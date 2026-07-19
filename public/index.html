@@ -1994,6 +1994,12 @@
         console.error('Mermaid render failed:', err); // full parser detail stays in the console
         canvas.innerHTML = '<div class="diagram-error">This diagram couldn\'t be displayed — the underlying content is still covered in the other tabs.</div>';
         expandBtn.disabled = true;
+      } finally {
+        // Mermaid 10.x sometimes injects its own "bomb" error graphic
+        // directly into document.body on a parse failure, regardless of the
+        // suppressErrorRendering config — that's a stray element outside our
+        // own diagram-error message, so sweep it away every time.
+        document.querySelectorAll('body > svg[aria-roledescription="error"], body > div[id^="dmermaid-"]').forEach(el => el.remove());
       }
     }
 
