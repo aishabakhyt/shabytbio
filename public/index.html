@@ -1,0 +1,2463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShabytBio — AI Study Companion</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* The browser only hides [hidden] elements via its own default
+       stylesheet, which any of OUR display:flex/inline-style rules on the
+       same element silently override (author CSS always wins over the
+       browser's default styling). This one rule guarantees hidden actually
+       hides, everywhere in the app, regardless of what else targets that
+       element — the standard fix for this well-known footgun. */
+    [hidden] { display: none !important; }
+
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 3rem 1rem 4rem;
+      color: #1a202c;
+    }
+
+    h1 { font-size: 2rem; margin-bottom: 0.25rem; }
+    p.subtitle { color: #718096; margin-bottom: 2rem; }
+
+    /* ── Auth bar ── */
+    .auth-bar {
+      width: 100%;
+      max-width: 540px;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      min-height: 40px;
+    }
+    .auth-signed-in {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      background: #fff;
+      border-radius: 999px;
+      padding: 0.4rem 0.9rem 0.4rem 0.4rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .auth-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+    }
+    .auth-profile-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.15rem 0.3rem;
+      border-radius: 999px;
+      transition: background 0.15s;
+    }
+    .auth-profile-btn:hover { background: #f0f4f8; }
+    .auth-name { font-size: 0.85rem; color: #2d3748; font-weight: 600; }
+    .auth-signout {
+      font-size: 0.78rem;
+      color: #a0aec0;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .auth-signout:hover { color: #e53e3e; }
+
+    /* ── Welcome / onboarding screen ── */
+    .welcome-screen {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+    .welcome-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.09);
+      padding: 2.5rem 2.25rem;
+      width: 100%;
+      max-width: 460px;
+      text-align: center;
+    }
+    .welcome-desc {
+      color: #4a5568;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 1.75rem;
+    }
+    .welcome-signin-btn {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .profile-field { margin-bottom: 1.1rem; text-align: left; }
+    .profile-field label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 0.4rem;
+    }
+    .profile-field select,
+    .profile-field textarea {
+      width: 100%;
+      padding: 0.55rem 0.7rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      color: #2d3748;
+    }
+    .profile-field textarea { resize: vertical; }
+    .profile-field-hint {
+      font-size: 0.75rem;
+      color: #a0aec0;
+      margin-top: 0.3rem;
+    }
+    .profile-actions {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 1.5rem;
+    }
+    .profile-save {
+      flex: 1;
+      padding: 0.65rem;
+      background: #3182ce;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .profile-save:hover { background: #2b6cb0; }
+    .profile-cancel {
+      padding: 0.65rem 1rem;
+      background: #edf2f7;
+      color: #4a5568;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .profile-cancel:hover { background: #e2e8f0; }
+    .profile-status {
+      font-size: 0.8rem;
+      margin-top: 0.6rem;
+      min-height: 1.1em;
+    }
+    .profile-status.error { color: #e53e3e; }
+    .profile-status.success { color: #38a169; }
+    .auth-config-error {
+      font-size: 0.85rem;
+      color: #c05621;
+      background: #fffaf0;
+      border: 1px solid #fbd38d;
+      border-radius: 8px;
+      padding: 0.6rem 0.9rem;
+      max-width: 540px;
+      text-align: center;
+    }
+
+    /* ── Upload card ── */
+    .upload-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 2rem;
+      width: 100%;
+      max-width: 540px;
+    }
+
+    label.drop-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border: 2px dashed #a0aec0;
+      border-radius: 8px;
+      padding: 2.5rem 1rem;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    label.drop-zone:hover, label.drop-zone.dragover {
+      border-color: #4299e1;
+      background: #ebf8ff;
+    }
+    label.drop-zone span { color: #4a5568; margin-top: 0.5rem; font-size: 0.9rem; }
+    label.drop-zone strong { color: #2b6cb0; }
+    #fileInput { display: none; }
+
+    #fileName {
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      color: #4a5568;
+      min-height: 1.2em;
+      text-align: center;
+    }
+
+    button#uploadBtn {
+      margin-top: 1.25rem;
+      width: 100%;
+      padding: 0.75rem;
+      background: #3182ce;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button#uploadBtn:hover:not(:disabled) { background: #2b6cb0; }
+    button#uploadBtn:disabled { background: #a0aec0; cursor: not-allowed; }
+
+    #status {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      min-height: 1.2em;
+      text-align: center;
+    }
+    #status.error { color: #e53e3e; }
+    #status.success { color: #38a169; }
+
+    /* ── Results ── */
+    #results {
+      margin-top: 2rem;
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .result-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      overflow: hidden;
+      display: none;
+    }
+    .result-card.active-tab { display: block; }
+
+    /* ── Tabs ── */
+    .tabs-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .tab-btn {
+      padding: 0.5rem 0.9rem;
+      border-radius: 8px;
+      border: 1px solid #cbd5e0;
+      background: #fff;
+      color: #4a5568;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .tab-btn:hover { background: #f0f4f8; }
+    .tab-btn.active {
+      background: #3182ce;
+      border-color: #3182ce;
+      color: #fff;
+    }
+
+    /* On narrow screens, nine-plus tabs wrapping into uneven rows reads as
+       cluttered (real beta feedback) — switch to a single horizontally
+       scrollable row instead, which is a familiar mobile pattern and keeps
+       the tab bar visually calm regardless of how many tabs exist. */
+    @media (max-width: 640px) {
+      .tabs-nav {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        padding-bottom: 0.3rem;
+      }
+      .tab-btn {
+        flex-shrink: 0;
+        scroll-snap-align: start;
+        white-space: nowrap;
+      }
+    }
+
+    .result-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .result-card-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .result-card-body {
+      padding: 1.25rem;
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    /* Accent colours per card */
+    .card-notes     .result-card-header { background: #ebf8ff; }
+    .card-notes     .result-card-header h2 { color: #2b6cb0; }
+    .card-hidden    .result-card-header { background: #fffbeb; }
+    .card-hidden    .result-card-header h2 { color: #b7791f; }
+    .card-concepts  .result-card-header { background: #f0fff4; }
+    .card-concepts  .result-card-header h2 { color: #276749; }
+    .card-summative .result-card-header { background: #faf5ff; }
+    .card-summative .result-card-header h2 { color: #553c9a; }
+    .card-checklist .result-card-header { background: #e6fffa; }
+    .card-checklist .result-card-header h2 { color: #234e52; }
+
+    /* ── Study notes ── */
+    .notes-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: #2d3748;
+    }
+    .notes-section { margin-bottom: 1rem; }
+    .notes-section:last-child { margin-bottom: 0; }
+    .notes-heading {
+      font-weight: 600;
+      color: #2b6cb0;
+      margin-bottom: 0.35rem;
+      font-size: 0.9rem;
+    }
+    .notes-subheading {
+      font-weight: 600;
+      color: #4a5568;
+      margin: 0.5rem 0 0.25rem 0.75rem;
+      font-size: 0.87rem;
+    }
+    .notes-list {
+      list-style: disc;
+      padding-left: 1.5rem;
+      color: #2d3748;
+    }
+    .notes-list.sub { padding-left: 2.25rem; margin-top: 0.25rem; }
+    .notes-list li { margin-bottom: 0.15rem; }
+
+    /* ── Hidden details (grouped) ── */
+    .hidden-group { margin-bottom: 1rem; }
+    .hidden-group:last-child { margin-bottom: 0; }
+    .hidden-category-heading {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #b7791f;
+      margin-bottom: 0.4rem;
+    }
+    .hidden-list {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .hidden-list li {
+      background: #fffbeb;
+      border-left: 3px solid #f6ad55;
+      border-radius: 0 6px 6px 0;
+      padding: 0.5rem 0.75rem;
+      color: #744210;
+    }
+    /* Mnemonics are collapsed behind a <details> toggle by default — with a
+       mnemonic on every hidden-detail item, showing all of them expanded at
+       once made the tab feel cluttered/wall-of-text. Click to reveal one at
+       a time instead. */
+    .mnemonic-box {
+      margin-top: 0.5rem;
+    }
+    .mnemonic-box summary.mnemonic-label {
+      cursor: pointer;
+      display: inline-block;
+      font-style: normal;
+      font-weight: 700;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #b7791f;
+      background: #fef3c7;
+      padding: 0.15em 0.6em;
+      border-radius: 3px;
+      user-select: none;
+    }
+    .mnemonic-box summary.mnemonic-label:hover {
+      background: #fde68a;
+    }
+    .mnemonic-box[open] summary.mnemonic-label {
+      margin-bottom: 0.4rem;
+    }
+    .mnemonic-box .mnemonic-text {
+      display: block;
+      padding: 0.5rem 0.65rem;
+      background: #fff;
+      border: 1px dashed #d69e2e;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-style: italic;
+      color: #92400e;
+      line-height: 1.5;
+    }
+
+    /* ── Key concepts ── */
+    .concept-item { margin-bottom: 0.9rem; }
+    .concept-item:last-child { margin-bottom: 0; }
+    .concept-name {
+      font-weight: 700;
+      color: #276749;
+      margin-bottom: 0.2rem;
+    }
+    .concept-explanation { color: #2d3748; }
+
+    /* ── Summative topics ── */
+    .summative-list {
+      list-style: decimal;
+      padding-left: 1.4rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+    }
+    .summative-list li { color: #2d3748; }
+
+    /* ── Self-test ── */
+    .card-selftest .result-card-header { background: #fff5f5; }
+    .card-selftest .result-card-header h2 { color: #c53030; }
+
+    .selftest-item {
+      padding: 0.85rem 0;
+      border-bottom: 1px solid #fed7d7;
+    }
+    .selftest-item:first-child { padding-top: 0; }
+    .selftest-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .selftest-question {
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 0.45rem;
+      line-height: 1.5;
+    }
+
+    .selftest-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .selftest-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.15em 0.5em;
+      border-radius: 3px;
+    }
+    .selftest-badge.recall      { background: #bee3f8; color: #2b6cb0; }
+    .selftest-badge.application { background: #feebc8; color: #c05621; }
+
+    .selftest-reveal {
+      font-size: 0.8rem;
+      padding: 0.25rem 0.7rem;
+      border: 1.5px solid #fc8181;
+      background: transparent;
+      color: #c53030;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .selftest-reveal:hover { background: #fff5f5; }
+    .selftest-reveal.open  { border-color: #a0aec0; color: #4a5568; }
+
+    .selftest-answer {
+      margin-top: 0.55rem;
+      background: #fff5f5;
+      border-left: 3px solid #fc8181;
+      border-radius: 0 6px 6px 0;
+      padding: 0.55rem 0.75rem;
+      color: #2d3748;
+      line-height: 1.6;
+    }
+
+    /* ── Learning objectives ── */
+    .card-objectives .result-card-header { background: #eef2ff; }
+    .card-objectives .result-card-header h2 { color: #3730a3; }
+
+    .objective-item {
+      padding: 0.7rem 0;
+      border-bottom: 1px solid #e0e7ff;
+    }
+    .objective-item:first-child { padding-top: 0; }
+    .objective-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .objective-text {
+      color: #2d3748;
+      margin-bottom: 0.35rem;
+      line-height: 1.5;
+    }
+
+    .objective-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.15em 0.5em;
+      border-radius: 3px;
+      display: inline-block;
+    }
+    .objective-badge.covered        { background: #c6f6d5; color: #276749; }
+    .objective-badge.partial        { background: #feebc8; color: #c05621; }
+    .objective-badge.not-addressed  { background: #fed7d7; color: #c53030; }
+
+    .objective-note {
+      margin-top: 0.35rem;
+      font-size: 0.85rem;
+      color: #4a5568;
+    }
+
+    /* ── Readiness checklist ── */
+    .checklist-list {
+      list-style: none;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+    .checklist-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      color: #2d3748;
+    }
+    .checklist-list li::before {
+      content: '';
+      flex-shrink: 0;
+      width: 15px;
+      height: 15px;
+      margin-top: 0.18rem;
+      border: 2px solid #319795;
+      border-radius: 3px;
+    }
+    /* The li's own text (incl. inline <strong> tags from bolded terms) must
+       live inside this single flex item, not as direct children of the flex
+       <li> — otherwise the browser treats each text node/<strong> as its
+       own flex item and mangles spacing/wrapping instead of flowing as a
+       normal paragraph. */
+    .checklist-list li .checklist-text {
+      flex: 1;
+      min-width: 0;
+      line-height: 1.5;
+    }
+
+    /* ── Audio dialogue ── */
+    .card-audio .result-card-header { background: #e6fffa; }
+    .card-audio .result-card-header h2 { color: #285e61; }
+
+    .audio-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .audio-play-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.1rem;
+      background: #319795;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .audio-play-btn:hover { background: #2c7a7b; }
+    .audio-restart-btn {
+      padding: 0.55rem 0.9rem;
+      background: #edf2f7;
+      color: #4a5568;
+      border: none;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .audio-restart-btn:hover { background: #e2e8f0; }
+    .audio-status {
+      font-size: 0.78rem;
+      color: #a0aec0;
+    }
+    .audio-unsupported {
+      font-size: 0.83rem;
+      color: #c05621;
+      background: #fffaf0;
+      border-left: 3px solid #f6ad55;
+      border-radius: 0 6px 6px 0;
+      padding: 0.55rem 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .audio-transcript {
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .audio-turn {
+      max-width: 82%;
+      padding: 0.6rem 0.85rem;
+      border-radius: 12px;
+      font-size: 0.87rem;
+      line-height: 1.5;
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .audio-turn .audio-speaker {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.2rem;
+      opacity: 0.7;
+    }
+    .audio-turn.speaker-alex {
+      align-self: flex-start;
+      background: #ebf8ff;
+      color: #2c5282;
+      border-bottom-left-radius: 3px;
+    }
+    .audio-turn.speaker-sam {
+      align-self: flex-end;
+      background: #f0fff4;
+      color: #276749;
+      border-bottom-right-radius: 3px;
+    }
+    .audio-turn.speaking {
+      box-shadow: 0 0 0 2px #319795;
+    }
+
+    /* ── Visual diagrams ── */
+    .card-diagrams .result-card-header { background: #fdf2f8; }
+    .card-diagrams .result-card-header h2 { color: #97266d; }
+
+    .diagram-section-heading {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #97266d;
+      margin: 1.3rem 0 0.6rem;
+    }
+    .diagram-section-heading:first-child { margin-top: 0; }
+
+    .diagram-item {
+      margin-bottom: 1.5rem;
+      background: #fdfcfb;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .diagram-item:last-child { margin-bottom: 0; }
+    .diagram-item-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .diagram-title {
+      font-weight: 700;
+      color: #2d3748;
+      font-size: 0.92rem;
+    }
+    .diagram-expand-btn {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: #fdf2f8;
+      color: #97266d;
+      border: none;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.3rem 0.6rem;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .diagram-expand-btn:hover { background: #fce7f3; }
+    .diagram-canvas {
+      min-height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: auto;
+    }
+    /* Capped (not stretched to 100%) so a diagram with few nodes doesn't get
+       blown up, and a diagram with many nodes doesn't get squashed unreadably
+       small — click "Enlarge" for the full-size lightbox view instead. */
+    .diagram-canvas svg { max-width: 100%; max-height: 340px; height: auto; }
+    .diagram-caption {
+      margin-top: 0.6rem;
+      font-size: 0.83rem;
+      color: #718096;
+    }
+    .diagram-error {
+      font-size: 0.83rem;
+      color: #c05621;
+      background: #fffaf0;
+      border-left: 3px solid #f6ad55;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0 6px 6px 0;
+    }
+
+    /* Related Videos tab */
+    .card-videos .result-card-header { background: #fff5f5; }
+    .card-videos .result-card-header h2 { color: #c53030; }
+    .videos-loading, .videos-empty {
+      font-size: 0.85rem;
+      color: #718096;
+    }
+    .video-card {
+      margin-bottom: 1.3rem;
+      background: #fdfcfb;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .video-card:last-child { margin-bottom: 0; }
+    .video-frame {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border: none;
+      display: block;
+    }
+    .video-meta { padding: 0.7rem 0.9rem; }
+    .video-title { font-weight: 700; font-size: 0.88rem; color: #2d3748; }
+    .video-channel { font-size: 0.78rem; color: #718096; margin-top: 0.15rem; }
+
+    /* Fullscreen lightbox for a single enlarged diagram */
+    .diagram-lightbox-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 32, 44, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      z-index: 110;
+    }
+    .diagram-lightbox-modal {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      width: 100%;
+      max-width: 92vw;
+      max-height: 90vh;
+      padding: 1.25rem 1.5rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .diagram-lightbox-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    .diagram-lightbox-header h2 { font-size: 1rem; color: #97266d; }
+    .diagram-lightbox-canvas {
+      overflow: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+    }
+    .diagram-lightbox-canvas svg { max-width: none; max-height: none; }
+
+    /* ── History ── */
+    .history-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 1.25rem 1.5rem;
+      width: 100%;
+      max-width: 540px;
+      margin-top: 1.25rem;
+    }
+    .history-card h3 {
+      font-size: 0.95rem;
+      color: #2d3748;
+      margin-bottom: 0.75rem;
+    }
+    .history-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      max-height: 260px;
+      overflow-y: auto;
+    }
+    .history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.55rem 0.7rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .history-item:hover { background: #f0f4f8; }
+    .history-item-main { min-width: 0; }
+    .history-item-name {
+      font-size: 0.85rem;
+      color: #2d3748;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .history-item-meta {
+      font-size: 0.75rem;
+      color: #a0aec0;
+    }
+    .history-item-delete {
+      flex-shrink: 0;
+      background: none;
+      border: none;
+      color: #cbd5e0;
+      font-size: 0.9rem;
+      cursor: pointer;
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+    }
+    .history-item-delete:hover { color: #e53e3e; background: #fff5f5; }
+    .history-empty { font-size: 0.85rem; color: #a0aec0; }
+
+    /* ── Review (spaced-repetition) ── */
+    .review-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #ebf8ff;
+      border: none;
+      color: #2b6cb0;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .review-btn:hover { background: #bee3f8; }
+    .review-badge {
+      background: #3182ce;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.05em 0.5em;
+      border-radius: 999px;
+    }
+
+    .review-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 32, 44, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      z-index: 100;
+    }
+    .review-modal {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 520px;
+      padding: 1.75rem;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .review-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.1rem;
+    }
+    .review-modal-header h2 { font-size: 1.1rem; color: #2b6cb0; }
+    .review-progress { font-size: 0.8rem; color: #a0aec0; }
+    .review-close-btn {
+      background: none;
+      border: none;
+      font-size: 1.3rem;
+      line-height: 1;
+      color: #a0aec0;
+      cursor: pointer;
+      padding: 0.2rem 0.4rem;
+    }
+    .review-close-btn:hover { color: #2d3748; }
+    .review-type-badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.15em 0.55em;
+      border-radius: 3px;
+      margin-bottom: 0.7rem;
+    }
+    .review-type-badge.recall { background: #e6fffa; color: #234e52; }
+    .review-type-badge.application { background: #faf5ff; color: #553c9a; }
+    .review-source {
+      font-size: 0.72rem;
+      color: #a0aec0;
+      margin-bottom: 0.9rem;
+    }
+    .review-question {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #2d3748;
+      line-height: 1.5;
+      margin-bottom: 1.1rem;
+    }
+    .review-reveal-btn {
+      background: #3182ce;
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .review-reveal-btn:hover { background: #2b6cb0; }
+    .review-answer-box {
+      background: #f0fff4;
+      border-left: 3px solid #48bb78;
+      border-radius: 0 8px 8px 0;
+      padding: 0.8rem 1rem;
+      margin-bottom: 1.2rem;
+      color: #22543d;
+      line-height: 1.55;
+    }
+    .review-grade-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
+    .review-grade-btn {
+      border: none;
+      border-radius: 8px;
+      padding: 0.55rem 0.3rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+    }
+    .review-grade-btn.again { background: #e53e3e; }
+    .review-grade-btn.again:hover { background: #c53030; }
+    .review-grade-btn.hard  { background: #dd6b20; }
+    .review-grade-btn.hard:hover  { background: #c05621; }
+    .review-grade-btn.good  { background: #38a169; }
+    .review-grade-btn.good:hover  { background: #2f855a; }
+    .review-grade-btn.easy  { background: #3182ce; }
+    .review-grade-btn.easy:hover  { background: #2b6cb0; }
+    .review-empty-state {
+      text-align: center;
+      color: #4a5568;
+      padding: 1.5rem 0;
+    }
+    .review-empty-state .review-empty-emoji { font-size: 2.2rem; display: block; margin-bottom: 0.6rem; }
+
+    /* Inline markdown */
+    strong { font-weight: 700; }
+    em { font-style: italic; }
+    code {
+      font-family: ui-monospace, monospace;
+      font-size: 0.85em;
+      background: #edf2f7;
+      padding: 0.1em 0.3em;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <h1>ShabytBio</h1>
+  <p class="subtitle">AI study companion for biology students</p>
+
+  <div class="auth-bar" id="authBar"></div>
+
+  <div id="welcomeScreen" class="welcome-screen" hidden>
+    <div class="welcome-card">
+
+      <div id="welcomeSignedOut">
+        <p class="welcome-desc">Sign in with Google to upload your slides and get exam-ready study notes, hidden exam traps, and self-tests tailored to you.</p>
+        <div id="welcomeSigninBtn" class="welcome-signin-btn"></div>
+        <div class="auth-config-error" id="welcomeConfigError" hidden></div>
+      </div>
+
+      <div id="welcomeOnboarding" hidden>
+        <p class="welcome-desc" id="welcomeGreeting">Let's set up your profile.</p>
+
+        <div class="profile-field">
+          <label for="profileGrade">NIS grade</label>
+          <select id="profileGrade">
+            <option value="">Not set</option>
+            <option value="7-8">Grade 7-8</option>
+            <option value="9-10">Grade 9-10</option>
+            <option value="11-12">Grade 11-12</option>
+          </select>
+        </div>
+
+        <div class="profile-field">
+          <label for="profileLanguage">Language</label>
+          <select id="profileLanguage">
+            <option value="en">English</option>
+            <option value="kk" disabled>Kazakh (coming soon)</option>
+            <option value="ru" disabled>Russian (coming soon)</option>
+          </select>
+          <p class="profile-field-hint">Only English is generated for now — this just saves your preference for when it ships.</p>
+        </div>
+
+        <div class="profile-field">
+          <label for="profileFocus">Default focus instructions</label>
+          <textarea id="profileFocus" rows="2" placeholder="e.g. 'I already know the vocab, focus on calculations' — leave blank for full coverage"></textarea>
+          <p class="profile-field-hint">Pre-fills the focus box on every upload — you can still edit it per file.</p>
+        </div>
+
+        <div class="profile-actions">
+          <button class="profile-save" id="welcomeEnterBtn">Enter ShabytBio</button>
+          <button class="profile-cancel" id="welcomeBackBtn" hidden>Cancel</button>
+        </div>
+        <div class="profile-status" id="welcomeStatus"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div id="appContent" style="width:100%;display:flex;flex-direction:column;align-items:center;" hidden>
+  <div class="upload-card">
+    <label class="drop-zone" id="dropZone" for="fileInput">
+      <svg width="36" height="36" fill="none" stroke="#4299e1" stroke-width="2"
+           viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 16V4m0 0L8 8m4-4 4 4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round"/>
+      </svg>
+      <span>Drag &amp; drop or <strong>click to browse</strong></span>
+      <span style="color:#a0aec0;">PDF, .txt, or .pptx · max 50 MB</span>
+    </label>
+    <input type="file" id="fileInput" accept=".pdf,.txt,.pptx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.presentationml.presentation" />
+
+    <div id="fileName"></div>
+    <textarea id="focusInput" rows="2"
+      placeholder="Optional: tell me what to focus on (e.g. 'I already know the vocab, focus on calculations') — leave blank for full coverage"
+      style="width:100%;margin-top:1rem;padding:0.6rem 0.75rem;border:1px solid #cbd5e0;border-radius:8px;font-size:0.85rem;font-family:inherit;resize:vertical;color:#2d3748;"></textarea>
+    <button id="uploadBtn" disabled>Upload &amp; Analyse</button>
+    <div id="status"></div>
+  </div>
+
+  <div class="history-card">
+    <h3>Recent uploads</h3>
+    <ul class="history-list" id="historyList"></ul>
+  </div>
+
+  <!-- Spaced-repetition review session — pulls from self_test questions
+       across ALL past uploads, not just the current one. -->
+  <div class="review-overlay" id="reviewOverlay" hidden>
+    <div class="review-modal">
+      <div class="review-modal-header">
+        <h2>Review</h2>
+        <span class="review-progress" id="reviewProgress"></span>
+        <button class="review-close-btn" id="reviewCloseBtn" aria-label="Close">&times;</button>
+      </div>
+      <div id="reviewBody"></div>
+    </div>
+  </div>
+
+  <!-- Fullscreen lightbox for enlarging a single diagram/mind map -->
+  <div class="diagram-lightbox-overlay" id="diagramLightboxOverlay" hidden>
+    <div class="diagram-lightbox-modal">
+      <div class="diagram-lightbox-header">
+        <h2 id="diagramLightboxTitle"></h2>
+        <button class="review-close-btn" id="diagramLightboxCloseBtn" aria-label="Close">&times;</button>
+      </div>
+      <div class="diagram-lightbox-canvas" id="diagramLightboxCanvas"></div>
+    </div>
+  </div>
+
+  <div id="results" hidden>
+    <div class="tabs-nav" id="tabsNav">
+      <button class="tab-btn" data-tab="objectives" id="tabBtn-objectives">Objectives</button>
+      <button class="tab-btn active" data-tab="notes" id="tabBtn-notes">Study Notes</button>
+      <button class="tab-btn" data-tab="diagrams" id="tabBtn-diagrams">Diagrams</button>
+      <button class="tab-btn" data-tab="videos" id="tabBtn-videos">Videos</button>
+      <button class="tab-btn" data-tab="audio" id="tabBtn-audio">Audio</button>
+      <button class="tab-btn" data-tab="hidden" id="tabBtn-hidden">Hidden Details</button>
+      <button class="tab-btn" data-tab="concepts" id="tabBtn-concepts">Key Concepts</button>
+      <button class="tab-btn" data-tab="summative" id="tabBtn-summative">Summative Topics</button>
+      <button class="tab-btn" data-tab="selftest" id="tabBtn-selftest">Test Yourself</button>
+      <button class="tab-btn" data-tab="checklist" id="tabBtn-checklist">Checklist</button>
+    </div>
+
+    <!-- Learning Objectives -->
+    <div class="result-card card-objectives" data-tab="objectives" id="objectivesCard">
+      <div class="result-card-header">
+        <svg width="18" height="18" fill="none" stroke="#4338ca" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.5 5.5 21 7.5 13.5 2 9h7l3-7z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h2>Learning Objectives — is this material covering what it set out to?</h2>
+      </div>
+      <div class="result-card-body" id="objectivesOutput"></div>
+    </div>
+
+    <!-- Study Notes -->
+    <div class="result-card card-notes active-tab" data-tab="notes">
+      <div class="result-card-header">
+        <svg width="18" height="18" fill="none" stroke="#3182ce" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M9 12h6M9 16h6M9 8h6M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z" stroke-linecap="round"/>
+        </svg>
+        <h2>Study Notes</h2>
+      </div>
+      <div class="result-card-body" id="restructuredOutput"></div>
+    </div>
+
+    <!-- Visual Diagrams -->
+    <div class="result-card card-diagrams" data-tab="diagrams" id="diagramsCard">
+      <div class="result-card-header">
+        <svg width="18" height="18" fill="none" stroke="#b83280" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="3" y="3" width="7" height="7" rx="1"/>
+          <rect x="14" y="3" width="7" height="7" rx="1"/>
+          <rect x="8.5" y="14" width="7" height="7" rx="1"/>
+          <path d="M10 6.5h4M6.5 10v3M17.5 10v3" stroke-linecap="round"/>
+        </svg>
+        <h2>Visual Diagrams — for visual learners</h2>
+      </div>
+      <div class="result-card-body" id="diagramsOutput"></div>
+    </div>
+
+    <!-- Related Videos -->
+    <div class="result-card card-videos" data-tab="videos" id="videosCard">
+      <div class="result-card-header">
+        <svg width="18" height="18" fill="none" stroke="#c53030" stroke-width="2" viewBox="0 0 24 24">
+          <rect x="2" y="5" width="15" height="14" rx="2"/>
+          <path d="M22 8l-5 4 5 4V8z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h2>Related Videos — real videos on this exact topic</h2>
+      </div>
+      <div class="result-card-body" id="videosOutput"></div>
+    </div>
+
+    <!-- Audio Dialogue -->
+    <div class="result-card card-audio" data-tab="audio" id="audioCard">
+      <div class="result-card-header">
+        <svg width="18" height="18" fill="none" stroke="#2c7a7b" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z" stroke-linecap="round"/>
+          <path d="M19 11a7 7 0 01-14 0M12 18v3" stroke-linecap="round"/>
+        </svg>
+        <h2>Listen — a study conversation about this material</h2>
+      </div>
+      <div class="result-card-body" id="audioOutput"></div>
+    </div>
+
+    <!-- Hidden Details -->
+    <div class="result-card card-hidden" data-tab="hidden">
+      <div class="result-card-header">
+        <svg width="18" height="18" fill="none" stroke="#d69e2e" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 8v4M12 16h.01" stroke-linecap="round"/>
+        </svg>
+        <h2>Hidden Details — likely to appear on your summative</h2>
+      </div>
+      <div class="result-card-body" id="hiddenDetailsOutput"></div>
+    </div>
+
+    <!-- Key Concepts -->
+    <div class="result-card card-concepts" data-tab="concepts">
+      <div class="result-card-header">
+        <svg width="18" height="18" fill="none" stroke="#38a169" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M12 2a7 7 0 017 7c0 3-1.8 5.5-4.5 6.7V18H9.5v-2.3C6.8 14.5 5 12 5 9a7 7 0 017-7z" stroke-linecap="round"/>
+          <path d="M9.5 21h5" stroke-linecap="round"/>
+        </svg>
+        <h2>Key Concepts</h2>
+      </div>
+      <div class="result-card-body" id="keyConceptsOutput"></div>
+    </div>
+
+    <!-- Summative Topics -->
+    <div class="result-card card-summative" data-tab="summative">
+      <div class="result-card-header">
+        <svg width="18" height="18" fill="none" stroke="#805ad5" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke-linecap="round"/>
+          <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h2>Likely Summative Topics</h2>
+      </div>
+      <div class="result-card-body" id="summativeOutput"></div>
+    </div>
+
+    <!-- Test Yourself -->
+    <div class="result-card card-selftest" data-tab="selftest">
+      <div class="result-card-header">
+        <svg width="18" height="18" fill="none" stroke="#c53030" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707M12 21a9 9 0 110-18 9 9 0 010 18z" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <h2>Test Yourself — practice active recall</h2>
+      </div>
+      <div class="result-card-body" id="selfTestOutput"></div>
+    </div>
+
+    <!-- Readiness Checklist -->
+    <div class="result-card card-checklist" data-tab="checklist">
+      <div class="result-card-header">
+        <svg width="18" height="18" fill="none" stroke="#319795" stroke-width="2" viewBox="0 0 24 24">
+          <path d="M9 11l3 3L22 4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-linecap="round"/>
+        </svg>
+        <h2>Readiness Checklist — tick these off before your summative</h2>
+      </div>
+      <div class="result-card-body" id="checklistOutput"></div>
+    </div>
+  </div>
+  </div><!-- /#appContent -->
+
+  <script>
+    const fileInput  = document.getElementById('fileInput');
+    const uploadBtn  = document.getElementById('uploadBtn');
+    const dropZone   = document.getElementById('dropZone');
+    const fileNameEl = document.getElementById('fileName');
+    const statusEl   = document.getElementById('status');
+    const resultsEl  = document.getElementById('results');
+
+    /* ── Auth ── */
+    let currentUser = null;
+
+    function waitForGoogleGIS(timeout = 5000) {
+      return new Promise((resolve, reject) => {
+        const start = Date.now();
+        (function poll() {
+          if (window.google && window.google.accounts && window.google.accounts.id) return resolve();
+          if (Date.now() - start > timeout) return reject(new Error('Google Sign-In library failed to load — check your connection and refresh.'));
+          setTimeout(poll, 100);
+        })();
+      });
+    }
+
+    /* ── Screen state: 'welcome' (signed out) / 'onboarding' (profile setup
+       or edit) / 'app' (main tool). Exactly one is visible at a time. ── */
+
+    function renderAuthBar() {
+      const authBar = document.getElementById('authBar');
+      authBar.innerHTML = '';
+      if (!currentUser) return; // the sign-in button lives in the welcome screen itself
+
+      const wrap = document.createElement('div');
+      wrap.className = 'auth-signed-in';
+
+      const reviewBtn = document.createElement('button');
+      reviewBtn.className = 'review-btn';
+      reviewBtn.id = 'reviewNavBtn';
+      reviewBtn.innerHTML = '📚 Review';
+      reviewBtn.addEventListener('click', openReviewSession);
+      wrap.appendChild(reviewBtn);
+
+      const profileBtn = document.createElement('button');
+      profileBtn.className = 'auth-profile-btn';
+      profileBtn.title = 'Edit profile';
+
+      if (currentUser.picture) {
+        const img = document.createElement('img');
+        img.className = 'auth-avatar';
+        img.src = currentUser.picture;
+        img.alt = '';
+        profileBtn.appendChild(img);
+      }
+
+      const name = document.createElement('span');
+      name.className = 'auth-name';
+      name.textContent = currentUser.name;
+      profileBtn.appendChild(name);
+
+      profileBtn.addEventListener('click', () => showOnboarding(true));
+      wrap.appendChild(profileBtn);
+
+      const signOutBtn = document.createElement('button');
+      signOutBtn.className = 'auth-signout';
+      signOutBtn.textContent = 'Sign out';
+      signOutBtn.addEventListener('click', handleSignOut);
+      wrap.appendChild(signOutBtn);
+
+      authBar.appendChild(wrap);
+      refreshDueCount(); // safe now that reviewBtn is actually in the document
+    }
+
+    function showWelcome() {
+      document.getElementById('welcomeScreen').hidden = false;
+      document.getElementById('welcomeSignedOut').hidden = false;
+      document.getElementById('welcomeOnboarding').hidden = true;
+      document.getElementById('appContent').hidden = true;
+      renderAuthBar();
+    }
+
+    function showOnboarding(isEditMode) {
+      document.getElementById('welcomeScreen').hidden = false;
+      document.getElementById('welcomeSignedOut').hidden = true;
+      document.getElementById('welcomeOnboarding').hidden = false;
+      document.getElementById('appContent').hidden = true;
+
+      document.getElementById('profileGrade').value = currentUser.grade || '';
+      document.getElementById('profileLanguage').value = currentUser.language || 'en';
+      document.getElementById('profileFocus').value = currentUser.defaultFocusInstructions || '';
+
+      const firstName = (currentUser.name || '').split(' ')[0];
+      document.getElementById('welcomeGreeting').textContent = isEditMode
+        ? `Editing your profile, ${firstName}.`
+        : `Welcome, ${firstName}! Let's set up your profile.`;
+      document.getElementById('welcomeEnterBtn').textContent = isEditMode ? 'Save' : 'Enter ShabytBio';
+      document.getElementById('welcomeBackBtn').hidden = !isEditMode;
+      document.getElementById('welcomeStatus').textContent = '';
+      document.getElementById('welcomeStatus').className = 'profile-status';
+
+      renderAuthBar();
+    }
+
+    function showApp() {
+      document.getElementById('welcomeScreen').hidden = true;
+      document.getElementById('appContent').hidden = false;
+      renderAuthBar();
+
+      // Pre-fill the per-upload focus box with the saved default (only if empty,
+      // so we never clobber something the student is mid-typing).
+      const focusInputEl = document.getElementById('focusInput');
+      if (focusInputEl && !focusInputEl.value && currentUser && currentUser.defaultFocusInstructions) {
+        focusInputEl.value = currentUser.defaultFocusInstructions;
+      }
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function saveProfileAndEnter() {
+      const statusEl2 = document.getElementById('welcomeStatus');
+      const grade = document.getElementById('profileGrade').value || null;
+      const language = document.getElementById('profileLanguage').value || 'en';
+      const defaultFocusInstructions = document.getElementById('profileFocus').value.trim();
+
+      statusEl2.className = 'profile-status';
+      statusEl2.textContent = 'Saving…';
+
+      try {
+        const res = await fetch('/api/auth/profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ grade, language, defaultFocusInstructions }),
+        });
+        if (res.status === 401) { handleSessionExpired(); return; }
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to save profile.');
+
+        currentUser = data;
+        const focusInputEl = document.getElementById('focusInput');
+        if (focusInputEl) focusInputEl.value = currentUser.defaultFocusInstructions || '';
+
+        // Visible confirmation before the transition, so Save clearly "does something"
+        // instead of just silently vanishing.
+        statusEl2.className = 'profile-status success';
+        statusEl2.textContent = 'Saved!';
+        setTimeout(() => {
+          showApp();
+          loadHistory();
+        }, 450);
+      } catch (err) {
+        statusEl2.className = 'profile-status error';
+        statusEl2.textContent = err.message;
+      }
+    }
+
+    document.getElementById('welcomeEnterBtn').addEventListener('click', saveProfileAndEnter);
+    document.getElementById('welcomeBackBtn').addEventListener('click', () => showApp());
+
+    async function handleSignOut() {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      location.reload();
+    }
+
+    // Called whenever a protected API call comes back 401 mid-session
+    // (e.g. the session expired or the server restarted) — cleanest fix is
+    // just reloading, which re-runs initAuth() and shows the sign-in screen again.
+    function handleSessionExpired() {
+      statusEl.className = 'error';
+      statusEl.textContent = 'Your session expired — reloading…';
+      setTimeout(() => location.reload(), 1200);
+    }
+
+    async function handleCredentialResponse(response) {
+      const errEl = document.getElementById('welcomeConfigError');
+      errEl.hidden = true;
+      try {
+        const res = await fetch('/api/auth/google', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Sign-in failed.');
+        currentUser = data;
+        // First-time sign-in (no grade yet) lands on setup; returning users go straight in.
+        if (!currentUser.grade) {
+          showOnboarding(false);
+        } else {
+          showApp();
+          loadHistory();
+        }
+      } catch (err) {
+        errEl.hidden = false;
+        errEl.textContent = err.message;
+      }
+    }
+
+    async function initAuth() {
+      const errEl = document.getElementById('welcomeConfigError');
+
+      let clientId;
+      try {
+        const cfgRes = await fetch('/api/auth/config');
+        ({ clientId } = await cfgRes.json());
+      } catch (err) {
+        showWelcome();
+        errEl.hidden = false;
+        errEl.textContent = "Couldn't reach the server to load sign-in config.";
+        return;
+      }
+
+      if (!clientId) {
+        showWelcome();
+        errEl.hidden = false;
+        errEl.textContent = "Google sign-in isn't configured yet — add GOOGLE_CLIENT_ID to your .env file.";
+        return;
+      }
+
+      // Already signed in via an existing session cookie?
+      try {
+        const meRes = await fetch('/api/auth/me');
+        if (meRes.ok) {
+          currentUser = await meRes.json();
+          showApp();
+          loadHistory();
+          return;
+        }
+      } catch (err) { /* fall through to showing the sign-in screen */ }
+
+      showWelcome();
+      try {
+        await waitForGoogleGIS();
+        google.accounts.id.initialize({ client_id: clientId, callback: handleCredentialResponse });
+        google.accounts.id.renderButton(document.getElementById('welcomeSigninBtn'), { theme: 'outline', size: 'large', shape: 'pill' });
+      } catch (err) {
+        errEl.hidden = false;
+        errEl.textContent = err.message;
+      }
+    }
+
+    initAuth();
+
+    /* ── Review (spaced repetition across ALL past uploads) ── */
+    let reviewQueue = [];
+    let reviewIndex = 0;
+
+    document.getElementById('reviewCloseBtn').addEventListener('click', closeReviewSession);
+    document.getElementById('diagramLightboxCloseBtn').addEventListener('click', closeDiagramLightbox);
+
+    async function refreshDueCount() {
+      const btn = document.getElementById('reviewNavBtn');
+      if (!btn) return; // not signed in yet — auth bar hasn't rendered it
+      try {
+        const res = await fetch('/api/mastery/stats');
+        if (!res.ok) return;
+        const stats = await res.json();
+        btn.innerHTML = stats.dueCount > 0
+          ? `📚 Review <span class="review-badge">${stats.dueCount}</span>`
+          : '📚 Review';
+      } catch (err) {
+        // Silent — a missing badge count isn't worth surfacing an error for.
+      }
+    }
+
+    async function openReviewSession() {
+      const overlay = document.getElementById('reviewOverlay');
+      const body = document.getElementById('reviewBody');
+      overlay.hidden = false;
+      document.getElementById('reviewProgress').textContent = '';
+      body.innerHTML = '<p style="color:#a0aec0;font-size:0.85rem;">Loading…</p>';
+
+      try {
+        const res = await fetch('/api/mastery/due?limit=20');
+        if (res.status === 401) { closeReviewSession(); handleSessionExpired(); return; }
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to load review queue.');
+        reviewQueue = data;
+      } catch (err) {
+        body.innerHTML = `<p style="color:#e53e3e;">${err.message}</p>`;
+        return;
+      }
+
+      reviewIndex = 0;
+      renderReviewCard();
+    }
+
+    function closeReviewSession() {
+      document.getElementById('reviewOverlay').hidden = true;
+      refreshDueCount(); // due count may have changed during the session
+    }
+
+    function renderReviewCard() {
+      const body = document.getElementById('reviewBody');
+      const progress = document.getElementById('reviewProgress');
+      body.innerHTML = '';
+
+      if (reviewIndex >= reviewQueue.length) {
+        progress.textContent = '';
+        const empty = document.createElement('div');
+        empty.className = 'review-empty-state';
+        empty.innerHTML = reviewQueue.length
+          ? '<span class="review-empty-emoji">🎉</span>That\'s everything due for today — nice work.'
+          : '<span class="review-empty-emoji">✅</span>Nothing due right now. Upload more material to build up your review queue.';
+        body.appendChild(empty);
+        return;
+      }
+
+      progress.textContent = `${reviewIndex + 1} / ${reviewQueue.length}`;
+      const item = reviewQueue[reviewIndex];
+
+      const typeBadge = document.createElement('span');
+      typeBadge.className = `review-type-badge ${item.type === 'application' ? 'application' : 'recall'}`;
+      typeBadge.textContent = item.type === 'application' ? 'Application' : 'Recall';
+      body.appendChild(typeBadge);
+
+      if (item.sourceFilename) {
+        const src = document.createElement('div');
+        src.className = 'review-source';
+        src.textContent = `From: ${item.sourceFilename}`;
+        body.appendChild(src);
+      }
+
+      const q = document.createElement('div');
+      q.className = 'review-question';
+      q.innerHTML = mdToHtml(item.question);
+      body.appendChild(q);
+
+      const revealBtn = document.createElement('button');
+      revealBtn.className = 'review-reveal-btn';
+      revealBtn.textContent = 'Show answer';
+      revealBtn.addEventListener('click', () => revealReviewAnswer(item));
+      body.appendChild(revealBtn);
+    }
+
+    function revealReviewAnswer(item) {
+      const body = document.getElementById('reviewBody');
+      const revealBtn = body.querySelector('.review-reveal-btn');
+      if (revealBtn) revealBtn.remove();
+
+      const answerBox = document.createElement('div');
+      answerBox.className = 'review-answer-box';
+      answerBox.innerHTML = mdToHtml(item.answer);
+      body.appendChild(answerBox);
+
+      const gradeRow = document.createElement('div');
+      gradeRow.className = 'review-grade-row';
+      [['again', 'Again'], ['hard', 'Hard'], ['good', 'Good'], ['easy', 'Easy']].forEach(([grade, label]) => {
+        const btn = document.createElement('button');
+        btn.className = `review-grade-btn ${grade}`;
+        btn.textContent = label;
+        btn.addEventListener('click', () => submitReviewGrade(item.id, grade));
+        gradeRow.appendChild(btn);
+      });
+      body.appendChild(gradeRow);
+    }
+
+    async function submitReviewGrade(id, grade) {
+      try {
+        const res = await fetch(`/api/mastery/${id}/review`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ grade }),
+        });
+        if (res.status === 401) { closeReviewSession(); handleSessionExpired(); return; }
+      } catch (err) {
+        // Non-fatal — worst case this item stays due and shows up again next session.
+        console.error('Failed to submit review grade:', err);
+      }
+      reviewIndex += 1;
+      renderReviewCard();
+    }
+
+    function setFile(file) {
+      if (!file) return;
+      fileInput._selectedFile = file;
+      fileNameEl.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+      uploadBtn.disabled = false;
+      statusEl.textContent = '';
+      statusEl.className = '';
+      resultsEl.hidden = true;
+    }
+
+    fileInput.addEventListener('change', () => setFile(fileInput.files[0]));
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      setFile(e.dataTransfer.files[0]);
+    });
+
+    uploadBtn.addEventListener('click', async () => {
+      const file = fileInput._selectedFile || fileInput.files[0];
+      if (!file) return;
+
+      uploadBtn.disabled = true;
+      statusEl.className = '';
+      statusEl.textContent = 'Analysing — this can take a moment, please wait…';
+      resultsEl.hidden = true;
+
+      const form = new FormData();
+      form.append('file', file);
+      const focus = document.getElementById('focusInput').value.trim();
+      if (focus) form.append('focusInstructions', focus);
+
+      try {
+        const res  = await fetch('/api/upload', { method: 'POST', body: form });
+
+        if (res.status === 401) { handleSessionExpired(); return; }
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          statusEl.className = 'error';
+          statusEl.textContent = `Error: ${data.error}`;
+        } else {
+          statusEl.className = 'success';
+          statusEl.textContent = data.fromCache
+            ? `Done instantly — someone already analysed this exact file, so you got the cached result.`
+            : `Done — ${data.charCount} characters extracted from "${data.filename}".`;
+          renderResults(data.result);
+          resultsEl.hidden = false;
+          resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          loadHistory();
+          refreshDueCount(); // this upload just seeded new review items
+        }
+      } catch (err) {
+        statusEl.className = 'error';
+        statusEl.textContent = `Network error: ${err.message}`;
+      } finally {
+        uploadBtn.disabled = false;
+      }
+    });
+
+    /* ── Markdown → safe HTML ── */
+    function mdToHtml(str) {
+      if (typeof str !== 'string') return '';
+      return str
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g,     '<em>$1</em>')
+        .replace(/`(.+?)`/g,       '<code>$1</code>');
+    }
+
+    /* ── Block markdown → HTML (for restructured study notes) ── */
+    function renderMarkdownBlock(str) {
+      if (typeof str !== 'string') return '';
+      const lines = str.split('\n');
+      let html = '';
+      let inList = false;
+
+      for (const raw of lines) {
+        const trimmed = raw.trim();
+        if (!trimmed) {
+          if (inList) { html += '</ul>'; inList = false; }
+          continue;
+        }
+        if (trimmed.startsWith('### ')) {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += `<p class="notes-heading">${mdToHtml(trimmed.slice(4))}</p>`;
+        } else if (trimmed.startsWith('## ') || trimmed.startsWith('# ')) {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += `<p class="notes-title" style="margin-top:1rem">${mdToHtml(trimmed.replace(/^#{1,2} /, ''))}</p>`;
+        } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+          if (!inList) { html += '<ul class="notes-list">'; inList = true; }
+          html += `<li>${mdToHtml(trimmed.slice(2))}</li>`;
+        } else {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += `<p style="margin-bottom:0.4rem;color:#2d3748">${mdToHtml(trimmed)}</p>`;
+        }
+      }
+      if (inList) html += '</ul>';
+      return html;
+    }
+
+    /* ── Tabs ── */
+    const tabsNav = document.getElementById('tabsNav');
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.result-card[data-tab]').forEach(card => {
+        card.classList.toggle('active-tab', card.dataset.tab === tabName);
+      });
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
+    }
+
+    tabsNav.addEventListener('click', e => {
+      const btn = e.target.closest('.tab-btn');
+      if (btn) switchTab(btn.dataset.tab);
+    });
+
+    /* ── Renderers ── */
+
+    function renderResults(result) {
+      renderObjectives(result.learning_objectives);
+      renderDiagrams(result.mind_map, result.visual_diagrams);
+      renderVideos(result.video_search_query);
+      renderAudioDialogue(result.audio_dialogue);
+      renderRestructured(result.restructured);
+      renderHiddenDetails(result.hidden_details);
+      renderKeyConcepts(result.key_concepts);
+      renderSummativeTopics(result.likely_summative_topics);
+      renderSelfTest(result.self_test);
+      renderChecklist(result.readiness_checklist);
+      switchTab('notes'); // always land on Study Notes for a fresh result
+    }
+
+    /* ── Audio dialogue (browser text-to-speech, no API cost) ── */
+    let audioTurns = [];
+    let audioVoices = { alex: null, sam: null };
+    let audioPlaybackToken = 0; // bumped on restart/stop to invalidate stale onend chains
+    let audioIsPlaying = false;
+
+    function getVoicesAsync(timeout = 2000) {
+      return new Promise(resolve => {
+        if (typeof speechSynthesis === 'undefined') return resolve([]);
+        const existing = speechSynthesis.getVoices();
+        if (existing.length) return resolve(existing);
+        const onVoicesChanged = () => {
+          speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
+          resolve(speechSynthesis.getVoices());
+        };
+        speechSynthesis.addEventListener('voiceschanged', onVoicesChanged);
+        setTimeout(() => {
+          speechSynthesis.removeEventListener('voiceschanged', onVoicesChanged);
+          resolve(speechSynthesis.getVoices());
+        }, timeout);
+      });
+    }
+
+    async function pickAudioVoices() {
+      const voices = await getVoicesAsync();
+      const en = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+      const pool = en.length ? en : voices;
+      if (!pool.length) { audioVoices = { alex: null, sam: null }; return; }
+
+      const female = pool.find(v => /female|zira|samantha|victoria|karen/i.test(v.name));
+      const male = pool.find(v => v !== female && /male|david|daniel|fred/i.test(v.name));
+      audioVoices.alex = male || pool[0];
+      audioVoices.sam = female || pool[pool.length - 1];
+    }
+
+    function renderAudioDialogue(turns) {
+      const tabBtn = document.getElementById('tabBtn-audio');
+      const el = document.getElementById('audioOutput');
+      el.innerHTML = '';
+      audioTurns = Array.isArray(turns) ? turns : [];
+      stopAudioPlayback();
+
+      if (!audioTurns.length) {
+        tabBtn.hidden = true;
+        return;
+      }
+      tabBtn.hidden = false;
+
+      const supported = typeof window.speechSynthesis !== 'undefined';
+
+      if (!supported) {
+        const note = document.createElement('div');
+        note.className = 'audio-unsupported';
+        note.textContent = "Your browser doesn't support text-to-speech playback — here's the transcript to read instead.";
+        el.appendChild(note);
+      } else {
+        const controls = document.createElement('div');
+        controls.className = 'audio-controls';
+
+        const playBtn = document.createElement('button');
+        playBtn.className = 'audio-play-btn';
+        playBtn.id = 'audioPlayBtn';
+        playBtn.textContent = '▶ Play conversation';
+        playBtn.addEventListener('click', toggleAudioPlayback);
+        controls.appendChild(playBtn);
+
+        const restartBtn = document.createElement('button');
+        restartBtn.className = 'audio-restart-btn';
+        restartBtn.textContent = 'Restart';
+        restartBtn.addEventListener('click', restartAudioPlayback);
+        controls.appendChild(restartBtn);
+
+        const status = document.createElement('span');
+        status.className = 'audio-status';
+        status.id = 'audioStatus';
+        controls.appendChild(status);
+
+        el.appendChild(controls);
+      }
+
+      const transcript = document.createElement('div');
+      transcript.className = 'audio-transcript';
+      audioTurns.forEach((turn, i) => {
+        const bubble = document.createElement('div');
+        const speakerClass = (turn.speaker || '').toLowerCase() === 'sam' ? 'speaker-sam' : 'speaker-alex';
+        bubble.className = `audio-turn ${speakerClass}`;
+        bubble.id = `audioTurn-${i}`;
+
+        const speakerLabel = document.createElement('span');
+        speakerLabel.className = 'audio-speaker';
+        speakerLabel.textContent = turn.speaker || '';
+        bubble.appendChild(speakerLabel);
+
+        const lineText = document.createElement('span');
+        lineText.innerHTML = mdToHtml(turn.line || '');
+        bubble.appendChild(lineText);
+
+        transcript.appendChild(bubble);
+      });
+      el.appendChild(transcript);
+    }
+
+    function updateAudioPlayButton() {
+      const btn = document.getElementById('audioPlayBtn');
+      if (btn) btn.textContent = audioIsPlaying ? '⏸ Pause' : '▶ Play conversation';
+    }
+
+    function toggleAudioPlayback() {
+      if (audioIsPlaying) {
+        speechSynthesis.pause();
+        audioIsPlaying = false;
+        updateAudioPlayButton();
+      } else if (speechSynthesis.paused) {
+        speechSynthesis.resume();
+        audioIsPlaying = true;
+        updateAudioPlayButton();
+      } else {
+        playAudioFromStart();
+      }
+    }
+
+    function restartAudioPlayback() {
+      stopAudioPlayback();
+      playAudioFromStart();
+    }
+
+    function stopAudioPlayback() {
+      audioPlaybackToken++; // invalidates any in-flight onend chain
+      if (typeof speechSynthesis !== 'undefined') speechSynthesis.cancel();
+      audioIsPlaying = false;
+      document.querySelectorAll('.audio-turn.speaking').forEach(el => el.classList.remove('speaking'));
+      updateAudioPlayButton();
+      const statusEl2 = document.getElementById('audioStatus');
+      if (statusEl2) statusEl2.textContent = '';
+    }
+
+    async function playAudioFromStart() {
+      if (!audioVoices.alex && !audioVoices.sam) await pickAudioVoices();
+      const myToken = ++audioPlaybackToken;
+      audioIsPlaying = true;
+      updateAudioPlayButton();
+      speakTurnAt(0, myToken);
+    }
+
+    function speakTurnAt(index, token) {
+      if (token !== audioPlaybackToken) return; // superseded by a newer restart/stop
+      document.querySelectorAll('.audio-turn.speaking').forEach(el => el.classList.remove('speaking'));
+
+      if (index >= audioTurns.length) {
+        audioIsPlaying = false;
+        updateAudioPlayButton();
+        const statusEl2 = document.getElementById('audioStatus');
+        if (statusEl2) statusEl2.textContent = 'Done.';
+        return;
+      }
+
+      const turn = audioTurns[index];
+      const bubble = document.getElementById(`audioTurn-${index}`);
+      if (bubble) {
+        bubble.classList.add('speaking');
+        if (typeof bubble.scrollIntoView === 'function') {
+          bubble.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+      const statusEl2 = document.getElementById('audioStatus');
+      if (statusEl2) statusEl2.textContent = `Line ${index + 1} of ${audioTurns.length}`;
+
+      const utterance = new SpeechSynthesisUtterance(turn.line || '');
+      const isSam = (turn.speaker || '').toLowerCase() === 'sam';
+      const voice = isSam ? audioVoices.sam : audioVoices.alex;
+      if (voice) utterance.voice = voice;
+      utterance.pitch = isSam ? 1.0 : 1.15; // differentiates speakers even if only one voice is available
+      utterance.rate = 1.0;
+
+      utterance.onend = () => speakTurnAt(index + 1, token);
+      utterance.onerror = () => speakTurnAt(index + 1, token); // one bad line shouldn't kill the whole playback
+
+      speechSynthesis.speak(utterance);
+    }
+
+    if (typeof mermaid !== 'undefined') {
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'neutral',
+        securityLevel: 'strict',
+        suppressErrorRendering: true, // stop mermaid injecting its own error graphic into the page
+      });
+    }
+
+    let diagramRenderCounter = 0;
+
+    /* Defense-in-depth: the model is instructed not to use parentheses/colons/semicolons/quotes
+       inside node labels (they break Mermaid's parser), but strip them here too in case it slips. */
+    function sanitizeMermaid(code) {
+      if (typeof code !== 'string') return '';
+      return code
+        .replace(/\(\(/g, '§§OPEN§§')
+        .replace(/\)\)/g, '§§CLOSE§§')
+        .replace(/[():;"]/g, '')
+        .replace(/§§OPEN§§/g, '((')
+        .replace(/§§CLOSE§§/g, '))');
+    }
+
+    async function renderOneDiagram(container, title, caption, mermaidCode) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'diagram-item';
+
+      const header = document.createElement('div');
+      header.className = 'diagram-item-header';
+
+      if (title) {
+        const t = document.createElement('p');
+        t.className = 'diagram-title';
+        t.textContent = title;
+        header.appendChild(t);
+      }
+
+      const expandBtn = document.createElement('button');
+      expandBtn.className = 'diagram-expand-btn';
+      expandBtn.innerHTML = '🔍 Enlarge';
+      header.appendChild(expandBtn);
+
+      wrapper.appendChild(header);
+
+      const canvas = document.createElement('div');
+      canvas.className = 'diagram-canvas';
+      wrapper.appendChild(canvas);
+
+      if (caption) {
+        const c = document.createElement('p');
+        c.className = 'diagram-caption';
+        c.textContent = caption;
+        wrapper.appendChild(c);
+      }
+
+      container.appendChild(wrapper);
+
+      if (typeof mermaid === 'undefined') {
+        canvas.innerHTML = '<div class="diagram-error">Diagram library failed to load.</div>';
+        expandBtn.disabled = true;
+        return;
+      }
+
+      try {
+        const id = `mermaid-diagram-${diagramRenderCounter++}`;
+        const { svg } = await mermaid.render(id, sanitizeMermaid(mermaidCode));
+        canvas.innerHTML = svg;
+        expandBtn.addEventListener('click', () => openDiagramLightbox(title || 'Diagram', svg));
+      } catch (err) {
+        console.error('Mermaid render failed:', err); // full parser detail stays in the console
+        canvas.innerHTML = '<div class="diagram-error">This diagram couldn\'t be displayed — the underlying content is still covered in the other tabs.</div>';
+        expandBtn.disabled = true;
+      }
+    }
+
+    function openDiagramLightbox(title, svgHtml) {
+      document.getElementById('diagramLightboxTitle').textContent = title;
+      document.getElementById('diagramLightboxCanvas').innerHTML = svgHtml;
+      document.getElementById('diagramLightboxOverlay').hidden = false;
+    }
+
+    function closeDiagramLightbox() {
+      document.getElementById('diagramLightboxOverlay').hidden = true;
+      document.getElementById('diagramLightboxCanvas').innerHTML = '';
+    }
+
+    async function renderDiagrams(mindMap, items) {
+      const tabBtn = document.getElementById('tabBtn-diagrams');
+      const el = document.getElementById('diagramsOutput');
+      el.innerHTML = '';
+
+      const hasMindMap = mindMap && typeof mindMap.mermaid === 'string' && mindMap.mermaid.trim();
+      const hasDiagrams = Array.isArray(items) && items.length > 0;
+
+      if (!hasMindMap && !hasDiagrams) {
+        tabBtn.hidden = true;
+        return;
+      }
+      tabBtn.hidden = false;
+
+      // Clear section headings when both a mind map AND process diagrams
+      // exist, so it doesn't read as one undifferentiated stack — the mind
+      // map is the "everything at a glance" view, the rest are specific
+      // sequences/comparisons.
+      if (hasMindMap) {
+        if (hasDiagrams) {
+          const heading = document.createElement('p');
+          heading.className = 'diagram-section-heading';
+          heading.textContent = 'Full Overview';
+          el.appendChild(heading);
+        }
+        await renderOneDiagram(el, 'Mind Map — full topic overview', '', mindMap.mermaid);
+      }
+
+      if (hasDiagrams) {
+        if (hasMindMap) {
+          const heading = document.createElement('p');
+          heading.className = 'diagram-section-heading';
+          heading.textContent = 'Process Diagrams';
+          el.appendChild(heading);
+        }
+        for (const item of items) {
+          await renderOneDiagram(el, item.title, item.caption, item.mermaid);
+        }
+      }
+    }
+
+    async function renderVideos(query) {
+      const tabBtn = document.getElementById('tabBtn-videos');
+      const el = document.getElementById('videosOutput');
+      el.innerHTML = '';
+
+      if (!query || !query.trim()) {
+        tabBtn.hidden = true;
+        return;
+      }
+      tabBtn.hidden = false;
+      el.innerHTML = '<p class="videos-loading">Finding real videos on this topic…</p>';
+
+      try {
+        const res = await fetch(`/api/videos?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          // Most likely YOUTUBE_API_KEY isn't configured yet — fail quietly
+          // with a plain note rather than breaking the rest of the results,
+          // since this is a bonus feature, not a core one.
+          el.innerHTML = `<p class="videos-empty">Video suggestions aren't available right now.</p>`;
+          return;
+        }
+
+        if (!Array.isArray(data.videos) || data.videos.length === 0) {
+          el.innerHTML = '<p class="videos-empty">No matching videos found for this topic.</p>';
+          return;
+        }
+
+        el.innerHTML = '';
+        data.videos.forEach(video => {
+          const card = document.createElement('div');
+          card.className = 'video-card';
+
+          const frame = document.createElement('iframe');
+          frame.className = 'video-frame';
+          frame.src = `https://www.youtube.com/embed/${video.videoId}`;
+          frame.title = video.title;
+          frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+          frame.allowFullscreen = true;
+          frame.loading = 'lazy';
+
+          const meta = document.createElement('div');
+          meta.className = 'video-meta';
+          const title = document.createElement('div');
+          title.className = 'video-title';
+          title.textContent = video.title;
+          const channel = document.createElement('div');
+          channel.className = 'video-channel';
+          channel.textContent = video.channelTitle || '';
+          meta.appendChild(title);
+          meta.appendChild(channel);
+
+          card.appendChild(frame);
+          card.appendChild(meta);
+          el.appendChild(card);
+        });
+      } catch (err) {
+        el.innerHTML = `<p class="videos-empty">Video suggestions aren't available right now.</p>`;
+      }
+    }
+
+    function renderObjectives(items) {
+      const tabBtn = document.getElementById('tabBtn-objectives');
+      const el = document.getElementById('objectivesOutput');
+      el.innerHTML = '';
+
+      if (!Array.isArray(items) || items.length === 0) {
+        tabBtn.hidden = true;
+        return;
+      }
+      tabBtn.hidden = false;
+
+      // Labels describe whether the SOURCE MATERIAL addresses the objective —
+      // not whether the student has personally mastered it. "Covered" read as
+      // ambiguous between those two meanings, so these are worded to only
+      // ever mean "the material does/doesn't give you this."
+      const badgeLabel = { covered: 'In Material', partial: 'Partially in Material', 'not addressed': 'Missing from Material' };
+
+      items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'objective-item';
+
+        const text = document.createElement('p');
+        text.className = 'objective-text';
+        text.innerHTML = mdToHtml(item.objective || '');
+        div.appendChild(text);
+
+        const status = (item.status || '').toLowerCase().trim();
+        const badgeClass = status === 'covered' ? 'covered'
+          : status === 'partial' ? 'partial'
+          : 'not-addressed';
+        const badge = document.createElement('span');
+        badge.className = `objective-badge ${badgeClass}`;
+        badge.textContent = badgeLabel[status] || item.status || 'Unknown';
+        div.appendChild(badge);
+
+        if (item.note) {
+          const note = document.createElement('p');
+          note.className = 'objective-note';
+          note.innerHTML = mdToHtml(item.note);
+          div.appendChild(note);
+        }
+
+        el.appendChild(div);
+      });
+    }
+
+    function renderRestructured(data) {
+      const el = document.getElementById('restructuredOutput');
+      el.innerHTML = '';
+
+      if (typeof data === 'string') {
+        el.innerHTML = renderMarkdownBlock(data);
+        return;
+      }
+
+      if (data.title) {
+        const t = document.createElement('p');
+        t.className = 'notes-title';
+        t.innerHTML = mdToHtml(data.title);
+        el.appendChild(t);
+      }
+
+      (data.sections || []).forEach(section => el.appendChild(renderSection(section, false)));
+    }
+
+    function renderSection(section, isSub) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'notes-section';
+
+      if (section.heading) {
+        const h = document.createElement('p');
+        h.className = isSub ? 'notes-subheading' : 'notes-heading';
+        h.innerHTML = mdToHtml(section.heading);
+        wrapper.appendChild(h);
+      }
+
+      if (section.points && section.points.length) {
+        const ul = document.createElement('ul');
+        ul.className = isSub ? 'notes-list sub' : 'notes-list';
+        section.points.forEach(pt => {
+          const li = document.createElement('li');
+          li.innerHTML = mdToHtml(pt);
+          ul.appendChild(li);
+        });
+        wrapper.appendChild(ul);
+      }
+
+      if (section.subsections && section.subsections.length) {
+        section.subsections.forEach(sub => wrapper.appendChild(renderSection(sub, true)));
+      }
+
+      return wrapper;
+    }
+
+    function renderHiddenDetails(groups) {
+      const el = document.getElementById('hiddenDetailsOutput');
+      el.innerHTML = '';
+      if (!Array.isArray(groups) || groups.length === 0) { el.textContent = '—'; return; }
+
+      // Flat-string fallback for old responses
+      if (typeof groups[0] === 'string') {
+        const ul = document.createElement('ul');
+        ul.className = 'hidden-list';
+        groups.forEach(item => {
+          const li = document.createElement('li');
+          li.innerHTML = mdToHtml(item);
+          ul.appendChild(li);
+        });
+        el.appendChild(ul);
+        return;
+      }
+
+      groups.forEach(group => {
+        const groupEl = document.createElement('div');
+        groupEl.className = 'hidden-group';
+
+        const heading = document.createElement('p');
+        heading.className = 'hidden-category-heading';
+        heading.textContent = group.category || '';
+        groupEl.appendChild(heading);
+
+        const ul = document.createElement('ul');
+        ul.className = 'hidden-list';
+        (group.items || []).forEach(item => {
+          const li = document.createElement('li');
+
+          // Items are {text, mnemonic} objects going forward; older saved
+          // history entries (from before mnemonics existed) may still be
+          // bare strings, so handle both.
+          const text = typeof item === 'string' ? item : (item.text || '');
+          const mnemonic = typeof item === 'string' ? '' : (item.mnemonic || '');
+
+          const textEl = document.createElement('div');
+          textEl.innerHTML = mdToHtml(text);
+          li.appendChild(textEl);
+
+          if (mnemonic) {
+            const mnemonicEl = document.createElement('details');
+            mnemonicEl.className = 'mnemonic-box';
+            const label = document.createElement('summary');
+            label.className = 'mnemonic-label';
+            label.textContent = 'Memory trick';
+            mnemonicEl.appendChild(label);
+            const mnemonicText = document.createElement('span');
+            mnemonicText.className = 'mnemonic-text';
+            mnemonicText.innerHTML = mdToHtml(mnemonic);
+            mnemonicEl.appendChild(mnemonicText);
+            li.appendChild(mnemonicEl);
+          }
+
+          ul.appendChild(li);
+        });
+        groupEl.appendChild(ul);
+        el.appendChild(groupEl);
+      });
+    }
+
+    function renderKeyConcepts(items) {
+      const el = document.getElementById('keyConceptsOutput');
+      el.innerHTML = '';
+      if (!Array.isArray(items) || items.length === 0) { el.textContent = '—'; return; }
+
+      items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'concept-item';
+        if (typeof item === 'string') {
+          div.innerHTML = mdToHtml(item);
+        } else {
+          const name = document.createElement('p');
+          name.className = 'concept-name';
+          name.innerHTML = mdToHtml(item.concept || '');
+          const exp = document.createElement('p');
+          exp.className = 'concept-explanation';
+          exp.innerHTML = mdToHtml(item.explanation || '');
+          div.appendChild(name);
+          div.appendChild(exp);
+        }
+        el.appendChild(div);
+      });
+    }
+
+    function renderSummativeTopics(items) {
+      const el = document.getElementById('summativeOutput');
+      el.innerHTML = '';
+      if (!Array.isArray(items) || items.length === 0) { el.textContent = '—'; return; }
+      const list = document.createElement('ol');
+      list.className = 'summative-list';
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.innerHTML = mdToHtml(typeof item === 'string' ? item : JSON.stringify(item));
+        list.appendChild(li);
+      });
+      el.appendChild(list);
+    }
+
+    function renderSelfTest(items) {
+      const el = document.getElementById('selfTestOutput');
+      el.innerHTML = '';
+      if (!Array.isArray(items) || items.length === 0) { el.textContent = '—'; return; }
+
+      items.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'selftest-item';
+
+        const q = document.createElement('p');
+        q.className = 'selftest-question';
+        q.innerHTML = mdToHtml(typeof item === 'string' ? item : (item.question || ''));
+        div.appendChild(q);
+
+        const meta = document.createElement('div');
+        meta.className = 'selftest-meta';
+
+        if (item.type) {
+          const badge = document.createElement('span');
+          badge.className = `selftest-badge ${item.type}`;
+          badge.textContent = item.type;
+          meta.appendChild(badge);
+        }
+
+        const btn = document.createElement('button');
+        btn.className = 'selftest-reveal';
+        btn.textContent = 'Show Answer';
+
+        const answerEl = document.createElement('div');
+        answerEl.className = 'selftest-answer';
+        answerEl.hidden = true;
+        answerEl.innerHTML = mdToHtml(item.answer || '');
+
+        btn.addEventListener('click', () => {
+          const isOpen = !answerEl.hidden;
+          answerEl.hidden = isOpen;
+          btn.textContent = isOpen ? 'Show Answer' : 'Hide Answer';
+          btn.classList.toggle('open', !isOpen);
+        });
+
+        meta.appendChild(btn);
+        div.appendChild(meta);
+        div.appendChild(answerEl);
+        el.appendChild(div);
+      });
+    }
+
+    /* ── History ── */
+    const historyListEl = document.getElementById('historyList');
+
+    function formatHistoryDate(isoString) {
+      const d = new Date(isoString);
+      if (isNaN(d)) return isoString;
+      return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    async function loadHistory() {
+      try {
+        const res = await fetch('/api/history');
+        const items = await res.json();
+        renderHistoryList(items);
+      } catch (err) {
+        // Usually a transient network hiccup (e.g. the dev server mid-restart),
+        // not lost data — the upload itself is safe on the server either way.
+        // Give a one-click way to try again instead of a dead-end message.
+        historyListEl.innerHTML = '';
+        const li = document.createElement('li');
+        li.className = 'history-empty';
+        li.textContent = `Couldn't load history: ${err.message} — `;
+        const retryLink = document.createElement('a');
+        retryLink.href = '#';
+        retryLink.textContent = 'try again';
+        retryLink.addEventListener('click', (e) => { e.preventDefault(); loadHistory(); });
+        li.appendChild(retryLink);
+        historyListEl.appendChild(li);
+      }
+    }
+
+    function renderHistoryList(items) {
+      historyListEl.innerHTML = '';
+      if (!Array.isArray(items) || items.length === 0) {
+        historyListEl.innerHTML = '<li class="history-empty">No uploads yet — analyse a file to start building your history.</li>';
+        return;
+      }
+
+      items.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'history-item';
+
+        const main = document.createElement('div');
+        main.className = 'history-item-main';
+        const name = document.createElement('div');
+        name.className = 'history-item-name';
+        name.textContent = item.filename;
+        const meta = document.createElement('div');
+        meta.className = 'history-item-meta';
+        meta.textContent = `${formatHistoryDate(item.uploaded_at)} · ${item.char_count.toLocaleString()} chars`;
+        main.appendChild(name);
+        main.appendChild(meta);
+
+        const del = document.createElement('button');
+        del.className = 'history-item-delete';
+        del.textContent = '✕';
+        del.title = 'Delete';
+        del.addEventListener('click', async e => {
+          e.stopPropagation();
+          if (!confirm(`Delete "${item.filename}" from history?`)) return;
+          await fetch(`/api/history/${item.id}`, { method: 'DELETE' });
+          loadHistory();
+        });
+
+        li.addEventListener('click', () => loadHistoryItem(item.id));
+        li.appendChild(main);
+        li.appendChild(del);
+        historyListEl.appendChild(li);
+      });
+    }
+
+    async function loadHistoryItem(id) {
+      statusEl.className = '';
+      statusEl.textContent = 'Loading from history…';
+      try {
+        const res = await fetch(`/api/history/${id}`);
+        if (!res.ok) throw new Error((await res.json()).error || 'Not found');
+        const data = await res.json();
+        renderResults(data.result);
+        resultsEl.hidden = false;
+        statusEl.className = 'success';
+        statusEl.textContent = `Loaded "${data.filename}" from history.`;
+        resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (err) {
+        statusEl.className = 'error';
+        statusEl.textContent = `Error loading history: ${err.message}`;
+      }
+    }
+
+    function renderChecklist(items) {
+      const el = document.getElementById('checklistOutput');
+      el.innerHTML = '';
+      if (!Array.isArray(items) || items.length === 0) { el.textContent = '—'; return; }
+      const list = document.createElement('ul');
+      list.className = 'checklist-list';
+      items.forEach(item => {
+        const li = document.createElement('li');
+        const text = document.createElement('span');
+        text.className = 'checklist-text';
+        text.innerHTML = mdToHtml(typeof item === 'string' ? item : JSON.stringify(item));
+        li.appendChild(text);
+        list.appendChild(li);
+      });
+      el.appendChild(list);
+    }
+  </script>
+</body>
+</html>

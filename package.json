@@ -1,0 +1,30 @@
+{
+  "name": "shabytbio",
+  "version": "1.0.0",
+  "description": "AI study companion for high school biology students",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.109.0",
+    "@google/generative-ai": "^0.24.1",
+    "connect-mongo": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.18.2",
+    "express-session": "^1.19.0",
+    "google-auth-library": "^10.9.0",
+    "mongodb": "^7.5.0",
+    "multer": "^2.2.0",
+    "officeparser": "^7.2.3",
+    "pdf-parse": "^1.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
