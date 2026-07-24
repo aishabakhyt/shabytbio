@@ -92,6 +92,15 @@ async function restructureWithClaude(text, focusInstructions = '', grade = null)
         // do so. Removes an entire class of "stray text around the JSON"
         // failures.
         responseMimeType: 'application/json',
+        // Default temperature let borderline judgment calls (e.g. a Learning
+        // Objective that's arguably "partial" vs "covered") flip between
+        // runs on the exact same material — a real inconsistency two beta
+        // testers hit independently. Lower temperature trades away a little
+        // creative variety (mnemonics/audio dialogue phrasing will vary a
+        // bit less run-to-run) for much more consistent grading verdicts,
+        // which matters more here since this is a judgment/grading feature
+        // students need to trust.
+        temperature: 0.3,
         // The output schema has grown a lot (mnemonics on every hidden
         // detail, a full audio dialogue, mind map, diagrams, self-test...).
         // Gemini 2.5 Flash's "thinking" tokens also draw from this same
@@ -287,7 +296,7 @@ Respond with ONLY a valid JSON object (no markdown, no preamble) with exactly th
       "caption": "1 sentence: what this diagram shows and why it's testable."
     }
   ],
-  "restructured": "Study notes formatted as a scannable reference — NOT a numbered list or a wall of text. Rules: (1) Use ## for main concept-area headers, ### for sub-concept headers. (2) Under each header write 1–3 short sentences OR a tight bullet list (- item). (3) Bold (**term**) only the single most testable term per paragraph — not every noun. (4) Leave a blank line between sections. (5) Do NOT use numbered lists (1. 2. 3.) — headers create the structure. (6) Preserve all facts from the slides; reorganise them into headed, bite-sized chunks a student can scan and review in under 60 seconds.",
+  "restructured": "Study notes formatted as a scannable reference — NOT a numbered list or a wall of text. Rules: (1) Use ## for main concept-area headers, ### for sub-concept headers. (2) Under each header write 1–3 short sentences OR a tight bullet list (- item) — never a paragraph longer than 3 sentences before the next header or list breaks it up; long undivided paragraphs are the #1 thing that makes notes feel like a wall of text, so favor more, smaller headed chunks over fewer, longer ones. (3) Bold (**term**) only the single most testable term per paragraph — not every noun. (4) Leave a blank line between sections. (5) Do NOT use numbered lists (1. 2. 3.) — headers create the structure. (6) When the content is naturally tabular — comparing 2+ things across the same attributes (e.g. mitosis vs meiosis, a list of organelles with their functions, stages with their durations) — use a markdown pipe table instead of prose or bullets: a header row, a separator row of dashes (---), then data rows, each cell short (a few words, not a sentence). Tables make this kind of content far faster to scan and compare than the equivalent bullet list. Only use a table when there's a genuine multi-attribute comparison; don't force one otherwise. (7) Preserve all facts from the slides; reorganise them into headed, bite-sized chunks a student can scan and review in under 60 seconds.",
   "hidden_details": [
     {
       "category": "Terminology",

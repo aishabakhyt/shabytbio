@@ -353,6 +353,24 @@
     }
     .notes-list.sub { padding-left: 2.25rem; margin-top: 0.25rem; }
     .notes-list li { margin-bottom: 0.15rem; }
+    .notes-table-wrap { overflow-x: auto; margin: 0.5rem 0 0.75rem; }
+    .notes-table {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: 0.85rem;
+    }
+    .notes-table th, .notes-table td {
+      border: 1px solid #e2e8f0;
+      padding: 0.4rem 0.6rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    .notes-table th {
+      background: #f7fafc;
+      color: #2d3748;
+      font-weight: 700;
+    }
+    .notes-table td { color: #4a5568; }
 
     /* ── Hidden details (grouped) ── */
     .hidden-group { margin-bottom: 1rem; }
@@ -441,6 +459,13 @@
     /* ── Self-test ── */
     .card-selftest .result-card-header { background: #fff5f5; }
     .card-selftest .result-card-header h2 { color: #c53030; }
+    .selftest-instructions {
+      font-size: 0.83rem;
+      color: #718096;
+      margin-bottom: 0.9rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #fed7d7;
+    }
 
     .selftest-item {
       padding: 0.85rem 0;
@@ -1218,9 +1243,12 @@
         <svg width="18" height="18" fill="none" stroke="#c53030" stroke-width="2" viewBox="0 0 24 24">
           <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707M12 21a9 9 0 110-18 9 9 0 010 18z" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <h2>Test Yourself — practice active recall</h2>
+        <h2>🎯 Quiz Time — test yourself</h2>
       </div>
-      <div class="result-card-body" id="selfTestOutput"></div>
+      <div class="result-card-body">
+        <p class="selftest-instructions">Answer each question in your head (or out loud) before revealing the answer — that's what actually builds recall, not just reading.</p>
+        <div id="selfTestOutput"></div>
+      </div>
     </div>
 
     <!-- Readiness Checklist -->
@@ -1678,20 +1706,56 @@
         .replace(/`(.+?)`/g,       '<code>$1</code>');
     }
 
+    /* Parses a buffered block of consecutive "|...|" lines as a markdown
+       table (header row, then a "---" separator row, then body rows).
+       Returns null if the block doesn't actually look like a valid table
+       (e.g. the model emitted a stray line with pipes in it) so the caller
+       can fall back to treating it as plain text instead of showing junk. */
+    function parseTableBlock(lines) {
+      if (lines.length < 2) return null;
+      const parseRow = row => row.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+      const isSeparator = row => /^\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?$/.test(row.trim());
+      if (!isSeparator(lines[1])) return null;
+      const header = parseRow(lines[0]);
+      const bodyRows = lines.slice(2).map(parseRow);
+      return { header, bodyRows };
+    }
+
+    function renderTable({ header, bodyRows }) {
+      const thead = `<thead><tr>${header.map(c => `<th>${mdToHtml(c)}</th>`).join('')}</tr></thead>`;
+      const tbody = `<tbody>${bodyRows.map(row => `<tr>${row.map(c => `<td>${mdToHtml(c)}</td>`).join('')}</tr>`).join('')}</tbody>`;
+      return `<div class="notes-table-wrap"><table class="notes-table">${thead}${tbody}</table></div>`;
+    }
+
     /* ── Block markdown → HTML (for restructured study notes) ── */
     function renderMarkdownBlock(str) {
       if (typeof str !== 'string') return '';
       const lines = str.split('\n');
       let html = '';
       let inList = false;
+      let tableBuffer = [];
+
+      const flushTable = () => {
+        if (!tableBuffer.length) return;
+        const table = parseTableBlock(tableBuffer);
+        html += table ? renderTable(table) : tableBuffer.map(l => `<p style="margin-bottom:0.4rem;color:#2d3748">${mdToHtml(l)}</p>`).join('');
+        tableBuffer = [];
+      };
 
       for (const raw of lines) {
         const trimmed = raw.trim();
+        const isTableRow = trimmed.startsWith('|') && trimmed.endsWith('|');
+
+        if (!isTableRow) flushTable();
+
         if (!trimmed) {
           if (inList) { html += '</ul>'; inList = false; }
           continue;
         }
-        if (trimmed.startsWith('### ')) {
+        if (isTableRow) {
+          if (inList) { html += '</ul>'; inList = false; }
+          tableBuffer.push(trimmed);
+        } else if (trimmed.startsWith('### ')) {
           if (inList) { html += '</ul>'; inList = false; }
           html += `<p class="notes-heading">${mdToHtml(trimmed.slice(4))}</p>`;
         } else if (trimmed.startsWith('## ') || trimmed.startsWith('# ')) {
@@ -1705,6 +1769,7 @@
           html += `<p style="margin-bottom:0.4rem;color:#2d3748">${mdToHtml(trimmed)}</p>`;
         }
       }
+      flushTable();
       if (inList) html += '</ul>';
       return html;
     }
@@ -1765,16 +1830,31 @@
       });
     }
 
+    // Beta feedback: the Alex/Sam voices sounded "robotic". Browsers expose
+    // both legacy offline synthesis voices (often robotic, especially on
+    // Windows) and higher-quality cloud/neural voices side by side with no
+    // clear signal — this scores each voice by the hints that actually do
+    // correlate with sounding more natural, so we pick the best available
+    // instead of just the first name-match. Still free (browser's own
+    // built-in voices), just better selection among what's already there.
+    function voiceQualityScore(v) {
+      let score = 0;
+      if (v.localService === false) score += 3; // cloud/network voices are almost always higher quality than offline ones
+      if (/natural|neural|online|enhanced|premium/i.test(v.name)) score += 3;
+      if (/google|microsoft (aria|jenny|guy|ana)|samantha|alex|daniel|karen|moira|tessa/i.test(v.name)) score += 1;
+      return score;
+    }
+
     async function pickAudioVoices() {
       const voices = await getVoicesAsync();
       const en = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
-      const pool = en.length ? en : voices;
+      const pool = (en.length ? en : voices).slice().sort((a, b) => voiceQualityScore(b) - voiceQualityScore(a));
       if (!pool.length) { audioVoices = { alex: null, sam: null }; return; }
 
-      const female = pool.find(v => /female|zira|samantha|victoria|karen/i.test(v.name));
-      const male = pool.find(v => v !== female && /male|david|daniel|fred/i.test(v.name));
+      const female = pool.find(v => /female|zira|samantha|victoria|karen|aria|jenny|ana/i.test(v.name));
+      const male = pool.find(v => v !== female && /male|david|daniel|fred|guy/i.test(v.name));
       audioVoices.alex = male || pool[0];
-      audioVoices.sam = female || pool[pool.length - 1];
+      audioVoices.sam = female || pool.find(v => v !== audioVoices.alex) || pool[0];
     }
 
     function renderAudioDialogue(turns) {
