@@ -1,5 +1,5 @@
 const express = require('express');
-const { listDue, getStats, gradeReview, getById, listTopics, setTopicArchived } = require('../services/mastery');
+const { listDue, getStats, gradeReview, getById, listTopics, setTopicArchived, renameTopic, deleteTopic } = require('../services/mastery');
 const { gradeAnswer } = require('../services/claude');
 
 const router = express.Router();
@@ -19,8 +19,8 @@ router.get('/due', async (req, res) => {
   try {
     const limit = Math.min(Number(req.query.limit) || 20, 50);
     const items = await listDue(req.session.userId, limit);
-    res.json(items.map(({ id, question, answer, type, sourceFilename }) => ({
-      id, question, answer, type, sourceFilename,
+    res.json(items.map(({ id, question, answer, type, sourceFilename, topicLabel }) => ({
+      id, question, answer, type, sourceFilename, topicLabel,
     })));
   } catch (err) {
     res.status(500).json({ error: `Failed to load review queue: ${err.message}` });
@@ -48,6 +48,32 @@ router.post('/topics/archive', async (req, res) => {
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: `Failed to update topic: ${err.message}` });
+  }
+});
+
+router.post('/topics/rename', async (req, res) => {
+  const { sourceFilename, label } = req.body;
+  if (typeof sourceFilename !== 'string') {
+    return res.status(400).json({ error: 'sourceFilename is required.' });
+  }
+  try {
+    const result = await renameTopic(req.session.userId, sourceFilename, label);
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: `Failed to rename topic: ${err.message}` });
+  }
+});
+
+// Permanently deletes a topic's review items — distinct from archiving,
+// which pauses but keeps progress. Mainly for cleaning up topics whose
+// source upload was already deleted from history before uploads started
+// cascade-deleting their review items automatically.
+router.delete('/topics/:sourceFilename', async (req, res) => {
+  try {
+    const result = await deleteTopic(req.session.userId, decodeURIComponent(req.params.sourceFilename));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: `Failed to delete topic: ${err.message}` });
   }
 });
 

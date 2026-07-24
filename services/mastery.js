@@ -120,17 +120,25 @@ async function listTopics(userId) {
         _id: '$sourceFilename',
         total: { $sum: 1 },
         due: { $sum: { $cond: [{ $and: [{ $lte: ['$nextReviewAt', now] }, { $ne: ['$archived', true] }] }, 1, 0] } },
-        archived: { $max: { $cond: [{ $eq: ['$archived', true] }, 1, 0] } }, // 1 if ALL items in this topic are archived
         allArchived: { $min: { $cond: [{ $eq: ['$archived', true] }, 1, 0] } },
         latestCreatedAt: { $max: '$createdAt' },
+        // Presentation filenames are often unclear (e.g. auto-generated
+        // export names) — a custom label set via renameTopic() takes over
+        // display everywhere it exists, falling back to the raw filename.
+        // $topicLabel is set uniformly on every doc in the group by
+        // renameTopic, so any single doc's value represents the whole topic.
+        label: { $first: { $ifNull: ['$topicLabel', '$sourceFilename'] } },
+        uploadIds: { $addToSet: '$uploadId' },
       },
     },
     { $sort: { latestCreatedAt: -1 } },
   ]).toArray().then(rows => rows.map(r => ({
     sourceFilename: r._id || '(untitled)',
+    label: r.label || r._id || '(untitled)',
     total: r.total,
     due: r.due,
     archived: r.allArchived === 1, // only show as "archived" if the whole topic is paused
+    uploadIds: r.uploadIds.filter(Boolean),
   })));
 }
 
@@ -141,6 +149,38 @@ async function setTopicArchived(userId, sourceFilename, archived) {
     { $set: { archived: !!archived } }
   );
   return { matched: result.matchedCount };
+}
+
+async function renameTopic(userId, sourceFilename, label) {
+  const db = await connectMongo();
+  const trimmed = (label || '').trim();
+  const result = await db.collection('mastery').updateMany(
+    { userId, sourceFilename },
+    { $set: { topicLabel: trimmed || null } } // empty label clears the override, reverting to the filename
+  );
+  return { matched: result.matchedCount };
+}
+
+// Permanently removes every review item for a topic — for topics whose
+// source upload has already been deleted from history (orphaned before the
+// cascade-delete fix existed) or that a student just wants gone entirely,
+// as opposed to setTopicArchived's pause-but-keep-progress behavior.
+async function deleteTopic(userId, sourceFilename) {
+  const db = await connectMongo();
+  const result = await db.collection('mastery').deleteMany({ userId, sourceFilename });
+  return { deleted: result.deletedCount };
+}
+
+// Called when a history entry is deleted — keeps the review queue from
+// accumulating "orphaned" topics with no corresponding upload, which was
+// confusing (a topic showing up in Manage Topics that no longer exists
+// anywhere else). Scoped to the specific uploadId, not the whole filename,
+// since multiple uploads can share the same filename.
+async function deleteByUploadId(userId, uploadId) {
+  if (!uploadId) return { deleted: 0 };
+  const db = await connectMongo();
+  const result = await db.collection('mastery').deleteMany({ userId, uploadId });
+  return { deleted: result.deletedCount };
 }
 
 // Applies one review's outcome and returns the updated record (or null if
@@ -197,4 +237,8 @@ async function gradeReview(id, userId, grade) {
   return record;
 }
 
-module.exports = { seedFromSelfTest, listDue, getStats, gradeReview, getById, listTopics, setTopicArchived, VALID_GRADES };
+module.exports = {
+  seedFromSelfTest, listDue, getStats, gradeReview, getById,
+  listTopics, setTopicArchived, renameTopic, deleteTopic, deleteByUploadId,
+  VALID_GRADES,
+};

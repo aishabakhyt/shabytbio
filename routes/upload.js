@@ -5,7 +5,7 @@ const { parseOffice } = require('officeparser');
 const { restructureWithClaude } = require('../services/claude');
 const { saveUpload, listUploads, getUpload, deleteUpload } = require('../services/db');
 const { getUserById } = require('../services/users');
-const { seedFromSelfTest } = require('../services/mastery');
+const { seedFromSelfTest, deleteByUploadId } = require('../services/mastery');
 const { getCached, setCached } = require('../services/resultCache');
 const { searchVideos } = require('../services/youtube');
 
@@ -143,13 +143,26 @@ router.get('/history/:id', async (req, res) => {
 });
 
 router.delete('/history/:id', async (req, res) => {
+  const uploadId = Number(req.params.id);
   try {
-    const ok = await deleteUpload(Number(req.params.id), req.session.userId);
+    const ok = await deleteUpload(uploadId, req.session.userId);
     if (!ok) return res.status(404).json({ error: 'Upload not found.' });
-    res.status(204).end();
   } catch (err) {
-    res.status(500).json({ error: `Failed to delete upload: ${err.message}` });
+    return res.status(500).json({ error: `Failed to delete upload: ${err.message}` });
   }
+
+  try {
+    // Beta feedback: deleting an upload used to leave its review items
+    // behind as an "orphaned" topic in Manage Topics with no corresponding
+    // history entry, which was confusing. Best-effort — a cleanup failure
+    // here shouldn't turn the (already-successful) history deletion into an
+    // error response.
+    await deleteByUploadId(req.session.userId, uploadId);
+  } catch (err) {
+    console.error('Failed to clean up review items for deleted upload:', err.message);
+  }
+
+  res.status(204).end();
 });
 
 // ── Video suggestions (real YouTube videos, not AI-generated) ───────────

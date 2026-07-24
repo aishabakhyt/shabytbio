@@ -959,7 +959,8 @@
       border-bottom: 1px solid #edf2f7;
     }
     .topic-row:last-child { border-bottom: none; }
-    .topic-info { min-width: 0; }
+    .topic-info { min-width: 0; flex: 1; }
+    .topic-name-row { display: flex; align-items: center; gap: 0.3rem; }
     .topic-name {
       font-weight: 600;
       color: #2d3748;
@@ -967,9 +968,29 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+      max-width: 240px;
     }
     .topic-meta { font-size: 0.75rem; color: #a0aec0; margin-top: 0.1rem; }
     .topic-row.archived .topic-name, .topic-row.archived .topic-meta { color: #cbd5e0; }
+    .topic-icon-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 0.1rem 0.25rem;
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+    .topic-icon-btn:hover { opacity: 1; }
+    .topic-rename-input {
+      font-size: 0.85rem;
+      padding: 0.15rem 0.4rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 5px;
+      flex: 1;
+      min-width: 0;
+    }
+    .topic-actions { display: flex; align-items: center; gap: 0.6rem; flex-shrink: 0; }
     .topic-toggle {
       flex-shrink: 0;
       position: relative;
@@ -1700,24 +1721,102 @@
 
         const info = document.createElement('div');
         info.className = 'topic-info';
-        const name = document.createElement('div');
+
+        const nameRow = document.createElement('div');
+        nameRow.className = 'topic-name-row';
+        const name = document.createElement('span');
         name.className = 'topic-name';
-        name.textContent = topic.sourceFilename;
+        // Presentation filenames are often unclear — show the custom label
+        // if one's been set, the raw filename otherwise.
+        name.textContent = topic.label;
+        const renameBtn = document.createElement('button');
+        renameBtn.className = 'topic-icon-btn';
+        renameBtn.innerHTML = '✏️';
+        renameBtn.title = 'Rename';
+        renameBtn.addEventListener('click', () => startRenameTopic(row, topic));
+        nameRow.appendChild(name);
+        nameRow.appendChild(renameBtn);
+
         const meta = document.createElement('div');
         meta.className = 'topic-meta';
         meta.textContent = topic.archived ? `Paused · ${topic.total} question(s)` : `${topic.due} due · ${topic.total} total`;
-        info.appendChild(name);
+        info.appendChild(nameRow);
         info.appendChild(meta);
+
+        const actions = document.createElement('div');
+        actions.className = 'topic-actions';
 
         const toggle = document.createElement('button');
         toggle.className = `topic-toggle${topic.archived ? ' off' : ''}`;
         toggle.setAttribute('aria-label', topic.archived ? 'Resume this topic' : 'Pause this topic');
         toggle.addEventListener('click', () => toggleTopicArchived(topic.sourceFilename, !topic.archived));
 
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'topic-icon-btn';
+        deleteBtn.innerHTML = '🗑️';
+        deleteBtn.title = 'Delete permanently';
+        deleteBtn.addEventListener('click', () => deleteTopicPermanently(topic));
+
+        actions.appendChild(toggle);
+        actions.appendChild(deleteBtn);
+
         row.appendChild(info);
-        row.appendChild(toggle);
+        row.appendChild(actions);
         body.appendChild(row);
       });
+    }
+
+    function startRenameTopic(row, topic) {
+      const nameRow = row.querySelector('.topic-name-row');
+      nameRow.innerHTML = '';
+
+      const input = document.createElement('input');
+      input.className = 'topic-rename-input';
+      input.type = 'text';
+      input.value = topic.label;
+      input.maxLength = 80;
+
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'topic-icon-btn';
+      saveBtn.innerHTML = '✔️';
+      saveBtn.title = 'Save';
+      saveBtn.addEventListener('click', () => renameTopic(topic.sourceFilename, input.value));
+
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') renameTopic(topic.sourceFilename, input.value);
+        if (e.key === 'Escape') openTopicsManager();
+      });
+
+      nameRow.appendChild(input);
+      nameRow.appendChild(saveBtn);
+      input.focus();
+      input.select();
+    }
+
+    async function renameTopic(sourceFilename, label) {
+      try {
+        const res = await fetch('/api/mastery/topics/rename', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sourceFilename, label }),
+        });
+        if (res.status === 401) { closeReviewSession(); handleSessionExpired(); return; }
+      } catch (err) {
+        console.error('Failed to rename topic:', err);
+      }
+      openTopicsManager();
+    }
+
+    async function deleteTopicPermanently(topic) {
+      if (!confirm(`Permanently delete "${topic.label}" and all ${topic.total} review item(s) in it? This can't be undone (pausing instead keeps your progress).`)) return;
+      try {
+        const res = await fetch(`/api/mastery/topics/${encodeURIComponent(topic.sourceFilename)}`, { method: 'DELETE' });
+        if (res.status === 401) { closeReviewSession(); handleSessionExpired(); return; }
+      } catch (err) {
+        console.error('Failed to delete topic:', err);
+      }
+      refreshDueCount();
+      openTopicsManager();
     }
 
     async function toggleTopicArchived(sourceFilename, archived) {
@@ -1804,7 +1903,7 @@
       if (item.sourceFilename) {
         const src = document.createElement('div');
         src.className = 'review-source';
-        src.textContent = `From: ${item.sourceFilename}`;
+        src.textContent = `From: ${item.topicLabel || item.sourceFilename}`;
         body.appendChild(src);
       }
 
