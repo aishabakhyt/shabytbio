@@ -959,6 +959,15 @@
       margin-bottom: 1rem;
       line-height: 1.4;
     }
+    .dashboard-exam-reminder {
+      font-size: 0.8rem;
+      color: #7b341e;
+      background: #fffaf0;
+      border-radius: 8px;
+      padding: 0.55rem 0.75rem;
+      margin-bottom: 0.6rem;
+      line-height: 1.4;
+    }
     .dashboard-empty {
       font-size: 0.85rem;
       color: #718096;
@@ -1158,6 +1167,33 @@
     }
     .topic-meta { font-size: 0.75rem; color: #a0aec0; margin-top: 0.1rem; }
     .topic-row.archived .topic-name, .topic-row.archived .topic-meta { color: #cbd5e0; }
+    .topic-exam-row { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.25rem; }
+    .topic-exam-label { font-size: 0.72rem; color: #718096; }
+    .topic-exam-set-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.72rem;
+      color: #3182ce;
+      padding: 0;
+    }
+    .topic-exam-set-btn:hover { text-decoration: underline; }
+    .topic-exam-clear-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.78rem;
+      color: #a0aec0;
+      padding: 0 0.15rem;
+      line-height: 1;
+    }
+    .topic-exam-clear-btn:hover { color: #718096; }
+    .topic-exam-input {
+      font-size: 0.75rem;
+      padding: 0.15rem 0.35rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 5px;
+    }
     .topic-icon-btn {
       background: none;
       border: none;
@@ -1761,6 +1797,10 @@
         rename: 'Rename',
         save: 'Save',
         deletePermanently: 'Delete permanently',
+        setExamDate: '+ Set exam date',
+        changeExamDate: 'Change',
+        clearExamDate: 'Clear exam date',
+        examDateSet: 'Exam: {date}',
         saving: 'Saving…',
         saved: 'Saved!',
         sessionExpired: 'Your session expired — reloading…',
@@ -1785,6 +1825,9 @@
         dashboardEmpty: 'Upload your first file to start building your study streak and track your mastery over time.',
         topicsProgress: 'Progress by topic',
         topicNeedsAttention: 'could use a revisit',
+        examReminder: '{days} days until your {topic} exam — you\'ve reviewed {mastered} of {total} questions here.',
+        examReminderTomorrow: "Your {topic} exam is tomorrow — you've reviewed {mastered} of {total} questions here.",
+        examReminderToday: "Your {topic} exam is today — you've reviewed {mastered} of {total} questions here.",
         milestoneWeek: "A full week of studying — that's a real habit forming. Keep going.",
         milestoneStreak: 'Nice streak — keep the momentum going!',
         milestoneMastered50: "Over 50 questions mastered — that's serious, exam-ready progress.",
@@ -1880,6 +1923,9 @@
         dashboardEmpty: 'Оқу серияңызды бастап, меңгеруіңізді уақыт бойы бақылау үшін алғашқы файлыңызды жүктеңіз.',
         topicsProgress: 'Тақырып бойынша прогресс',
         topicNeedsAttention: 'қайта қарауды қажет етеді',
+        examReminder: '{topic} емтиханына {days} күн қалды — мұнда {mastered}/{total} сұрақты қайталадың.',
+        examReminderTomorrow: '{topic} емтиханы ертең — мұнда {mastered}/{total} сұрақты қайталадың.',
+        examReminderToday: '{topic} емтиханы бүгін — мұнда {mastered}/{total} сұрақты қайталадың.',
         milestoneWeek: 'Бір апта бойы оқыдың — бұл нағыз әдетке айналуда. Жалғастыра бер.',
         milestoneStreak: 'Жақсы серия — қарқынды сақта!',
         milestoneMastered50: '50-ден астам сұрақты меңгердің — бұл емтиханға шынымен дайын болу деңгейі.',
@@ -1893,6 +1939,10 @@
         pauseTopic: 'Осы тақырыпты кідірту',
         save: 'Сақтау',
         deletePermanently: 'Толығымен жою',
+        setExamDate: '+ Емтихан күнін белгілеу',
+        changeExamDate: 'Өзгерту',
+        clearExamDate: 'Емтихан күнін өшіру',
+        examDateSet: 'Емтихан: {date}',
         saving: 'Сақталуда…',
         saved: 'Сақталды!',
         sessionExpired: 'Сеанс мерзімі аяқталды — қайта жүктелуде…',
@@ -1991,6 +2041,9 @@
         dashboardEmpty: 'Загрузите первый файл, чтобы начать серию занятий и отслеживать своё освоение материала.',
         topicsProgress: 'Прогресс по темам',
         topicNeedsAttention: 'стоит повторить',
+        examReminder: 'До экзамена по теме «{topic}» осталось {days} дн. — вы повторили {mastered} из {total} вопросов.',
+        examReminderTomorrow: 'Экзамен по теме «{topic}» завтра — вы повторили {mastered} из {total} вопросов.',
+        examReminderToday: 'Экзамен по теме «{topic}» сегодня — вы повторили {mastered} из {total} вопросов.',
         milestoneWeek: 'Целая неделя занятий — формируется настоящая привычка. Продолжайте в том же духе.',
         milestoneStreak: 'Хорошая серия — не останавливайтесь!',
         milestoneMastered50: 'Освоено более 50 вопросов — это серьёзный, готовый к экзамену прогресс.',
@@ -2004,6 +2057,10 @@
         pauseTopic: 'Поставить эту тему на паузу',
         save: 'Сохранить',
         deletePermanently: 'Удалить навсегда',
+        setExamDate: '+ Указать дату экзамена',
+        changeExamDate: 'Изменить',
+        clearExamDate: 'Убрать дату экзамена',
+        examDateSet: 'Экзамен: {date}',
         saving: 'Сохранение…',
         saved: 'Сохранено!',
         sessionExpired: 'Сессия истекла — перезагрузка…',
@@ -2421,6 +2478,7 @@
           : tf('dueOfTotal', { due: topic.due, total: topic.total });
         info.appendChild(nameRow);
         info.appendChild(meta);
+        info.appendChild(renderExamDateRow(topic));
 
         const actions = document.createElement('div');
         actions.className = 'topic-actions';
@@ -2470,6 +2528,79 @@
       nameRow.appendChild(saveBtn);
       input.focus();
       input.select();
+    }
+
+    // Pre-summative encouragement: an optional exam date per topic, shown
+    // inline in Manage Topics. Kept low-key (a small text link, not a form
+    // field on every row) since most topics won't have one set.
+    function renderExamDateRow(topic) {
+      const examRow = document.createElement('div');
+      examRow.className = 'topic-exam-row';
+      if (topic.examDate) {
+        const label = document.createElement('span');
+        label.className = 'topic-exam-label';
+        label.textContent = tf('examDateSet', { date: formatExamDate(topic.examDate) });
+        const changeBtn = document.createElement('button');
+        changeBtn.className = 'topic-exam-set-btn';
+        changeBtn.textContent = t('changeExamDate');
+        changeBtn.addEventListener('click', () => startSetExamDate(examRow, topic));
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'topic-exam-clear-btn';
+        clearBtn.textContent = '×';
+        clearBtn.title = t('clearExamDate');
+        clearBtn.addEventListener('click', () => saveTopicExamDate(topic.sourceFilename, ''));
+        examRow.appendChild(label);
+        examRow.appendChild(changeBtn);
+        examRow.appendChild(clearBtn);
+      } else {
+        const setBtn = document.createElement('button');
+        setBtn.className = 'topic-exam-set-btn';
+        setBtn.textContent = t('setExamDate');
+        setBtn.addEventListener('click', () => startSetExamDate(examRow, topic));
+        examRow.appendChild(setBtn);
+      }
+      return examRow;
+    }
+
+    function startSetExamDate(examRow, topic) {
+      examRow.innerHTML = '';
+      const input = document.createElement('input');
+      input.type = 'date';
+      input.className = 'topic-exam-input';
+      if (topic.examDate) input.value = topic.examDate;
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'topic-icon-btn';
+      saveBtn.innerHTML = ICON_CHECK;
+      saveBtn.title = t('save');
+      saveBtn.addEventListener('click', () => saveTopicExamDate(topic.sourceFilename, input.value));
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') saveTopicExamDate(topic.sourceFilename, input.value);
+        if (e.key === 'Escape') openTopicsManager();
+      });
+      examRow.appendChild(input);
+      examRow.appendChild(saveBtn);
+      input.focus();
+    }
+
+    async function saveTopicExamDate(sourceFilename, examDate) {
+      try {
+        const res = await fetch('/api/mastery/topics/exam-date', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sourceFilename, examDate }),
+        });
+        if (res.status === 401) { closeReviewSession(); handleSessionExpired(); return; }
+      } catch (err) {
+        console.error('Failed to set exam date:', err);
+      }
+      openTopicsManager();
+      renderDashboard(); // exam reminders on the dashboard depend on this
+    }
+
+    function formatExamDate(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      if (isNaN(d)) return dateStr;
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     }
 
     async function renameTopic(sourceFilename, label) {
@@ -3717,6 +3848,19 @@
       else if (data.streak >= 3) milestoneKey = 'milestoneStreak';
       else if (data.masteredCount >= 10) milestoneKey = 'milestoneMastered10';
       else if (data.dueCount > 0 && data.streak === 0) milestoneKey = 'milestoneStudyToday';
+
+      // Pre-summative encouragement — only shown once an exam is actually
+      // close (backend caps this to the next 30 days), and phrased as a
+      // calm status update (days left + what's covered), never hype.
+      if (data.examReminders && data.examReminders.length) {
+        data.examReminders.forEach(r => {
+          const reminder = document.createElement('p');
+          reminder.className = 'dashboard-exam-reminder';
+          const key = r.daysUntilExam === 0 ? 'examReminderToday' : r.daysUntilExam === 1 ? 'examReminderTomorrow' : 'examReminder';
+          reminder.textContent = tf(key, { days: r.daysUntilExam, topic: r.label, mastered: r.mastered, total: r.total });
+          out.appendChild(reminder);
+        });
+      }
 
       if (milestoneKey) {
         const milestone = document.createElement('p');

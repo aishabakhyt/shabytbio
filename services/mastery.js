@@ -156,6 +156,7 @@ async function getDashboard(userId) {
           lastReviewedAt: { $max: '$lastReviewedAt' },
           allArchived: { $min: { $cond: [{ $eq: ['$archived', true] }, 1, 0] } },
           label: { $first: { $ifNull: ['$topicLabel', '$sourceFilename'] } },
+          examDate: { $first: '$examDate' },
           latestCreatedAt: { $max: '$createdAt' },
         },
       },
@@ -204,6 +205,7 @@ async function getDashboard(userId) {
   }
 
   const nowMs = Date.now();
+  const todayStr = new Date(nowMs).toISOString().slice(0, 10);
   const topics = topicRows.map(r => {
     const avgRepetitions = r.total ? r.totalRepetitions / r.total : 0;
     // grey (not studied), light (studied a little), deep (reviewed several
@@ -214,6 +216,12 @@ async function getDashboard(userId) {
     const daysSinceReview = r.lastReviewedAt
       ? Math.floor((nowMs - new Date(r.lastReviewedAt).getTime()) / (24 * 60 * 60 * 1000))
       : null;
+    // Exam date is per-topic (set via setTopicExamDate), stored as a plain
+    // 'YYYY-MM-DD' string — diffed against today's UTC date, not a precise
+    // timestamp, since "days until the exam" is a calendar concept.
+    const daysUntilExam = r.examDate
+      ? Math.round((new Date(r.examDate) - new Date(todayStr)) / (24 * 60 * 60 * 1000))
+      : null;
     return {
       sourceFilename: r._id || '(untitled)',
       label: r.label || r._id || '(untitled)',
@@ -223,10 +231,23 @@ async function getDashboard(userId) {
       // Only flag as neglected if it's been studied before and then went
       // quiet — a topic that's simply new isn't "needs attention" yet.
       needsAttention: daysSinceReview !== null && daysSinceReview >= NEGLECTED_TOPIC_DAYS,
+      examDate: r.examDate || null,
+      daysUntilExam,
     };
   });
 
-  return { streak, longestStreak, masteredCount, totalTracked, dueCount, topics };
+  // Only surface exam reminders once a summative is actually close —
+  // Aisha's spec calls for acknowledging it "close to a summative date",
+  // not turning every topic into a countdown. Past exam dates don't need
+  // reminding, so those are dropped once they're behind today.
+  const EXAM_REMINDER_WINDOW_DAYS = 30;
+  const examReminders = topics
+    .filter(t => t.daysUntilExam !== null && t.daysUntilExam >= 0 && t.daysUntilExam <= EXAM_REMINDER_WINDOW_DAYS)
+    .sort((a, b) => a.daysUntilExam - b.daysUntilExam)
+    .slice(0, 3)
+    .map(t => ({ label: t.label, daysUntilExam: t.daysUntilExam, mastered: t.mastered, total: t.total }));
+
+  return { streak, longestStreak, masteredCount, totalTracked, dueCount, topics, examReminders };
 }
 
 // Groups a student's review items by source material so they can see their
@@ -251,6 +272,7 @@ async function listTopics(userId) {
         // $topicLabel is set uniformly on every doc in the group by
         // renameTopic, so any single doc's value represents the whole topic.
         label: { $first: { $ifNull: ['$topicLabel', '$sourceFilename'] } },
+        examDate: { $first: '$examDate' },
         uploadIds: { $addToSet: '$uploadId' },
       },
     },
@@ -261,6 +283,7 @@ async function listTopics(userId) {
     total: r.total,
     due: r.due,
     archived: r.allArchived === 1, // only show as "archived" if the whole topic is paused
+    examDate: r.examDate || null,
     uploadIds: r.uploadIds.filter(Boolean),
   })));
 }
@@ -280,6 +303,24 @@ async function renameTopic(userId, sourceFilename, label) {
   const result = await db.collection('mastery').updateMany(
     { userId, sourceFilename },
     { $set: { topicLabel: trimmed || null } } // empty label clears the override, reverting to the filename
+  );
+  return { matched: result.matchedCount };
+}
+
+// Sets (or clears, if examDate is falsy) the summative exam date a student
+// is preparing for on this topic — stored as 'YYYY-MM-DD', denormalized
+// onto every item in the topic the same way topicLabel/archived are.
+// Powers the dashboard's pre-summative encouragement: a calm "X days left,
+// here's what you've covered" reminder rather than a countdown timer.
+async function setTopicExamDate(userId, sourceFilename, examDate) {
+  const db = await connectMongo();
+  const trimmed = (examDate || '').trim();
+  if (trimmed && !/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    throw new Error('Exam date must be in YYYY-MM-DD format.');
+  }
+  const result = await db.collection('mastery').updateMany(
+    { userId, sourceFilename },
+    { $set: { examDate: trimmed || null } }
   );
   return { matched: result.matchedCount };
 }
@@ -362,6 +403,6 @@ async function gradeReview(id, userId, grade) {
 
 module.exports = {
   seedFromSelfTest, listDue, getStats, getDashboard, gradeReview, getById,
-  listTopics, setTopicArchived, renameTopic, deleteTopic, deleteByUploadId,
+  listTopics, setTopicArchived, renameTopic, setTopicExamDate, deleteTopic, deleteByUploadId,
   VALID_GRADES,
 };

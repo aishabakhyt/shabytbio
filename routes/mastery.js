@@ -1,5 +1,5 @@
 const express = require('express');
-const { listDue, getStats, getDashboard, gradeReview, getById, listTopics, setTopicArchived, renameTopic, deleteTopic } = require('../services/mastery');
+const { listDue, getStats, getDashboard, gradeReview, getById, listTopics, setTopicArchived, renameTopic, setTopicExamDate, deleteTopic } = require('../services/mastery');
 const { gradeAnswer } = require('../services/claude');
 const { getUserById } = require('../services/users');
 
@@ -62,6 +62,22 @@ router.post('/topics/rename', async (req, res) => {
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: `Failed to rename topic: ${err.message}` });
+  }
+});
+
+// Sets or clears (empty/null examDate) the summative exam date a student is
+// preparing for on this topic — powers the dashboard's pre-summative
+// encouragement (days remaining + what's been covered so far).
+router.post('/topics/exam-date', async (req, res) => {
+  const { sourceFilename, examDate } = req.body;
+  if (typeof sourceFilename !== 'string') {
+    return res.status(400).json({ error: 'sourceFilename is required.' });
+  }
+  try {
+    const result = await setTopicExamDate(req.session.userId, sourceFilename, examDate);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 
