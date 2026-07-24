@@ -404,19 +404,18 @@
     }
 
     /* Key-term callouts ([KEY] lines) — pulls out the single most testable
-       term/definition in a section so it stands out when scanning. */
+       term/definition in a section so it stands out when scanning. A left
+       accent bar (not an icon/emoji) is the visual cue. */
     .notes-callout {
-      display: flex;
-      gap: 0.5rem;
       background: #fffbea;
       border: 1px solid #f6e05e;
-      border-radius: 8px;
+      border-left: 4px solid #d69e2e;
+      border-radius: 6px;
       padding: 0.5rem 0.75rem;
       margin: 0.5rem 0 0.75rem;
       font-size: 0.87rem;
       color: #744210;
     }
-    .notes-callout-icon { flex-shrink: 0; }
 
     /* ── Hidden details (grouped) ── */
     .hidden-group { margin-bottom: 1rem; }
@@ -797,6 +796,23 @@
       border-left: 3px solid #f6ad55;
       padding: 0.5rem 0.75rem;
       border-radius: 0 6px 6px 0;
+    }
+    .diagram-error-details { margin-top: 0.5rem; }
+    .diagram-error-details summary {
+      cursor: pointer;
+      font-size: 0.78rem;
+      color: #a0522d;
+    }
+    .diagram-error-details pre {
+      margin-top: 0.4rem;
+      background: #fff;
+      border: 1px solid #f6ad55;
+      border-radius: 4px;
+      padding: 0.5rem;
+      font-size: 0.72rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #4a5568;
     }
 
     /* Related Videos tab */
@@ -2176,7 +2192,10 @@
     // [STEP] lines mark a genuinely ordered process (e.g. filtration steps
     // in the PCT) — rendered as a connected numbered sequence instead of a
     // plain bullet list, so the flow is visually obvious at a glance.
-    const STEP_PREFIX = /^\[STEP\]\s*/i;
+    // Tolerates a leading "- " or "* " bullet marker before the tag (the
+    // model sometimes adds one out of habit despite being told not to) so a
+    // slip doesn't leave the literal "[STEP]" text visible to the student.
+    const STEP_PREFIX = /^(?:[-*]\s+)?\[STEP\]\s*/i;
     function renderSteps(stepLines) {
       const items = stepLines.map((line, i) => {
         const text = line.replace(STEP_PREFIX, '');
@@ -2187,11 +2206,12 @@
 
     // [KEY] lines mark the single most testable term/definition worth
     // pulling out of the surrounding prose — rendered as a highlighted
-    // callout box distinct from ordinary bullets.
-    const KEY_PREFIX = /^\[KEY\]\s*/i;
+    // callout box distinct from ordinary bullets. Same leading-bullet
+    // tolerance as STEP_PREFIX above, for the same reason.
+    const KEY_PREFIX = /^(?:[-*]\s+)?\[KEY\]\s*/i;
     function renderCallout(line) {
       const text = line.replace(KEY_PREFIX, '');
-      return `<div class="notes-callout"><span class="notes-callout-icon">📌</span><span>${mdToHtml(text)}</span></div>`;
+      return `<div class="notes-callout">${mdToHtml(text)}</div>`;
     }
 
     /* ── Block markdown → HTML (for restructured study notes) ── */
@@ -2596,7 +2616,23 @@
         expandBtn.addEventListener('click', () => openDiagramLightbox(title || 'Diagram', svg));
       } catch (err) {
         console.error('Mermaid render failed after retry:', err); // full parser detail stays in the console
-        canvas.innerHTML = '<div class="diagram-error">This diagram couldn\'t be displayed — the underlying content is still covered in the other tabs.</div>';
+        // Surfacing the actual parser error + raw source here (not just the console) so a
+        // still-failing diagram is diagnosable from a screenshot alone, without needing dev
+        // tools open — this has been a recurring "why doesn't this diagram show up" mystery.
+        const errDiv = document.createElement('div');
+        errDiv.className = 'diagram-error';
+        errDiv.textContent = "This diagram couldn't be displayed — the underlying content is still covered in the other tabs.";
+        const details = document.createElement('details');
+        details.className = 'diagram-error-details';
+        const summary = document.createElement('summary');
+        summary.textContent = 'Technical details';
+        details.appendChild(summary);
+        const pre = document.createElement('pre');
+        pre.textContent = `Error: ${err.message || err}\n\n${mermaidCode}`;
+        details.appendChild(pre);
+        errDiv.appendChild(details);
+        canvas.innerHTML = '';
+        canvas.appendChild(errDiv);
         expandBtn.disabled = true;
       } finally {
         // Mermaid 10.x sometimes injects its own "bomb" error graphic
