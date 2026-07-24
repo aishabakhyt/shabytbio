@@ -2,6 +2,23 @@
 
 _Last updated: Jul 24, 2026_
 
+## Original plan vs. what's built (checked Jul 24, 2026)
+
+Aisha's original requirements doc ("ShabytBio — Full Requirements Summary") named a target audience of NIS Grade 11-12 (English, primary) plus Grade 7-10 (Kazakh/Russian, secondary), a July→October V1-V4 timeline, and a longer feature list than what the earlier sessions' working notes tracked. Cross-checked against the actual code:
+
+**Done, several expanded well beyond the original spec:** file upload + AI restructuring (now 11 output sections, not the original 4), Learning Objectives extractor, student focus-instruction input, visual diagrams (mind map + process diagrams), spaced repetition (plus full topic management — rename/archive/delete — beyond original scope), practice question generator (plus AI-graded free-text answers, beyond original scope), Google OAuth accounts. All 6 "Immediate Fixes Needed" from that doc (markdown asterisks, hidden-details quality, memorization-friendly formatting, objective extractor, prompt input, diagrams) are done.
+
+**Real gaps, not yet built:**
+- **Kazakh/Russian language support.** User profiles already have a `language` field (`services/users.js`) defaulting to `'en'`, with a comment noting `'en' is the only functional option until language support ships` — anticipated but never wired up. The Gemini prompt (`services/claude.js`) has no language parameter at all; output is English-only regardless of what's set. This blocks the plan's stated Grade 7-10 secondary audience entirely.
+- **Community content sharing.** Not built. Current caching is invisible/automatic (dedup by content hash, so classmates don't re-trigger AI calls) — different from the plan's description of students browsing/sharing each other's notes.
+- **Motivational/confidence block.** Not built — streaks, progress visualization across units, celebrating wins. Backend has some raw material (`getStats()` returns `masteredCount`/`totalTracked`) but nothing in the frontend surfaces it. Discussed and deliberately deferred this session, consistent with the plan's own September (V3) timeline.
+- **Explicit learning-style selector.** The plan describes a student picking a style (visual/auditory/reading/kinesthetic) and getting adapted output. What's built instead gives every student all four modalities as tabs (notes/diagrams/audio/quiz) to freely choose between — arguably better UX, but a different design than planned. Needs Aisha's call on whether that's fine as-is.
+- **Design palette.** Plan specified "calm green (biology association)"; actual CSS is blue-primary throughout (`#3182ce`/`#2b6cb0` used pervasively, green only on one toggle switch). Unclear if this was an intentional pivot — needs Aisha's call.
+
+**Stack deviations (not gaps, just different tools than originally named):** Gemini 2.5 Flash (not 1.5), Render (not Vercel), MongoDB Atlas (not Firebase/Supabase).
+
+**Timeline read:** original plan was July=V1, August=V2 (spaced repetition + practice questions + accounts), September=V3 (motivational block + community + feedback), October=V4 (refinements + launch beyond NIS). Most of V2 is already done ahead of schedule. The real gaps above are legitimately V3/unscheduled work, not things that slipped — except language support, which the plan lists as a target-audience requirement without an assigned month.
+
 ## Decision (Jul 19, 2026)
 Launch biology-only first. Beta testers asked for physics, chemistry, etc. — strong signal, but deliberately holding off to keep the biology launch stable and focused.
 
