@@ -2532,7 +2532,10 @@
     if (typeof mermaid !== 'undefined') {
       mermaid.initialize({
         startOnLoad: false,
-        theme: 'neutral',
+        // Beta feedback: diagrams looked flat/grayscale and hard to
+        // distinguish at a glance — 'default' gives each node a soft color
+        // fill instead of 'neutral''s plain gray-on-white boxes.
+        theme: 'default',
         securityLevel: 'strict',
         suppressErrorRendering: true, // stop mermaid injecting its own error graphic into the page
       });
