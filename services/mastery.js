@@ -106,12 +106,20 @@ async function getStats(userId) {
   return { totalTracked, dueCount, masteredCount };
 }
 
+// How many days without a review before a topic is flagged as needing
+// attention on the dashboard — a student who hasn't touched a topic in over
+// a week is the kind of gentle nudge this is meant to give ("Unit X needs
+// attention" per Aisha's spec), without being so aggressive it fires after
+// a single day off.
+const NEGLECTED_TOPIC_DAYS = 10;
+
 // Powers the "Your Progress" dashboard — a study streak (consecutive days
-// with real activity), overall mastery count, and per-topic mastery
-// progress. Built from data that already exists (review timestamps, upload
-// timestamps, mastery repetitions/intervals) rather than a new tracked
-// field, so it works retroactively for every student's existing history
-// instead of only counting activity from the day this feature shipped.
+// with real activity, plus the longest streak ever reached), overall
+// mastery count, and a per-topic progress map. Built from data that already
+// exists (review timestamps, upload timestamps, mastery repetitions/
+// intervals) rather than a new tracked field, so it works retroactively for
+// every student's existing history instead of only counting activity from
+// the day this feature shipped.
 async function getDashboard(userId) {
   const db = await connectMongo();
   const masteryCol = db.collection('mastery');
@@ -144,6 +152,8 @@ async function getDashboard(userId) {
               ],
             },
           },
+          totalRepetitions: { $sum: '$repetitions' },
+          lastReviewedAt: { $max: '$lastReviewedAt' },
           allArchived: { $min: { $cond: [{ $eq: ['$archived', true] }, 1, 0] } },
           label: { $first: { $ifNull: ['$topicLabel', '$sourceFilename'] } },
           latestCreatedAt: { $max: '$createdAt' },
@@ -172,14 +182,51 @@ async function getDashboard(userId) {
     cursor.setUTCDate(cursor.getUTCDate() - 1);
   }
 
-  const topics = topicRows.map(r => ({
-    sourceFilename: r._id || '(untitled)',
-    label: r.label || r._id || '(untitled)',
-    total: r.total,
-    mastered: r.mastered,
-  }));
+  // Longest streak ever, scanning the full activity history — powers the
+  // "comeback" framing (a broken streak isn't shown as "back to zero", it's
+  // shown next to the record it can beat again) and the weekly/monthly
+  // streak record Aisha's spec asked for.
+  const sortedDates = [...activeDates].sort();
+  let longestStreak = 0;
+  let run = 0;
+  let prevDate = null;
+  for (const dateStr of sortedDates) {
+    if (prevDate) {
+      const prev = new Date(prevDate);
+      const cur = new Date(dateStr);
+      const dayGap = Math.round((cur - prev) / (24 * 60 * 60 * 1000));
+      run = dayGap === 1 ? run + 1 : 1;
+    } else {
+      run = 1;
+    }
+    longestStreak = Math.max(longestStreak, run);
+    prevDate = dateStr;
+  }
 
-  return { streak, masteredCount, totalTracked, dueCount, topics };
+  const nowMs = Date.now();
+  const topics = topicRows.map(r => {
+    const avgRepetitions = r.total ? r.totalRepetitions / r.total : 0;
+    // grey (not studied), light (studied a little), deep (reviewed several
+    // times) — mirrors Aisha's "unstudied / studied once / reviewed
+    // multiple times" color scale, using average repetitions per item as
+    // the signal since it reflects real review activity, not just presence.
+    const status = avgRepetitions === 0 ? 'unstudied' : avgRepetitions < 2 ? 'light' : 'deep';
+    const daysSinceReview = r.lastReviewedAt
+      ? Math.floor((nowMs - new Date(r.lastReviewedAt).getTime()) / (24 * 60 * 60 * 1000))
+      : null;
+    return {
+      sourceFilename: r._id || '(untitled)',
+      label: r.label || r._id || '(untitled)',
+      total: r.total,
+      mastered: r.mastered,
+      status,
+      // Only flag as neglected if it's been studied before and then went
+      // quiet — a topic that's simply new isn't "needs attention" yet.
+      needsAttention: daysSinceReview !== null && daysSinceReview >= NEGLECTED_TOPIC_DAYS,
+    };
+  });
+
+  return { streak, longestStreak, masteredCount, totalTracked, dueCount, topics };
 }
 
 // Groups a student's review items by source material so they can see their

@@ -173,6 +173,28 @@
       text-align: center;
     }
 
+    /* ── Home layout (upload + dashboard + history) ──
+       A single narrow centered column (540px) left huge empty margins on
+       anything wider than a phone — beta feedback specifically flagged
+       this. A two-column layout puts the motivational dashboard in a
+       sidebar next to the upload flow instead of buried underneath it,
+       using the width instead of wasting it, and collapses back to a
+       single stacked column on narrow/mobile screens. */
+    .home-layout {
+      width: 100%;
+      max-width: 980px;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    .home-main { display: flex; flex-direction: column; gap: 1.25rem; min-width: 0; }
+    .home-sidebar { display: flex; flex-direction: column; gap: 1.25rem; position: sticky; top: 1.5rem; }
+    @media (max-width: 860px) {
+      .home-layout { grid-template-columns: 1fr; max-width: 540px; }
+      .home-sidebar { position: static; }
+    }
+
     /* ── Upload card ── */
     .upload-card {
       background: #fff;
@@ -180,7 +202,7 @@
       box-shadow: 0 2px 12px rgba(0,0,0,0.08);
       padding: 2rem;
       width: 100%;
-      max-width: 540px;
+      max-width: 100%;
     }
 
     label.drop-zone {
@@ -885,42 +907,49 @@
       box-shadow: 0 2px 12px rgba(0,0,0,0.08);
       padding: 1.25rem 1.5rem;
       width: 100%;
-      max-width: 540px;
-      margin-top: 1.25rem;
+      max-width: 100%;
     }
     .dashboard-card h3 {
       font-size: 0.95rem;
       color: #2d3748;
       margin-bottom: 0.9rem;
     }
+    /* Streak, shown as a growing plant (not a flame) — fits the biology/
+       green theme and gives a "tending something alive" feeling that a
+       flame or raw counter doesn't. */
+    .dashboard-plant-hero {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      background: linear-gradient(135deg, #f0fff4, #e6fffa);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 0.85rem;
+    }
+    .dashboard-plant-icon { flex-shrink: 0; }
+    .dashboard-streak-num { font-size: 1.55rem; font-weight: 800; color: #22543d; line-height: 1.15; }
+    .dashboard-streak-label { font-size: 0.78rem; color: #2f855a; margin-top: 0.1rem; }
+    .dashboard-streak-record { font-size: 0.72rem; color: #68a08a; margin-top: 0.3rem; }
+    .dashboard-comeback {
+      font-size: 0.85rem;
+      color: #22543d;
+      line-height: 1.4;
+    }
+
     .dashboard-stats-row {
       display: flex;
-      gap: 1rem;
+      gap: 0.6rem;
       margin-bottom: 1rem;
     }
     .dashboard-stat {
       flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
       background: #f7fafc;
       border-radius: 10px;
-      padding: 0.7rem 0.9rem;
+      padding: 0.6rem 0.75rem;
+      text-align: center;
     }
-    .dashboard-stat-icon {
-      flex-shrink: 0;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #fff5f0;
-      color: #dd6b20;
-    }
-    .dashboard-stat.mastered .dashboard-stat-icon { background: #f0fff4; color: #38a169; }
-    .dashboard-stat-num { font-size: 1.15rem; font-weight: 700; color: #2d3748; line-height: 1.1; }
-    .dashboard-stat-label { font-size: 0.72rem; color: #718096; }
+    .dashboard-stat-num { font-size: 1.1rem; font-weight: 700; color: #2d3748; line-height: 1.1; }
+    .dashboard-stat-label { font-size: 0.68rem; color: #718096; margin-top: 0.2rem; }
     .dashboard-milestone {
       font-size: 0.83rem;
       color: #2c5282;
@@ -928,11 +957,13 @@
       border-radius: 8px;
       padding: 0.55rem 0.75rem;
       margin-bottom: 1rem;
+      line-height: 1.4;
     }
     .dashboard-empty {
       font-size: 0.85rem;
       color: #718096;
       padding: 0.5rem 0;
+      line-height: 1.4;
     }
     .dashboard-topics-label {
       font-size: 0.75rem;
@@ -941,31 +972,35 @@
       letter-spacing: 0.03em;
       margin-bottom: 0.5rem;
     }
-    .dashboard-topic-row { margin-bottom: 0.6rem; }
-    .dashboard-topic-row:last-child { margin-bottom: 0; }
-    .dashboard-topic-top {
+    /* Color-coded progress map: grey = not studied yet, light green =
+       studied a little, deep green = reviewed several times — a glance
+       shows what needs attention without a judgmental score. */
+    .dashboard-topic-row {
       display: flex;
-      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.55rem;
+    }
+    .dashboard-topic-row:last-child { margin-bottom: 0; }
+    .dashboard-topic-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .dashboard-topic-dot.unstudied { background: #cbd5e0; }
+    .dashboard-topic-dot.light { background: #9ae6b4; }
+    .dashboard-topic-dot.deep { background: #2f855a; }
+    .dashboard-topic-name {
+      flex: 1;
       font-size: 0.8rem;
       color: #4a5568;
-      margin-bottom: 0.25rem;
-    }
-    .dashboard-topic-name {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      max-width: 380px;
     }
-    .dashboard-progress-track {
-      height: 6px;
-      background: #edf2f7;
+    .dashboard-topic-attention {
+      font-size: 0.66rem;
+      color: #c05621;
+      background: #fffaf0;
+      padding: 0.1rem 0.45rem;
       border-radius: 999px;
-      overflow: hidden;
-    }
-    .dashboard-progress-fill {
-      height: 100%;
-      background: #38a169;
-      border-radius: 999px;
+      flex-shrink: 0;
     }
 
     /* ── History ── */
@@ -975,8 +1010,7 @@
       box-shadow: 0 2px 12px rgba(0,0,0,0.08);
       padding: 1.25rem 1.5rem;
       width: 100%;
-      max-width: 540px;
-      margin-top: 1.25rem;
+      max-width: 100%;
     }
     .history-card h3 {
       font-size: 0.95rem;
@@ -1384,38 +1418,44 @@
   </div>
 
   <div id="appContent" style="width:100%;display:flex;flex-direction:column;align-items:center;" hidden>
-  <div class="upload-card">
-    <label class="drop-zone" id="dropZone" for="fileInput">
-      <svg width="36" height="36" fill="none" stroke="#4299e1" stroke-width="2"
-           viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M12 16V4m0 0L8 8m4-4 4 4" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round"/>
-      </svg>
-      <span id="dropZoneText">Drag &amp; drop or <strong>click to browse</strong></span>
-      <span style="color:#a0aec0;" data-i18n="dropZoneHint">PDF, .txt, or .pptx · max 50 MB</span>
-    </label>
-    <input type="file" id="fileInput" accept=".pdf,.txt,.pptx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.presentationml.presentation" />
+  <div class="home-layout">
+    <div class="home-main">
+      <div class="upload-card">
+        <label class="drop-zone" id="dropZone" for="fileInput">
+          <svg width="36" height="36" fill="none" stroke="#4299e1" stroke-width="2"
+               viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 16V4m0 0L8 8m4-4 4 4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round"/>
+          </svg>
+          <span id="dropZoneText">Drag &amp; drop or <strong>click to browse</strong></span>
+          <span style="color:#a0aec0;" data-i18n="dropZoneHint">PDF, .txt, or .pptx · max 50 MB</span>
+        </label>
+        <input type="file" id="fileInput" accept=".pdf,.txt,.pptx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.presentationml.presentation" />
 
-    <div id="fileName"></div>
-    <textarea id="focusInput" rows="2"
-      data-i18n-placeholder="focusPlaceholder"
-      placeholder="Optional: tell me what to focus on (e.g. 'I already know the vocab, focus on calculations') — leave blank for full coverage"
-      style="width:100%;margin-top:1rem;padding:0.6rem 0.75rem;border:1px solid #cbd5e0;border-radius:8px;font-size:0.85rem;font-family:inherit;resize:vertical;color:#2d3748;"></textarea>
-    <button id="uploadBtn" data-i18n="uploadBtn" disabled>Upload &amp; Analyse</button>
-    <div id="status"></div>
-  </div>
+        <div id="fileName"></div>
+        <textarea id="focusInput" rows="2"
+          data-i18n-placeholder="focusPlaceholder"
+          placeholder="Optional: tell me what to focus on (e.g. 'I already know the vocab, focus on calculations') — leave blank for full coverage"
+          style="width:100%;margin-top:1rem;padding:0.6rem 0.75rem;border:1px solid #cbd5e0;border-radius:8px;font-size:0.85rem;font-family:inherit;resize:vertical;color:#2d3748;"></textarea>
+        <button id="uploadBtn" data-i18n="uploadBtn" disabled>Upload &amp; Analyse</button>
+        <div id="status"></div>
+      </div>
 
-  <!-- Motivational dashboard — streak, mastery count, per-topic progress.
-       Built from existing review/upload timestamps, not a separate tracked
-       field, so it works retroactively for a student's whole history. -->
-  <div class="dashboard-card" id="dashboardCard" hidden>
-    <h3 data-i18n="yourProgress">Your Progress</h3>
-    <div id="dashboardOutput"></div>
-  </div>
+      <div class="history-card">
+        <h3 data-i18n="recentUploads">Recent uploads</h3>
+        <ul class="history-list" id="historyList"></ul>
+      </div>
+    </div>
 
-  <div class="history-card">
-    <h3 data-i18n="recentUploads">Recent uploads</h3>
-    <ul class="history-list" id="historyList"></ul>
+    <!-- Motivational dashboard — streak, mastery count, per-topic progress.
+         Built from existing review/upload timestamps, not a separate tracked
+         field, so it works retroactively for a student's whole history. -->
+    <div class="home-sidebar">
+      <div class="dashboard-card" id="dashboardCard" hidden>
+        <h3 data-i18n="yourProgress">Your Progress</h3>
+        <div id="dashboardOutput"></div>
+      </div>
+    </div>
   </div>
 
   <!-- Spaced-repetition review session — pulls from self_test questions
@@ -1601,6 +1641,43 @@
     const ICON_FLAME = svgIcon('<path d="M12 2c1 3-2 4-2 7a3 3 0 006 0c0-1-1-2-1-2 2 1 3 3 3 5a6 6 0 01-12 0c0-4 3-6 4-8 .5 1 1 2 2 2 0-2 0-3 0-4z" fill="currentColor" stroke="none"/>', 17);
     const ICON_TROPHY = svgIcon('<path d="M8 4h8v5a4 4 0 01-8 0V4z"/><path d="M8 5H5a2 2 0 002 4M16 5h3a2 2 0 01-2 4"/><path d="M12 13v3M9 20h6M9 20a3 3 0 003-3 3 3 0 003 3" stroke-linecap="round"/>', 17);
 
+    /* Streak visual: a growing plant instead of a flame — fits the biology
+       theme and the "tending something over time" feeling a streak should
+       have. Four stages read as a small story rather than a raw number:
+       a seed just planted, a first sprout, a young plant, a plant in bloom. */
+    function plantIcon(stage, size = 40) {
+      const stages = [
+        // 0 — no streak yet / a fresh start: soil, seed waiting to grow
+        `<ellipse cx="12" cy="19" rx="8" ry="2" fill="#c9b79c"/>
+         <circle cx="12" cy="16.5" r="1.8" fill="#8b6f47"/>`,
+        // 1 — a first sprout
+        `<ellipse cx="12" cy="20" rx="8" ry="2" fill="#c9b79c"/>
+         <path d="M12 20V14" stroke="#38a169" stroke-width="2" stroke-linecap="round" fill="none"/>
+         <path d="M12 14c-2-1-3-3-2-5 2 1 3 3 2 5z" fill="#68d391"/>`,
+        // 2 — a young plant, a couple of leaves
+        `<ellipse cx="12" cy="21" rx="9" ry="2" fill="#c9b79c"/>
+         <path d="M12 21V10" stroke="#2f855a" stroke-width="2.3" stroke-linecap="round" fill="none"/>
+         <path d="M12 15c-3-1-4-4-3-6 3 1 4 4 3 6z" fill="#68d391"/>
+         <path d="M12 12c3-1 4-4 3-6-3 1-4 4-3 6z" fill="#38a169"/>`,
+        // 3 — full bloom, for a streak worth celebrating
+        `<ellipse cx="12" cy="21" rx="9" ry="2" fill="#c9b79c"/>
+         <path d="M12 21V8" stroke="#2f855a" stroke-width="2.3" stroke-linecap="round" fill="none"/>
+         <path d="M12 16c-3-1-4-4-3-6 3 1 4 4 3 6z" fill="#68d391"/>
+         <path d="M12 13c3-1 4-4 3-6-3 1-4 4-3 6z" fill="#38a169"/>
+         <circle cx="12" cy="7" r="2.4" fill="#f6ad55"/>
+         <circle cx="9.6" cy="8.4" r="1.7" fill="#fbd38d"/>
+         <circle cx="14.4" cy="8.4" r="1.7" fill="#fbd38d"/>`,
+      ];
+      const svg = stages[Math.max(0, Math.min(stage, stages.length - 1))];
+      return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" style="flex-shrink:0">${svg}</svg>`;
+    }
+    function plantStageForStreak(streak) {
+      if (streak >= 7) return 3;
+      if (streak >= 3) return 2;
+      if (streak >= 1) return 1;
+      return 0;
+    }
+
     /* ── Language / i18n ──
        Covers the always-visible app shell (welcome/onboarding, upload
        screen, nav, tabs, result headers) plus the highest-traffic dynamic
@@ -1700,10 +1777,14 @@
         charsExtracted: 'Done — {count} characters extracted from "{filename}".',
         yourProgress: 'Your Progress',
         dayStreak: '{n}-day streak',
-        noStreakYet: 'No streak yet',
+        noStreakYet: 'Your streak starts with your next upload — no rush.',
+        streakBest: 'Best so far: {n} days',
+        streakComeback: "Streak reset, but nothing is lost — every topic you've studied is still here. Come back today and start growing again.",
         questionsMastered: '{n} mastered',
+        questionsMasteredLabel: 'questions mastered',
         dashboardEmpty: 'Upload your first file to start building your study streak and track your mastery over time.',
         topicsProgress: 'Progress by topic',
+        topicNeedsAttention: 'could use a revisit',
         milestoneWeek: "A full week of studying — that's a real habit forming. Keep going.",
         milestoneStreak: 'Nice streak — keep the momentum going!',
         milestoneMastered50: "Over 50 questions mastered — that's serious, exam-ready progress.",
@@ -1791,10 +1872,14 @@
         rename: 'Атын өзгерту',
         yourProgress: 'Сенің жетістігің',
         dayStreak: '{n} күндік серия',
-        noStreakYet: 'Әзірге серия жоқ',
+        noStreakYet: 'Серияң келесі жүктеген файлыңнан басталады — асықпа.',
+        streakBest: 'Ең жақсы нәтиже: {n} күн',
+        streakComeback: 'Серия үзілді, бірақ ештеңе жоғалған жоқ — оқыған тақырықтарыңның бәрі осында тұр. Бүгін қайта оралып, қайтадан өсіре баста.',
         questionsMastered: '{n} меңгерілді',
+        questionsMasteredLabel: 'сұрақ меңгерілді',
         dashboardEmpty: 'Оқу серияңызды бастап, меңгеруіңізді уақыт бойы бақылау үшін алғашқы файлыңызды жүктеңіз.',
         topicsProgress: 'Тақырып бойынша прогресс',
+        topicNeedsAttention: 'қайта қарауды қажет етеді',
         milestoneWeek: 'Бір апта бойы оқыдың — бұл нағыз әдетке айналуда. Жалғастыра бер.',
         milestoneStreak: 'Жақсы серия — қарқынды сақта!',
         milestoneMastered50: '50-ден астам сұрақты меңгердің — бұл емтиханға шынымен дайын болу деңгейі.',
@@ -1898,10 +1983,14 @@
         rename: 'Переименовать',
         yourProgress: 'Ваш прогресс',
         dayStreak: 'Серия: {n} дн.',
-        noStreakYet: 'Серии пока нет',
+        noStreakYet: 'Серия начнётся со следующей загрузки — спешить некуда.',
+        streakBest: 'Лучший результат: {n} дн.',
+        streakComeback: 'Серия прервалась, но ничего не потеряно — все изученные темы никуда не делись. Вернитесь сегодня и начните заново.',
         questionsMastered: 'Освоено: {n}',
+        questionsMasteredLabel: 'вопросов освоено',
         dashboardEmpty: 'Загрузите первый файл, чтобы начать серию занятий и отслеживать своё освоение материала.',
         topicsProgress: 'Прогресс по темам',
+        topicNeedsAttention: 'стоит повторить',
         milestoneWeek: 'Целая неделя занятий — формируется настоящая привычка. Продолжайте в том же духе.',
         milestoneStreak: 'Хорошая серия — не останавливайтесь!',
         milestoneMastered50: 'Освоено более 50 вопросов — это серьёзный, готовый к экзамену прогресс.',
@@ -3581,28 +3670,44 @@
         return;
       }
 
-      const statsRow = document.createElement('div');
-      statsRow.className = 'dashboard-stats-row';
+      const longest = data.longestStreak || 0;
 
-      const streakStat = document.createElement('div');
-      streakStat.className = 'dashboard-stat';
-      streakStat.innerHTML = `
-        <span class="dashboard-stat-icon">${ICON_FLAME}</span>
-        <span>
-          <span class="dashboard-stat-num">${data.streak > 0 ? tf('dayStreak', { n: data.streak }) : t('noStreakYet')}</span>
-        </span>`;
-      statsRow.appendChild(streakStat);
+      // Streak, as a growing plant rather than a raw number or a flame —
+      // and never a harsh reset. A broken streak still shows what was
+      // built before it and invites picking it back up, instead of just
+      // "0".
+      const hero = document.createElement('div');
+      hero.className = 'dashboard-plant-hero';
+      const iconWrap = document.createElement('div');
+      iconWrap.className = 'dashboard-plant-icon';
+      iconWrap.innerHTML = plantIcon(plantStageForStreak(data.streak));
+      hero.appendChild(iconWrap);
+
+      const textWrap = document.createElement('div');
+      if (data.streak > 0) {
+        textWrap.innerHTML = `
+          <div class="dashboard-streak-num">${tf('dayStreak', { n: data.streak })}</div>
+          ${longest > data.streak ? `<div class="dashboard-streak-record">${tf('streakBest', { n: longest })}</div>` : ''}`;
+      } else if (longest > 0) {
+        // They've studied consistently before — frame the break as a
+        // comeback, not a failure.
+        textWrap.innerHTML = `
+          <div class="dashboard-comeback">${t('streakComeback')}</div>
+          <div class="dashboard-streak-record">${tf('streakBest', { n: longest })}</div>`;
+      } else {
+        textWrap.innerHTML = `<div class="dashboard-comeback">${t('noStreakYet')}</div>`;
+      }
+      hero.appendChild(textWrap);
+      out.appendChild(hero);
 
       const masteredStat = document.createElement('div');
-      masteredStat.className = 'dashboard-stat mastered';
+      masteredStat.className = 'dashboard-stats-row';
       masteredStat.innerHTML = `
-        <span class="dashboard-stat-icon">${ICON_TROPHY}</span>
-        <span>
-          <span class="dashboard-stat-num">${tf('questionsMastered', { n: data.masteredCount })}</span>
-        </span>`;
-      statsRow.appendChild(masteredStat);
-
-      out.appendChild(statsRow);
+        <div class="dashboard-stat">
+          <div class="dashboard-stat-num">${data.masteredCount}</div>
+          <div class="dashboard-stat-label">${t('questionsMasteredLabel')}</div>
+        </div>`;
+      out.appendChild(masteredStat);
 
       // One milestone message at a time, highest-value first — celebrating
       // everything at once would be noisy rather than motivating.
@@ -3626,24 +3731,18 @@
         label.textContent = t('topicsProgress');
         out.appendChild(label);
 
-        // Cap at 5 so an active student's dashboard doesn't turn into a
-        // scrolling wall of bars — the topics list already exists for the
-        // full picture (Manage Topics), this is meant to be a glance.
+        // Color-coded status instead of a percentage bar — grey (not
+        // studied), light green (studied a little), deep green (reviewed
+        // several times) reads as a map to glance at, not a score to
+        // judge yourself against. Capped at 5 so this stays a glance —
+        // Manage Topics has the full list.
         data.topics.slice(0, 5).forEach(topic => {
-          const pct = topic.total ? Math.round((topic.mastered / topic.total) * 100) : 0;
           const row = document.createElement('div');
           row.className = 'dashboard-topic-row';
-          const top = document.createElement('div');
-          top.className = 'dashboard-topic-top';
-          top.innerHTML = `<span class="dashboard-topic-name">${mdToHtml(topic.label)}</span><span>${pct}%</span>`;
-          const track = document.createElement('div');
-          track.className = 'dashboard-progress-track';
-          const fill = document.createElement('div');
-          fill.className = 'dashboard-progress-fill';
-          fill.style.width = `${pct}%`;
-          track.appendChild(fill);
-          row.appendChild(top);
-          row.appendChild(track);
+          const dot = `<span class="dashboard-topic-dot ${topic.status}"></span>`;
+          const name = `<span class="dashboard-topic-name">${mdToHtml(topic.label)}</span>`;
+          const attention = topic.needsAttention ? `<span class="dashboard-topic-attention">${t('topicNeedsAttention')}</span>` : '';
+          row.innerHTML = dot + name + attention;
           out.appendChild(row);
         });
       }
