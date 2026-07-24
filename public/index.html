@@ -944,11 +944,35 @@
       width: 100%;
       max-width: 100%;
     }
+    .dashboard-card-header { margin-bottom: 0.9rem; }
     .dashboard-card h3 {
       font-size: 0.95rem;
       color: #2d3748;
-      margin-bottom: 0.9rem;
+      margin-bottom: 0;
     }
+    /* Plain-language explanation of streak/mastery — collapsed by default so
+       it doesn't clutter a compact sidebar card, but one click away instead
+       of being a total mystery ("i dont understand how this streak works"). */
+    .dashboard-explain {
+      margin-top: 0.9rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #edf2f7;
+    }
+    .dashboard-explain summary {
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #3182ce;
+      user-select: none;
+    }
+    .dashboard-explain summary:hover { text-decoration: underline; }
+    .dashboard-explain p {
+      font-size: 0.76rem;
+      color: #718096;
+      line-height: 1.5;
+      margin-top: 0.55rem;
+    }
+    .dashboard-explain p strong { color: #4a5568; }
     /* Streak, shown as a growing plant (not a flame) — fits the biology/
        green theme and gives a "tending something alive" feeling that a
        flame or raw counter doesn't. */
@@ -1523,8 +1547,15 @@
          field, so it works retroactively for a student's whole history. -->
     <div class="home-sidebar">
       <div class="dashboard-card" id="dashboardCard" hidden>
-        <h3 data-i18n="yourProgress">Your Progress</h3>
+        <div class="dashboard-card-header">
+          <h3 data-i18n="yourProgress">Your Progress</h3>
+        </div>
         <div id="dashboardOutput"></div>
+        <details class="dashboard-explain">
+          <summary data-i18n="dashboardHowItWorks">How does this work?</summary>
+          <p><strong data-i18n="dayStreakWord">Streak</strong> — <span data-i18n="dashboardStreakExplain">Counts any day you upload new material or review questions — both count as studying. Missing a day resets the count, but nothing you've learned is lost, and your best streak is always shown so you can beat it again.</span></p>
+          <p><strong data-i18n="masteredWord">Mastered</strong> — <span data-i18n="dashboardMasteredExplain">A question is marked mastered once you've answered it correctly 4 separate times, spaced out over at least 3 weeks. That spacing is what makes it stick in long-term memory rather than short-term recall — mastered questions then show up for review less and less often.</span></p>
+        </details>
       </div>
     </div>
   </div>
@@ -1851,6 +1882,11 @@
         cachedResult: 'Done instantly — someone already analysed this exact file, so you got the cached result.',
         charsExtracted: 'Done — {count} characters extracted from "{filename}".',
         yourProgress: 'Your Progress',
+        dashboardHowItWorks: 'How does this work?',
+        dayStreakWord: 'Streak',
+        masteredWord: 'Mastered',
+        dashboardStreakExplain: "Counts any day you upload new material or review questions — both count as studying. Missing a day resets the count, but nothing you've learned is lost, and your best streak is always shown so you can beat it again.",
+        dashboardMasteredExplain: "A question is marked mastered once you've answered it correctly 4 separate times, spaced out over at least 3 weeks. That spacing is what makes it stick in long-term memory rather than short-term recall — mastered questions then show up for review less and less often.",
         dayStreak: '{n}-day streak',
         noStreakYet: 'Your streak starts with your next upload — no rush.',
         streakBest: 'Best so far: {n} days',
@@ -1949,6 +1985,11 @@
         backToReview: '← Қайталауға оралу',
         rename: 'Атын өзгерту',
         yourProgress: 'Сенің жетістігің',
+        dashboardHowItWorks: 'Бұл қалай жұмыс істейді?',
+        dayStreakWord: 'Серия',
+        masteredWord: 'Меңгерілді',
+        dashboardStreakExplain: 'Серияң жаңа материал жүктеген немесе сұрақтарды қайталаған әрбір күнді санайды — екеуі де оқу болып есептеледі. Бір күнді өткізіп алсаң, санақ қайта басталады, бірақ үйренгендерің жоғалмайды, әрі ең жақсы серияң әрқашан көрсетіліп тұрады, оны қайта жеңуге болады.',
+        dashboardMasteredExplain: 'Сұрақ кемінде 3 апта аралығында 4 рет дұрыс жауап берілгеннен кейін меңгерілген деп белгіленеді. Бұл аралық ұзақ мерзімді есте сақтауға көмектеседі, жай ғана қысқа мерзімді есте қалудан гөрі — сондықтан меңгерілген сұрақтар уақыт өте келе сирек қайталанады.',
         dayStreak: '{n} күндік серия',
         noStreakYet: 'Серияң келесі жүктеген файлыңнан басталады — асықпа.',
         streakBest: 'Ең жақсы нәтиже: {n} күн',
@@ -2067,6 +2108,11 @@
         backToReview: '← Назад к повторению',
         rename: 'Переименовать',
         yourProgress: 'Ваш прогресс',
+        dashboardHowItWorks: 'Как это работает?',
+        dayStreakWord: 'Серия',
+        masteredWord: 'Освоено',
+        dashboardStreakExplain: 'Серия считает каждый день, когда вы загружаете новый материал или повторяете вопросы — оба действия считаются занятием. Пропуск дня обнуляет счётчик, но всё изученное никуда не исчезает, а ваш лучший результат всегда показан, чтобы его можно было побить снова.',
+        dashboardMasteredExplain: 'Вопрос считается освоенным после 4 правильных ответов, распределённых как минимум на 3 недели. Именно такой интервал закрепляет материал в долговременной памяти, а не только в кратковременной — поэтому освоенные вопросы повторяются всё реже.',
         dayStreak: 'Серия: {n} дн.',
         noStreakYet: 'Серия начнётся со следующей загрузки — спешить некуда.',
         streakBest: 'Лучший результат: {n} дн.',
