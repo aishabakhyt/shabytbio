@@ -372,6 +372,52 @@
     }
     .notes-table td { color: #4a5568; }
 
+    /* Step sequences ([STEP] lines) — a genuine ordered process, visually
+       distinct from a plain bulleted list so the eye can follow the flow. */
+    .notes-steps {
+      margin: 0.5rem 0 0.75rem;
+      padding-left: 0;
+      list-style: none;
+      border-left: 2px solid #cbd5e0;
+    }
+    .notes-step {
+      position: relative;
+      padding: 0 0 0.6rem 1.1rem;
+      color: #2d3748;
+      font-size: 0.9rem;
+    }
+    .notes-step:last-child { padding-bottom: 0; }
+    .notes-step-num {
+      position: absolute;
+      left: -0.72rem;
+      top: 0.05rem;
+      width: 1.3rem;
+      height: 1.3rem;
+      border-radius: 50%;
+      background: #4a5568;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Key-term callouts ([KEY] lines) — pulls out the single most testable
+       term/definition in a section so it stands out when scanning. */
+    .notes-callout {
+      display: flex;
+      gap: 0.5rem;
+      background: #fffbea;
+      border: 1px solid #f6e05e;
+      border-radius: 8px;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0 0.75rem;
+      font-size: 0.87rem;
+      color: #744210;
+    }
+    .notes-callout-icon { flex-shrink: 0; }
+
     /* ── Hidden details (grouped) ── */
     .hidden-group { margin-bottom: 1rem; }
     .hidden-group:last-child { margin-bottom: 0; }
@@ -2127,6 +2173,27 @@
       return `<div class="notes-table-wrap"><table class="notes-table">${thead}${tbody}</table></div>`;
     }
 
+    // [STEP] lines mark a genuinely ordered process (e.g. filtration steps
+    // in the PCT) — rendered as a connected numbered sequence instead of a
+    // plain bullet list, so the flow is visually obvious at a glance.
+    const STEP_PREFIX = /^\[STEP\]\s*/i;
+    function renderSteps(stepLines) {
+      const items = stepLines.map((line, i) => {
+        const text = line.replace(STEP_PREFIX, '');
+        return `<li class="notes-step"><span class="notes-step-num">${i + 1}</span>${mdToHtml(text)}</li>`;
+      }).join('');
+      return `<ol class="notes-steps">${items}</ol>`;
+    }
+
+    // [KEY] lines mark the single most testable term/definition worth
+    // pulling out of the surrounding prose — rendered as a highlighted
+    // callout box distinct from ordinary bullets.
+    const KEY_PREFIX = /^\[KEY\]\s*/i;
+    function renderCallout(line) {
+      const text = line.replace(KEY_PREFIX, '');
+      return `<div class="notes-callout"><span class="notes-callout-icon">📌</span><span>${mdToHtml(text)}</span></div>`;
+    }
+
     /* ── Block markdown → HTML (for restructured study notes) ── */
     function renderMarkdownBlock(str) {
       if (typeof str !== 'string') return '';
@@ -2134,6 +2201,7 @@
       let html = '';
       let inList = false;
       let tableBuffer = [];
+      let stepBuffer = [];
 
       const flushTable = () => {
         if (!tableBuffer.length) return;
@@ -2141,12 +2209,20 @@
         html += table ? renderTable(table) : tableBuffer.map(l => `<p style="margin-bottom:0.4rem;color:#2d3748">${mdToHtml(l)}</p>`).join('');
         tableBuffer = [];
       };
+      const flushSteps = () => {
+        if (!stepBuffer.length) return;
+        html += renderSteps(stepBuffer);
+        stepBuffer = [];
+      };
 
       for (const raw of lines) {
         const trimmed = raw.trim();
         const isTableRow = trimmed.startsWith('|') && trimmed.endsWith('|');
+        const isStepLine = STEP_PREFIX.test(trimmed);
+        const isKeyLine = KEY_PREFIX.test(trimmed);
 
         if (!isTableRow) flushTable();
+        if (!isStepLine) flushSteps();
 
         if (!trimmed) {
           if (inList) { html += '</ul>'; inList = false; }
@@ -2155,6 +2231,12 @@
         if (isTableRow) {
           if (inList) { html += '</ul>'; inList = false; }
           tableBuffer.push(trimmed);
+        } else if (isStepLine) {
+          if (inList) { html += '</ul>'; inList = false; }
+          stepBuffer.push(trimmed);
+        } else if (isKeyLine) {
+          if (inList) { html += '</ul>'; inList = false; }
+          html += renderCallout(trimmed);
         } else if (trimmed.startsWith('### ')) {
           if (inList) { html += '</ul>'; inList = false; }
           html += `<p class="notes-heading">${mdToHtml(trimmed.slice(4))}</p>`;
@@ -2170,6 +2252,7 @@
         }
       }
       flushTable();
+      flushSteps();
       if (inList) html += '</ul>';
       return html;
     }
@@ -2413,16 +2496,45 @@
 
     let diagramRenderCounter = 0;
 
-    /* Defense-in-depth: the model is instructed not to use parentheses/colons/semicolons/quotes
-       inside node labels (they break Mermaid's parser), but strip them here too in case it slips. */
+    /* Defense-in-depth: the model is instructed not to use parentheses/colons/semicolons/quotes/
+       special unicode symbols inside node labels (they break Mermaid's parser), but normalize/strip
+       them here too in case it slips — beta testing showed diagrams for unicode-heavy biology
+       content (ion charges, subscripts, degree signs) failing to render even after that prompt rule
+       was added, so this net has to catch what the prompt alone doesn't. */
+    const MERMAID_UNICODE_REPLACEMENTS = [
+      [/[²]/g, '2'], [/[³]/g, '3'], [/₀/g, '0'], [/₁/g, '1'], [/₂/g, '2'], [/₃/g, '3'],
+      [/₄/g, '4'], [/₅/g, '5'], [/₆/g, '6'], [/₇/g, '7'], [/₈/g, '8'], [/₉/g, '9'],
+      [/⁺/g, '+'], [/⁻/g, '-'], [/±/g, '+/-'], [/°/g, ' degrees '], [/µ|μ/g, 'micro'],
+      [/α/g, 'alpha'], [/β/g, 'beta'], [/γ/g, 'gamma'], [/δ/g, 'delta'],
+      [/↑/g, ' increases '], [/↓/g, ' decreases '], [/→/g, ' to '], [/⇌|↔/g, ' to '],
+      [/[“”]/g, ''], [/[‘’]/g, ''], [/&/g, 'and'],
+    ];
     function sanitizeMermaid(code) {
       if (typeof code !== 'string') return '';
-      return code
+      let out = code;
+      for (const [pattern, replacement] of MERMAID_UNICODE_REPLACEMENTS) {
+        out = out.replace(pattern, replacement);
+      }
+      return out
         .replace(/\(\(/g, '§§OPEN§§')
         .replace(/\)\)/g, '§§CLOSE§§')
         .replace(/[():;"]/g, '')
         .replace(/§§OPEN§§/g, '((')
         .replace(/§§CLOSE§§/g, '))');
+    }
+
+    // Last-resort pass used only as a retry after a first render attempt fails — much blunter
+    // than sanitizeMermaid (which tries to preserve normal words): strips anything that isn't a
+    // letter, digit, space, or one of the handful of characters Mermaid's own syntax needs, on
+    // the theory that some still-unknown stray character (not just the ones above) is the culprit.
+    // Never applied on the first attempt because it would also mangle legitimate content in edge
+    // cases (e.g. a hyphenated word split oddly) — it's a fallback, not the default path.
+    function aggressivelySanitizeMermaid(code) {
+      if (typeof code !== 'string') return '';
+      return sanitizeMermaid(code)
+        .split('\n')
+        .map(line => line.replace(/[^A-Za-z0-9 \-\[\]()>\.]/g, ''))
+        .join('\n');
     }
 
     async function renderOneDiagram(container, title, caption, mermaidCode) {
@@ -2466,12 +2578,24 @@
       }
 
       try {
-        const id = `mermaid-diagram-${diagramRenderCounter++}`;
-        const { svg } = await mermaid.render(id, sanitizeMermaid(mermaidCode));
+        let svg;
+        try {
+          const id = `mermaid-diagram-${diagramRenderCounter++}`;
+          ({ svg } = await mermaid.render(id, sanitizeMermaid(mermaidCode)));
+        } catch (firstErr) {
+          // First attempt failed — most real-world failures on this app have been a single
+          // stray character (a unicode symbol, a smart quote) slipping past sanitizeMermaid,
+          // not a structurally broken diagram. One retry with the blunter fallback cleanup
+          // gives it a second chance instead of immediately giving up on a diagram that's
+          // otherwise fine.
+          console.error('Mermaid render failed, retrying with aggressive cleanup:', firstErr);
+          const id = `mermaid-diagram-${diagramRenderCounter++}`;
+          ({ svg } = await mermaid.render(id, aggressivelySanitizeMermaid(mermaidCode)));
+        }
         canvas.innerHTML = svg;
         expandBtn.addEventListener('click', () => openDiagramLightbox(title || 'Diagram', svg));
       } catch (err) {
-        console.error('Mermaid render failed:', err); // full parser detail stays in the console
+        console.error('Mermaid render failed after retry:', err); // full parser detail stays in the console
         canvas.innerHTML = '<div class="diagram-error">This diagram couldn\'t be displayed — the underlying content is still covered in the other tabs.</div>';
         expandBtn.disabled = true;
       } finally {
