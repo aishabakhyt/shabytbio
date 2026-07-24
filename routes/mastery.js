@@ -1,6 +1,7 @@
 const express = require('express');
-const { listDue, getStats, gradeReview, getById, listTopics, setTopicArchived, renameTopic, deleteTopic } = require('../services/mastery');
+const { listDue, getStats, getDashboard, gradeReview, getById, listTopics, setTopicArchived, renameTopic, deleteTopic } = require('../services/mastery');
 const { gradeAnswer } = require('../services/claude');
+const { getUserById } = require('../services/users');
 
 const router = express.Router();
 
@@ -85,6 +86,17 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+// Powers the "Your Progress" dashboard on the main page — streak, mastery
+// count, and per-topic progress. Separate from /stats since that route is
+// polled frequently just for the due-count badge and stays minimal on purpose.
+router.get('/dashboard', async (req, res) => {
+  try {
+    res.json(await getDashboard(req.session.userId));
+  } catch (err) {
+    res.status(500).json({ error: `Failed to load dashboard: ${err.message}` });
+  }
+});
+
 // Grades the student's own typed answer against the model answer — a
 // separate step from /:id/review, which just records the spaced-repetition
 // grade. This one costs a small Gemini call, so it's its own endpoint
@@ -97,7 +109,14 @@ router.post('/:id/grade-answer', async (req, res) => {
   try {
     const item = await getById(Number(req.params.id), req.session.userId);
     if (!item) return res.status(404).json({ error: 'Review item not found.' });
-    const result = await gradeAnswer(item.question, item.answer, studentAnswer);
+    let user;
+    try {
+      user = await getUserById(req.session.userId);
+    } catch (err) {
+      user = null;
+    }
+    const language = (user && user.language) || 'en';
+    const result = await gradeAnswer(item.question, item.answer, studentAnswer, language);
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: `Grading failed: ${err.message}` });

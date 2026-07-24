@@ -61,6 +61,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     user = null;
   }
   const grade = user ? user.grade : null;
+  const language = (user && user.language) || 'en';
 
   const focusInstructions = req.body.focusInstructions || '';
 
@@ -69,15 +70,17 @@ router.post('/upload', upload.single('file'), async (req, res) => {
   try {
     // Classmates very often upload the exact same slide deck (same
     // teacher, same lesson) — if someone's already gotten a result for
-    // this exact content + focus + grade combination, reuse it instantly
-    // instead of spending another call against the free-tier rate limit.
-    const cached = await getCached(extractedText, focusInstructions, grade);
+    // this exact content + focus + grade + language combination, reuse it
+    // instantly instead of spending another call against the free-tier rate
+    // limit. Language is part of the cache key so a Kazakh-medium student
+    // never gets served an English-medium classmate's cached result.
+    const cached = await getCached(extractedText, focusInstructions, grade, language);
     if (cached) {
       result = cached;
       fromCache = true;
     } else {
-      result = await restructureWithClaude(extractedText, focusInstructions, grade);
-      setCached(extractedText, focusInstructions, grade, result).catch(err => {
+      result = await restructureWithClaude(extractedText, focusInstructions, grade, language);
+      setCached(extractedText, focusInstructions, grade, language, result).catch(err => {
         console.error('Failed to cache result:', err.message);
       });
     }

@@ -11,7 +11,7 @@ const GEMINI_ENDPOINT =
 // This bit us for real: the [STEP]/[KEY] note formats and the Mermaid
 // unicode-sanitization prompt rules were invisible on a re-upload of an
 // already-cached file until this existed.
-const PROMPT_VERSION = 'v6-diagram-edge-labels-square-brackets';
+const PROMPT_VERSION = 'v7-language-support-kk-ru';
 
 // 429 = rate limited (too many requests right now), 503 = model overloaded —
 // both are transient and worth retrying with backoff instead of failing
@@ -145,7 +145,9 @@ async function callGeminiJSON(prompt, { maxOutputTokens = 2048, temperature = 0.
   }
 }
 
-async function restructureWithClaude(text, focusInstructions = '', grade = null) {
+const LANGUAGE_NAMES = { en: 'English', kk: 'Kazakh', ru: 'Russian' };
+
+async function restructureWithClaude(text, focusInstructions = '', grade = null, language = 'en') {
   // The output schema has grown a lot (mnemonics on every hidden detail, a
   // full audio dialogue, mind map, diagrams, self-test...). Gemini 2.5
   // Flash's "thinking" tokens also draw from this same budget, so a
@@ -161,7 +163,7 @@ async function restructureWithClaude(text, focusInstructions = '', grade = null)
   // less run-to-run) for much more consistent grading verdicts, which
   // matters more here since this is a judgment/grading feature students
   // need to trust.
-  return callGeminiJSON(buildPrompt(text, focusInstructions, grade), { maxOutputTokens: 32768, temperature: 0.3 });
+  return callGeminiJSON(buildPrompt(text, focusInstructions, grade, language), { maxOutputTokens: 32768, temperature: 0.3 });
 }
 
 const VALID_SUGGESTED_GRADES = new Set(['again', 'hard', 'good', 'easy']);
@@ -173,9 +175,12 @@ const VALID_SUGGESTED_GRADES = new Set(['again', 'hard', 'good', 'easy']);
 // Easy/Good/Hard alone doesn't catch that gap, actually producing an answer
 // does). Deliberately a small, cheap, separate call — not the big
 // restructuring prompt — since this fires once per review card.
-async function gradeAnswer(question, modelAnswer, studentAnswer) {
+async function gradeAnswer(question, modelAnswer, studentAnswer, language = 'en') {
+  const languageLine = language && language !== 'en' && LANGUAGE_NAMES[language]
+    ? `\nWrite the "feedback" text in ${LANGUAGE_NAMES[language]} — the student is studying in ${LANGUAGE_NAMES[language]}, so feedback in English wouldn't be usable to them. The JSON keys themselves stay in English exactly as shown below.\n`
+    : '';
   const prompt = `You are grading a high school biology student's own typed answer against a model answer, for spaced-repetition review (not a formal exam) — the goal is honest, specific, encouraging feedback that helps them see exactly what they got right and what they missed, not a harsh score.
-
+${languageLine}
 QUESTION:
 ${question}
 
@@ -209,7 +214,7 @@ const GRADE_BAND_GUIDANCE = {
   '11-12': 'The student is in NIS grade 11-12. Use full SA-level rigor: exact NIS terminology throughout, no simplification, and weight self_test toward application/HOT-level questions as already specified above.',
 };
 
-function buildPrompt(text, focusInstructions = '', grade = null) {
+function buildPrompt(text, focusInstructions = '', grade = null, language = 'en') {
   const focusBlock = focusInstructions
     ? `\n──────────────────────────────────────────────
 STUDENT FOCUS INSTRUCTIONS
@@ -225,6 +230,23 @@ Spend more depth on areas they flagged; reduce detail on areas they say they alr
 STUDENT GRADE LEVEL
 ──────────────────────────────────────────────
 ${GRADE_BAND_GUIDANCE[grade]}\n`
+    : '';
+
+  // NIS Grade 7-10 students study in Kazakh- or Russian-medium classes, not
+  // English — English-only output was a real gap for that audience (they'd
+  // have to mentally translate every note). Everything the student actually
+  // reads gets translated; video_search_query stays in English on purpose
+  // (far more biology education content exists in English on YouTube, so an
+  // English query finds better videos even for a Kazakh/Russian-medium
+  // student), and every JSON key stays exactly as specified in the schema —
+  // only the text VALUES the student reads are affected.
+  const languageBlock = language && language !== 'en' && LANGUAGE_NAMES[language]
+    ? `\n──────────────────────────────────────────────
+OUTPUT LANGUAGE
+──────────────────────────────────────────────
+The student studies in ${LANGUAGE_NAMES[language]}-medium classes. Write ALL text content in ${LANGUAGE_NAMES[language]} — restructured notes, hidden_details, key_concepts, likely_summative_topics, readiness_checklist, self_test questions and answers, audio_dialogue lines, mind_map and visual_diagrams node labels/captions, mnemonics, learning_objectives text. Use the actual ${LANGUAGE_NAMES[language]} biology terminology as it is taught in NIS ${LANGUAGE_NAMES[language]}-medium classrooms (the real vocabulary NIS teachers and mark schemes use), not a literal word-for-word translation from an English textbook.
+EXCEPTION: video_search_query must stay in English regardless of this setting — it's used to search YouTube, and English search terms surface far better biology education videos.
+The JSON keys in the schema below (e.g. "restructured", "hidden_details") always stay exactly as written in English — this instruction only affects the actual text values you write into those fields.\n`
     : '';
 
   return `You are an expert biology tutor specializing in the NIS (Nazarbayev Intellectual Schools) curriculum in Kazakhstan. Analyze biology slide or PDF content and help a high school student prepare for their NIS summative assessments (SA1/SA2).
@@ -423,7 +445,7 @@ Strict rules:
 - The "Likely Task Types" category should always be included when the content contains any mechanism, process, or biological pathway; provide 1–3 applied-thinking prompts that connect multiple facts rather than isolating them.
 - self_test: 10–16 questions total (this is the student's main self-check — err toward more, not fewer, as long as every question is grounded and non-redundant); aim for roughly half recall, half application; draw from across hidden_details, key_concepts, and likely_summative_topics so the set reinforces the highest-yield content from all sections without being redundant with any one; answers 2–4 sentences max; do NOT include "Question 1:" or any preamble in the question field itself.
 - Output must be valid JSON parseable by JSON.parse() with no trailing commas or comments.
-${gradeBlock}${focusBlock}
+${gradeBlock}${focusBlock}${languageBlock}
 Biology content:
 ---
 ${text}

@@ -2,16 +2,32 @@
 
 _Last updated: Jul 24, 2026_
 
+## Language support + motivational dashboard (built Jul 24, 2026)
+
+Aisha prioritized these two of the real gaps below — both are now built:
+
+**Kazakh/Russian language support, full scope (AI content + whole UI):**
+- `services/claude.js`: `buildPrompt`/`restructureWithClaude` take a `language` param ('en'/'kk'/'ru'); when non-English, a new OUTPUT LANGUAGE prompt block tells Gemini to write every text field (notes, hidden details, key concepts, self-test, audio dialogue, diagram/mind-map labels, mnemonics) in that language, using real NIS classroom terminology, not literal translation. `video_search_query` deliberately stays English (better YouTube results). `gradeAnswer`'s feedback text is also localized. PROMPT_VERSION bumped so this doesn't get masked by old cache entries.
+- `services/resultCache.js`: language is now part of the cache key — a Kazakh-medium student can never get served an English/Russian classmate's cached result for the same file.
+- `routes/upload.js` / `routes/mastery.js`: pass the signed-in user's `language` (from their profile) through to both AI calls.
+- Frontend (`public/index.html`): full i18n system — a `TRANSLATIONS` dictionary (en/kk/ru, 105 keys, verified equal key sets across all three), a `t()`/`tf()` lookup+interpolation helper, `data-i18n`/`data-i18n-placeholder` attributes on static markup, and `applyTranslations()`/`setLanguage()`/`syncLanguageFromUser()` wiring so the language switches instantly on profile save and persists (via the user's saved profile once signed in, via `localStorage` before sign-in). Covers the welcome/onboarding screen, upload screen, nav, all 10 result tabs and headers, the full review flow (grading, grade buttons, empty states), and Manage Topics. The profile's language dropdown (`kk`/`ru` options) is no longer disabled/"coming soon" — it's live.
+- Known incomplete spots (acceptable follow-up, not blocking): a handful of raw server-side error messages (e.g. network error text, validation errors) are still English-only, since translating those means localizing backend error strings too — lower priority than the content students actually study from.
+
+**Motivational/confidence dashboard ("Your Progress" card, fuller version):**
+- `services/mastery.js`: new `getDashboard(userId)` — computes a study streak (consecutive active days, built retroactively from existing `mastery.lastReviewedAt` + `history.uploaded_at` timestamps, not a new tracked field — so it works for a student's whole existing history, not just activity from today forward), overall mastered-question count, and per-topic mastery progress (mastered/total per topic, paused topics excluded). Streak logic has a one-day grace period (doesn't reset to 0 just because today hasn't happened yet) — verified with unit tests covering gap/no-gap/empty cases.
+- `routes/mastery.js`: new `GET /api/mastery/dashboard`.
+- Frontend: new "Your Progress" card between the upload box and Recent Uploads — streak (flame icon), mastered count (trophy icon), one milestone message at a time (highest-value first: 7-day streak > 50 mastered > 3-day streak > 10 mastered > "study today" nudge), and up to 5 per-topic progress bars. Shows an encouraging empty state for brand-new students instead of nothing. Refreshes after every upload and every review session.
+
 ## Original plan vs. what's built (checked Jul 24, 2026)
 
 Aisha's original requirements doc ("ShabytBio — Full Requirements Summary") named a target audience of NIS Grade 11-12 (English, primary) plus Grade 7-10 (Kazakh/Russian, secondary), a July→October V1-V4 timeline, and a longer feature list than what the earlier sessions' working notes tracked. Cross-checked against the actual code:
 
 **Done, several expanded well beyond the original spec:** file upload + AI restructuring (now 11 output sections, not the original 4), Learning Objectives extractor, student focus-instruction input, visual diagrams (mind map + process diagrams), spaced repetition (plus full topic management — rename/archive/delete — beyond original scope), practice question generator (plus AI-graded free-text answers, beyond original scope), Google OAuth accounts. All 6 "Immediate Fixes Needed" from that doc (markdown asterisks, hidden-details quality, memorization-friendly formatting, objective extractor, prompt input, diagrams) are done.
 
-**Real gaps, not yet built:**
-- **Kazakh/Russian language support.** User profiles already have a `language` field (`services/users.js`) defaulting to `'en'`, with a comment noting `'en' is the only functional option until language support ships` — anticipated but never wired up. The Gemini prompt (`services/claude.js`) has no language parameter at all; output is English-only regardless of what's set. This blocks the plan's stated Grade 7-10 secondary audience entirely.
+**Real gaps — status:**
+- ~~Kazakh/Russian language support~~ — **done, see above.**
+- ~~Motivational/confidence block~~ — **done, see above.**
 - **Community content sharing.** Not built. Current caching is invisible/automatic (dedup by content hash, so classmates don't re-trigger AI calls) — different from the plan's description of students browsing/sharing each other's notes.
-- **Motivational/confidence block.** Not built — streaks, progress visualization across units, celebrating wins. Backend has some raw material (`getStats()` returns `masteredCount`/`totalTracked`) but nothing in the frontend surfaces it. Discussed and deliberately deferred this session, consistent with the plan's own September (V3) timeline.
 - **Explicit learning-style selector.** The plan describes a student picking a style (visual/auditory/reading/kinesthetic) and getting adapted output. What's built instead gives every student all four modalities as tabs (notes/diagrams/audio/quiz) to freely choose between — arguably better UX, but a different design than planned. Needs Aisha's call on whether that's fine as-is.
 - **Design palette.** Plan specified "calm green (biology association)"; actual CSS is blue-primary throughout (`#3182ce`/`#2b6cb0` used pervasively, green only on one toggle switch). Unclear if this was an intentional pivot — needs Aisha's call.
 

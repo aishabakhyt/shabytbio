@@ -878,6 +878,96 @@
     }
     .diagram-lightbox-canvas svg { max-width: none; max-height: none; }
 
+    /* ── Motivational dashboard ── */
+    .dashboard-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 1.25rem 1.5rem;
+      width: 100%;
+      max-width: 540px;
+      margin-top: 1.25rem;
+    }
+    .dashboard-card h3 {
+      font-size: 0.95rem;
+      color: #2d3748;
+      margin-bottom: 0.9rem;
+    }
+    .dashboard-stats-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .dashboard-stat {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      background: #f7fafc;
+      border-radius: 10px;
+      padding: 0.7rem 0.9rem;
+    }
+    .dashboard-stat-icon {
+      flex-shrink: 0;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff5f0;
+      color: #dd6b20;
+    }
+    .dashboard-stat.mastered .dashboard-stat-icon { background: #f0fff4; color: #38a169; }
+    .dashboard-stat-num { font-size: 1.15rem; font-weight: 700; color: #2d3748; line-height: 1.1; }
+    .dashboard-stat-label { font-size: 0.72rem; color: #718096; }
+    .dashboard-milestone {
+      font-size: 0.83rem;
+      color: #2c5282;
+      background: #ebf8ff;
+      border-radius: 8px;
+      padding: 0.55rem 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .dashboard-empty {
+      font-size: 0.85rem;
+      color: #718096;
+      padding: 0.5rem 0;
+    }
+    .dashboard-topics-label {
+      font-size: 0.75rem;
+      color: #a0aec0;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-bottom: 0.5rem;
+    }
+    .dashboard-topic-row { margin-bottom: 0.6rem; }
+    .dashboard-topic-row:last-child { margin-bottom: 0; }
+    .dashboard-topic-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #4a5568;
+      margin-bottom: 0.25rem;
+    }
+    .dashboard-topic-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 380px;
+    }
+    .dashboard-progress-track {
+      height: 6px;
+      background: #edf2f7;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .dashboard-progress-fill {
+      height: 100%;
+      background: #38a169;
+      border-radius: 999px;
+    }
+
     /* ── History ── */
     .history-card {
       background: #fff;
@@ -1241,7 +1331,7 @@
 </head>
 <body>
   <h1>ShabytBio</h1>
-  <p class="subtitle">AI study companion for biology students</p>
+  <p class="subtitle" data-i18n="appSubtitle">AI study companion for biology students</p>
 
   <div class="auth-bar" id="authBar"></div>
 
@@ -1249,43 +1339,43 @@
     <div class="welcome-card">
 
       <div id="welcomeSignedOut">
-        <p class="welcome-desc">Sign in with Google to upload your slides and get exam-ready study notes, hidden exam traps, and self-tests tailored to you.</p>
+        <p class="welcome-desc" data-i18n="welcomeSignedOutDesc">Sign in with Google to upload your slides and get exam-ready study notes, hidden exam traps, and self-tests tailored to you.</p>
         <div id="welcomeSigninBtn" class="welcome-signin-btn"></div>
         <div class="auth-config-error" id="welcomeConfigError" hidden></div>
       </div>
 
       <div id="welcomeOnboarding" hidden>
-        <p class="welcome-desc" id="welcomeGreeting">Let's set up your profile.</p>
+        <p class="welcome-desc" id="welcomeGreeting" data-i18n="welcomeGreeting">Let's set up your profile.</p>
 
         <div class="profile-field">
-          <label for="profileGrade">NIS grade</label>
+          <label for="profileGrade" data-i18n="profileGradeLabel">NIS grade</label>
           <select id="profileGrade">
-            <option value="">Not set</option>
-            <option value="7-8">Grade 7-8</option>
-            <option value="9-10">Grade 9-10</option>
-            <option value="11-12">Grade 11-12</option>
+            <option value="" data-i18n="gradeNotSet">Not set</option>
+            <option value="7-8" data-i18n="grade78">Grade 7-8</option>
+            <option value="9-10" data-i18n="grade910">Grade 9-10</option>
+            <option value="11-12" data-i18n="grade1112">Grade 11-12</option>
           </select>
         </div>
 
         <div class="profile-field">
-          <label for="profileLanguage">Language</label>
+          <label for="profileLanguage" data-i18n="profileLanguageLabel">Language</label>
           <select id="profileLanguage">
-            <option value="en">English</option>
-            <option value="kk" disabled>Kazakh (coming soon)</option>
-            <option value="ru" disabled>Russian (coming soon)</option>
+            <option value="en" data-i18n="langEnglish">English</option>
+            <option value="kk" data-i18n="langKazakh">Kazakh</option>
+            <option value="ru" data-i18n="langRussian">Russian</option>
           </select>
-          <p class="profile-field-hint">Only English is generated for now — this just saves your preference for when it ships.</p>
+          <p class="profile-field-hint" data-i18n="profileLanguageHint">Study notes, quizzes, and everything else will be generated in this language.</p>
         </div>
 
         <div class="profile-field">
-          <label for="profileFocus">Default focus instructions</label>
-          <textarea id="profileFocus" rows="2" placeholder="e.g. 'I already know the vocab, focus on calculations' — leave blank for full coverage"></textarea>
-          <p class="profile-field-hint">Pre-fills the focus box on every upload — you can still edit it per file.</p>
+          <label for="profileFocus" data-i18n="profileFocusLabel">Default focus instructions</label>
+          <textarea id="profileFocus" rows="2" data-i18n-placeholder="profileFocusPlaceholder" placeholder="e.g. 'I already know the vocab, focus on calculations' — leave blank for full coverage"></textarea>
+          <p class="profile-field-hint" data-i18n="profileFocusHint">Pre-fills the focus box on every upload — you can still edit it per file.</p>
         </div>
 
         <div class="profile-actions">
-          <button class="profile-save" id="welcomeEnterBtn">Enter ShabytBio</button>
-          <button class="profile-cancel" id="welcomeBackBtn" hidden>Cancel</button>
+          <button class="profile-save" id="welcomeEnterBtn" data-i18n="enterBtn">Enter ShabytBio</button>
+          <button class="profile-cancel" id="welcomeBackBtn" data-i18n="cancelBtn" hidden>Cancel</button>
         </div>
         <div class="profile-status" id="welcomeStatus"></div>
       </div>
@@ -1301,21 +1391,30 @@
         <path d="M12 16V4m0 0L8 8m4-4 4 4" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round"/>
       </svg>
-      <span>Drag &amp; drop or <strong>click to browse</strong></span>
-      <span style="color:#a0aec0;">PDF, .txt, or .pptx · max 50 MB</span>
+      <span id="dropZoneText">Drag &amp; drop or <strong>click to browse</strong></span>
+      <span style="color:#a0aec0;" data-i18n="dropZoneHint">PDF, .txt, or .pptx · max 50 MB</span>
     </label>
     <input type="file" id="fileInput" accept=".pdf,.txt,.pptx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.presentationml.presentation" />
 
     <div id="fileName"></div>
     <textarea id="focusInput" rows="2"
+      data-i18n-placeholder="focusPlaceholder"
       placeholder="Optional: tell me what to focus on (e.g. 'I already know the vocab, focus on calculations') — leave blank for full coverage"
       style="width:100%;margin-top:1rem;padding:0.6rem 0.75rem;border:1px solid #cbd5e0;border-radius:8px;font-size:0.85rem;font-family:inherit;resize:vertical;color:#2d3748;"></textarea>
-    <button id="uploadBtn" disabled>Upload &amp; Analyse</button>
+    <button id="uploadBtn" data-i18n="uploadBtn" disabled>Upload &amp; Analyse</button>
     <div id="status"></div>
   </div>
 
+  <!-- Motivational dashboard — streak, mastery count, per-topic progress.
+       Built from existing review/upload timestamps, not a separate tracked
+       field, so it works retroactively for a student's whole history. -->
+  <div class="dashboard-card" id="dashboardCard" hidden>
+    <h3 data-i18n="yourProgress">Your Progress</h3>
+    <div id="dashboardOutput"></div>
+  </div>
+
   <div class="history-card">
-    <h3>Recent uploads</h3>
+    <h3 data-i18n="recentUploads">Recent uploads</h3>
     <ul class="history-list" id="historyList"></ul>
   </div>
 
@@ -1324,9 +1423,9 @@
   <div class="review-overlay" id="reviewOverlay" hidden>
     <div class="review-modal">
       <div class="review-modal-header">
-        <h2>Review</h2>
+        <h2 data-i18n="reviewTitle">Review</h2>
         <span class="review-progress" id="reviewProgress"></span>
-        <button class="review-topics-btn" id="reviewTopicsBtn" type="button">Manage Topics</button>
+        <button class="review-topics-btn" id="reviewTopicsBtn" type="button" data-i18n="manageTopics">Manage Topics</button>
         <button class="review-close-btn" id="reviewCloseBtn" aria-label="Close">&times;</button>
       </div>
       <div id="reviewBody"></div>
@@ -1346,16 +1445,16 @@
 
   <div id="results" hidden>
     <div class="tabs-nav" id="tabsNav">
-      <button class="tab-btn" data-tab="objectives" id="tabBtn-objectives">Objectives</button>
-      <button class="tab-btn active" data-tab="notes" id="tabBtn-notes">Study Notes</button>
-      <button class="tab-btn" data-tab="diagrams" id="tabBtn-diagrams">Diagrams</button>
-      <button class="tab-btn" data-tab="videos" id="tabBtn-videos">Videos</button>
-      <button class="tab-btn" data-tab="audio" id="tabBtn-audio">Audio</button>
-      <button class="tab-btn" data-tab="hidden" id="tabBtn-hidden">Hidden Details</button>
-      <button class="tab-btn" data-tab="concepts" id="tabBtn-concepts">Key Concepts</button>
-      <button class="tab-btn" data-tab="summative" id="tabBtn-summative">Summative Topics</button>
-      <button class="tab-btn" data-tab="selftest" id="tabBtn-selftest">Test Yourself</button>
-      <button class="tab-btn" data-tab="checklist" id="tabBtn-checklist">Checklist</button>
+      <button class="tab-btn" data-tab="objectives" id="tabBtn-objectives" data-i18n="tabObjectives">Objectives</button>
+      <button class="tab-btn active" data-tab="notes" id="tabBtn-notes" data-i18n="tabNotes">Study Notes</button>
+      <button class="tab-btn" data-tab="diagrams" id="tabBtn-diagrams" data-i18n="tabDiagrams">Diagrams</button>
+      <button class="tab-btn" data-tab="videos" id="tabBtn-videos" data-i18n="tabVideos">Videos</button>
+      <button class="tab-btn" data-tab="audio" id="tabBtn-audio" data-i18n="tabAudio">Audio</button>
+      <button class="tab-btn" data-tab="hidden" id="tabBtn-hidden" data-i18n="tabHidden">Hidden Details</button>
+      <button class="tab-btn" data-tab="concepts" id="tabBtn-concepts" data-i18n="tabConcepts">Key Concepts</button>
+      <button class="tab-btn" data-tab="summative" id="tabBtn-summative" data-i18n="tabSummative">Summative Topics</button>
+      <button class="tab-btn" data-tab="selftest" id="tabBtn-selftest" data-i18n="tabSelftest">Test Yourself</button>
+      <button class="tab-btn" data-tab="checklist" id="tabBtn-checklist" data-i18n="tabChecklist">Checklist</button>
     </div>
 
     <!-- Learning Objectives -->
@@ -1364,7 +1463,7 @@
         <svg width="18" height="18" fill="none" stroke="#4338ca" stroke-width="2" viewBox="0 0 24 24">
           <path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.5 5.5 21 7.5 13.5 2 9h7l3-7z" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <h2>Learning Objectives — is this material covering what it set out to?</h2>
+        <h2 data-i18n="headerObjectives">Learning Objectives — is this material covering what it set out to?</h2>
       </div>
       <div class="result-card-body" id="objectivesOutput"></div>
     </div>
@@ -1375,7 +1474,7 @@
         <svg width="18" height="18" fill="none" stroke="#3182ce" stroke-width="2" viewBox="0 0 24 24">
           <path d="M9 12h6M9 16h6M9 8h6M5 4h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5a1 1 0 011-1z" stroke-linecap="round"/>
         </svg>
-        <h2>Study Notes</h2>
+        <h2 data-i18n="headerNotes">Study Notes</h2>
       </div>
       <div class="result-card-body" id="restructuredOutput"></div>
     </div>
@@ -1389,7 +1488,7 @@
           <rect x="8.5" y="14" width="7" height="7" rx="1"/>
           <path d="M10 6.5h4M6.5 10v3M17.5 10v3" stroke-linecap="round"/>
         </svg>
-        <h2>Visual Diagrams — for visual learners</h2>
+        <h2 data-i18n="headerDiagrams">Visual Diagrams — for visual learners</h2>
       </div>
       <div class="result-card-body" id="diagramsOutput"></div>
     </div>
@@ -1401,7 +1500,7 @@
           <rect x="2" y="5" width="15" height="14" rx="2"/>
           <path d="M22 8l-5 4 5 4V8z" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <h2>Related Videos — real videos on this exact topic</h2>
+        <h2 data-i18n="headerVideos">Related Videos — real videos on this exact topic</h2>
       </div>
       <div class="result-card-body" id="videosOutput"></div>
     </div>
@@ -1413,7 +1512,7 @@
           <path d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z" stroke-linecap="round"/>
           <path d="M19 11a7 7 0 01-14 0M12 18v3" stroke-linecap="round"/>
         </svg>
-        <h2>Listen — a study conversation about this material</h2>
+        <h2 data-i18n="headerAudio">Listen — a study conversation about this material</h2>
       </div>
       <div class="result-card-body" id="audioOutput"></div>
     </div>
@@ -1425,7 +1524,7 @@
           <circle cx="12" cy="12" r="9"/>
           <path d="M12 8v4M12 16h.01" stroke-linecap="round"/>
         </svg>
-        <h2>Hidden Details — likely to appear on your summative</h2>
+        <h2 data-i18n="headerHidden">Hidden Details — likely to appear on your summative</h2>
       </div>
       <div class="result-card-body" id="hiddenDetailsOutput"></div>
     </div>
@@ -1437,7 +1536,7 @@
           <path d="M12 2a7 7 0 017 7c0 3-1.8 5.5-4.5 6.7V18H9.5v-2.3C6.8 14.5 5 12 5 9a7 7 0 017-7z" stroke-linecap="round"/>
           <path d="M9.5 21h5" stroke-linecap="round"/>
         </svg>
-        <h2>Key Concepts</h2>
+        <h2 data-i18n="headerConcepts">Key Concepts</h2>
       </div>
       <div class="result-card-body" id="keyConceptsOutput"></div>
     </div>
@@ -1449,7 +1548,7 @@
           <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke-linecap="round"/>
           <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <h2>Likely Summative Topics</h2>
+        <h2 data-i18n="headerSummative">Likely Summative Topics</h2>
       </div>
       <div class="result-card-body" id="summativeOutput"></div>
     </div>
@@ -1460,10 +1559,10 @@
         <svg width="18" height="18" fill="none" stroke="#c53030" stroke-width="2" viewBox="0 0 24 24">
           <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707M12 21a9 9 0 110-18 9 9 0 010 18z" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
-        <h2>Quiz Time — test yourself</h2>
+        <h2 data-i18n="headerSelftest">Quiz Time — test yourself</h2>
       </div>
       <div class="result-card-body">
-        <p class="selftest-instructions">Answer each question in your head (or out loud) before revealing the answer — that's what actually builds recall, not just reading.</p>
+        <p class="selftest-instructions" data-i18n="selftestInstructions">Answer each question in your head (or out loud) before revealing the answer — that's what actually builds recall, not just reading.</p>
         <div id="selfTestOutput"></div>
       </div>
     </div>
@@ -1475,7 +1574,7 @@
           <path d="M9 11l3 3L22 4" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-linecap="round"/>
         </svg>
-        <h2>Readiness Checklist — tick these off before your summative</h2>
+        <h2 data-i18n="headerChecklist">Readiness Checklist — tick these off before your summative</h2>
       </div>
       <div class="result-card-body" id="checklistOutput"></div>
     </div>
@@ -1499,6 +1598,410 @@
     const ICON_CHECK_CIRCLE = svgIcon('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>');
     const ICON_PLAY = svgIcon('<polygon points="6 3 20 12 6 21 6 3" fill="currentColor" stroke="none"/>');
     const ICON_PAUSE = svgIcon('<rect x="6" y="4" width="4" height="16" fill="currentColor" stroke="none"/><rect x="14" y="4" width="4" height="16" fill="currentColor" stroke="none"/>');
+    const ICON_FLAME = svgIcon('<path d="M12 2c1 3-2 4-2 7a3 3 0 006 0c0-1-1-2-1-2 2 1 3 3 3 5a6 6 0 01-12 0c0-4 3-6 4-8 .5 1 1 2 2 2 0-2 0-3 0-4z" fill="currentColor" stroke="none"/>', 17);
+    const ICON_TROPHY = svgIcon('<path d="M8 4h8v5a4 4 0 01-8 0V4z"/><path d="M8 5H5a2 2 0 002 4M16 5h3a2 2 0 01-2 4"/><path d="M12 13v3M9 20h6M9 20a3 3 0 003-3 3 3 0 003 3" stroke-linecap="round"/>', 17);
+
+    /* ── Language / i18n ──
+       Covers the always-visible app shell (welcome/onboarding, upload
+       screen, nav, tabs, result headers) plus the highest-traffic dynamic
+       UI (review flow, manage topics, empty states, status messages).
+       AI-generated content (study notes, quiz, etc.) is translated
+       separately, server-side, by services/claude.js based on the same
+       language setting — this dictionary only covers the app's own UI text. */
+    const TRANSLATIONS = {
+      en: {
+        appSubtitle: 'AI study companion for biology students',
+        welcomeSignedOutDesc: "Sign in with Google to upload your slides and get exam-ready study notes, hidden exam traps, and self-tests tailored to you.",
+        welcomeGreeting: "Let's set up your profile.",
+        welcomeBackGreeting: "Welcome, {name}! Let's set up your profile.",
+        editingProfileGreeting: 'Editing your profile, {name}.',
+        profileGradeLabel: 'NIS grade',
+        gradeNotSet: 'Not set',
+        grade78: 'Grade 7-8',
+        grade910: 'Grade 9-10',
+        grade1112: 'Grade 11-12',
+        profileLanguageLabel: 'Language',
+        langEnglish: 'English',
+        langKazakh: 'Kazakh',
+        langRussian: 'Russian',
+        profileLanguageHint: 'Study notes, quizzes, and everything else will be generated in this language.',
+        profileFocusLabel: 'Default focus instructions',
+        profileFocusPlaceholder: "e.g. 'I already know the vocab, focus on calculations' — leave blank for full coverage",
+        profileFocusHint: 'Pre-fills the focus box on every upload — you can still edit it per file.',
+        enterBtn: 'Enter ShabytBio',
+        cancelBtn: 'Cancel',
+        dropZoneText: 'Drag & drop or ',
+        dropZoneBold: 'click to browse',
+        dropZoneHint: 'PDF, .txt, or .pptx · max 50 MB',
+        focusPlaceholder: "Optional: tell me what to focus on (e.g. 'I already know the vocab, focus on calculations') — leave blank for full coverage",
+        uploadBtn: 'Upload & Analyse',
+        recentUploads: 'Recent uploads',
+        reviewTitle: 'Review',
+        manageTopics: 'Manage Topics',
+        tabObjectives: 'Objectives',
+        tabNotes: 'Study Notes',
+        tabDiagrams: 'Diagrams',
+        tabVideos: 'Videos',
+        tabAudio: 'Audio',
+        tabHidden: 'Hidden Details',
+        tabConcepts: 'Key Concepts',
+        tabSummative: 'Summative Topics',
+        tabSelftest: 'Test Yourself',
+        tabChecklist: 'Checklist',
+        headerObjectives: 'Learning Objectives — is this material covering what it set out to?',
+        headerNotes: 'Study Notes',
+        headerDiagrams: 'Visual Diagrams — for visual learners',
+        headerVideos: 'Related Videos — real videos on this exact topic',
+        headerAudio: 'Listen — a study conversation about this material',
+        headerHidden: 'Hidden Details — likely to appear on your summative',
+        headerConcepts: 'Key Concepts',
+        headerSummative: 'Likely Summative Topics',
+        headerSelftest: 'Quiz Time — test yourself',
+        selftestInstructions: "Answer each question in your head (or out loud) before revealing the answer — that's what actually builds recall, not just reading.",
+        headerChecklist: 'Readiness Checklist — tick these off before your summative',
+        signOut: 'Sign out',
+        editProfile: 'Edit profile',
+        reviewQuiz: 'Review Quiz',
+        reviewQuizTooltip: "Practice questions from everything you've studied so far",
+        enlarge: 'Enlarge',
+        playConversation: 'Play conversation',
+        pause: 'Pause',
+        showAnswer: 'Show Answer',
+        hideAnswer: 'Hide Answer',
+        typeRecall: 'recall',
+        typeApplication: 'application',
+        checkMyAnswer: 'Check My Answer',
+        skipShowAnswer: 'Skip — just show me the answer',
+        typeAnswerPlaceholder: 'Type your answer here…',
+        gradeAgain: 'Again',
+        gradeHard: 'Hard',
+        gradeGood: 'Good',
+        gradeEasy: 'Easy',
+        gradeSuggestedHint: 'Highlighted below is what the AI suggests — pick whatever actually matches how it felt.',
+        reviewDoneToday: "That's everything due for today — nice work.",
+        reviewNothingDue: 'Nothing due right now. Upload more material to build up your review queue.',
+        backToReview: '← Back to Review',
+        rename: 'Rename',
+        save: 'Save',
+        deletePermanently: 'Delete permanently',
+        saving: 'Saving…',
+        saved: 'Saved!',
+        sessionExpired: 'Your session expired — reloading…',
+        checking: 'Checking…',
+        analysing: 'Analysing — this can take a moment, please wait…',
+        restart: 'Restart',
+        audioDone: 'Done.',
+        technicalDetails: 'Technical details',
+        fullOverview: 'Full Overview',
+        processDiagrams: 'Process Diagrams',
+        memoryTrick: 'Memory trick',
+        loadingHistory: 'Loading from history…',
+        cachedResult: 'Done instantly — someone already analysed this exact file, so you got the cached result.',
+        charsExtracted: 'Done — {count} characters extracted from "{filename}".',
+        yourProgress: 'Your Progress',
+        dayStreak: '{n}-day streak',
+        noStreakYet: 'No streak yet',
+        questionsMastered: '{n} mastered',
+        dashboardEmpty: 'Upload your first file to start building your study streak and track your mastery over time.',
+        topicsProgress: 'Progress by topic',
+        milestoneWeek: "A full week of studying — that's a real habit forming. Keep going.",
+        milestoneStreak: 'Nice streak — keep the momentum going!',
+        milestoneMastered50: "Over 50 questions mastered — that's serious, exam-ready progress.",
+        milestoneMastered10: 'Your first 10 mastered questions — good start!',
+        milestoneStudyToday: "You've got material waiting — study today to start a new streak.",
+        pausedQuestions: 'Paused · {total} question(s)',
+        dueOfTotal: '{due} due · {total} total',
+        noTopicsYet: 'No topics yet — upload material to start building your review queue.',
+        topicsHint: "Turn off a topic to pause it — it stops showing up in reviews, but your progress on it is kept, not deleted.",
+        resumeTopic: 'Resume this topic',
+        pauseTopic: 'Pause this topic',
+      },
+      kk: {
+        appSubtitle: 'Биология пәні бойынша ЖИ-көмекші',
+        welcomeSignedOutDesc: 'Слайдтарыңызды жүктеп, емтиханға дайын конспектілер, жасырын емтихан қателерін және өзіңізге бейімделген тесттерді алу үшін Google арқылы кіріңіз.',
+        welcomeGreeting: 'Профиліңізді баптайық.',
+        welcomeBackGreeting: 'Қош келдіңіз, {name}! Профиліңізді баптайық.',
+        editingProfileGreeting: 'Профиліңізді өзгертуде, {name}.',
+        profileGradeLabel: 'НЗМ сыныбы',
+        gradeNotSet: 'Көрсетілмеген',
+        grade78: '7-8 сынып',
+        grade910: '9-10 сынып',
+        grade1112: '11-12 сынып',
+        profileLanguageLabel: 'Тіл',
+        langEnglish: 'Ағылшын',
+        langKazakh: 'Қазақ',
+        langRussian: 'Орыс',
+        profileLanguageHint: 'Конспектілер, тесттер және басқа барлық нәрсе осы тілде жасалады.',
+        profileFocusLabel: 'Әдепкі назар аудару нұсқаулары',
+        profileFocusPlaceholder: 'мысалы, «Мен терминдерді білемін, есептеулерге назар аударыңыз» — толық қамту үшін бос қалдырыңыз',
+        profileFocusHint: 'Әр жүктеу кезінде назар аудару өрісін автоматты түрде толтырады — оны әр файл үшін өзгертуге болады.',
+        enterBtn: 'ShabytBio-ға кіру',
+        cancelBtn: 'Бас тарту',
+        dropZoneText: 'Сүйреп апарыңыз немесе ',
+        dropZoneBold: 'таңдау үшін басыңыз',
+        dropZoneHint: 'PDF, .txt немесе .pptx · макс. 50 МБ',
+        focusPlaceholder: "Міндетті емес: неге назар аудару керектігін жазыңыз (мысалы, «Мен терминдерді білемін, есептеулерге назар аударыңыз») — толық қамту үшін бос қалдырыңыз",
+        uploadBtn: 'Жүктеу және талдау',
+        recentUploads: 'Соңғы жүктеулер',
+        reviewTitle: 'Қайталау',
+        manageTopics: 'Тақырыптарды басқару',
+        tabObjectives: 'Мақсаттар',
+        tabNotes: 'Конспектілер',
+        tabDiagrams: 'Диаграммалар',
+        tabVideos: 'Видеолар',
+        tabAudio: 'Аудио',
+        tabHidden: 'Жасырын мәліметтер',
+        tabConcepts: 'Негізгі ұғымдар',
+        tabSummative: 'Жиынтық бағалау тақырыптары',
+        tabSelftest: 'Өзіңді тексер',
+        tabChecklist: 'Тексеру тізімі',
+        headerObjectives: 'Оқу мақсаттары — бұл материал көздеген нәрсені қамтиды ма?',
+        headerNotes: 'Конспектілер',
+        headerDiagrams: 'Көрнекі диаграммалар — көрнекілікті қалайтындарға',
+        headerVideos: 'Қатысты видеолар — дәл осы тақырып бойынша нақты видеолар',
+        headerAudio: 'Тыңдау — осы материал бойынша оқу диалогы',
+        headerHidden: 'Жасырын мәліметтер — жиынтық бағалауда кездесуі мүмкін',
+        headerConcepts: 'Негізгі ұғымдар',
+        headerSummative: 'Ықтимал жиынтық бағалау тақырыптары',
+        headerSelftest: 'Викторина уақыты — өзіңді тексер',
+        selftestInstructions: 'Жауапты ашпас бұрын әр сұраққа ойыңда (немесе дауыстап) жауап бер — есте сақтауды дамытатын дәл осы, жай оқу емес.',
+        headerChecklist: 'Дайындық тізімі — жиынтық бағалау алдында осыларды белгіле',
+        signOut: 'Шығу',
+        editProfile: 'Профильді өзгерту',
+        reviewQuiz: 'Қайталау викторинасы',
+        reviewQuizTooltip: 'Оқыған барлық материал бойынша жаттығу сұрақтары',
+        enlarge: 'Үлкейту',
+        playConversation: 'Диалогты тыңдау',
+        pause: 'Кідірту',
+        showAnswer: 'Жауапты көрсету',
+        hideAnswer: 'Жауапты жасыру',
+        typeRecall: 'есте сақтау',
+        typeApplication: 'қолдану',
+        checkMyAnswer: 'Жауабымды тексеру',
+        skipShowAnswer: 'Өткізіп жіберу — жауапты көрсет',
+        typeAnswerPlaceholder: 'Жауабыңызды осында теріңіз…',
+        gradeAgain: 'Білмедім',
+        gradeHard: 'Қиын болды',
+        gradeGood: 'Жақсы',
+        gradeEasy: 'Оңай',
+        gradeSuggestedHint: 'Төменде ЖИ ұсынған жауап белгіленген — өзіңе қалай сезілгеніне сай келетінін таңда.',
+        reviewDoneToday: 'Бүгінге барлығы дайын — жарайсың!',
+        reviewNothingDue: 'Қазір қайталайтын ештеңе жоқ. Қайталау кезегін толтыру үшін көбірек материал жүктеңіз.',
+        backToReview: '← Қайталауға оралу',
+        rename: 'Атын өзгерту',
+        yourProgress: 'Сенің жетістігің',
+        dayStreak: '{n} күндік серия',
+        noStreakYet: 'Әзірге серия жоқ',
+        questionsMastered: '{n} меңгерілді',
+        dashboardEmpty: 'Оқу серияңызды бастап, меңгеруіңізді уақыт бойы бақылау үшін алғашқы файлыңызды жүктеңіз.',
+        topicsProgress: 'Тақырып бойынша прогресс',
+        milestoneWeek: 'Бір апта бойы оқыдың — бұл нағыз әдетке айналуда. Жалғастыра бер.',
+        milestoneStreak: 'Жақсы серия — қарқынды сақта!',
+        milestoneMastered50: '50-ден астам сұрақты меңгердің — бұл емтиханға шынымен дайын болу деңгейі.',
+        milestoneMastered10: 'Алғашқы 10 меңгерілген сұрағың — жақсы бастама!',
+        milestoneStudyToday: 'Сені күтіп тұрған материал бар — жаңа серия бастау үшін бүгін оқы.',
+        pausedQuestions: 'Кідіртілген · {total} сұрақ',
+        dueOfTotal: '{due} кезекте · {total} барлығы',
+        noTopicsYet: 'Әзірге тақырып жоқ — қайталау кезегін бастау үшін материал жүктеңіз.',
+        topicsHint: 'Тақырыпты кідірту үшін өшіріңіз — ол қайталауда көрінбейді, бірақ прогресс жойылмайды.',
+        resumeTopic: 'Осы тақырыпты жалғастыру',
+        pauseTopic: 'Осы тақырыпты кідірту',
+        save: 'Сақтау',
+        deletePermanently: 'Толығымен жою',
+        saving: 'Сақталуда…',
+        saved: 'Сақталды!',
+        sessionExpired: 'Сеанс мерзімі аяқталды — қайта жүктелуде…',
+        checking: 'Тексерілуде…',
+        analysing: 'Талдануда — бұл біраз уақыт алуы мүмкін, күте тұрыңыз…',
+        restart: 'Қайта бастау',
+        audioDone: 'Аяқталды.',
+        technicalDetails: 'Техникалық мәліметтер',
+        fullOverview: 'Толық шолу',
+        processDiagrams: 'Процесс диаграммалары',
+        memoryTrick: 'Есте сақтау тәсілі',
+        loadingHistory: 'Тарихтан жүктелуде…',
+        cachedResult: 'Дереу дайын — бұл файлды біреу бұрын талдаған, сондықтан дайын нәтиже алдыңыз.',
+        charsExtracted: 'Дайын — «{filename}» файлынан {count} таңба алынды.',
+      },
+      ru: {
+        appSubtitle: 'ИИ-помощник по изучению биологии',
+        welcomeSignedOutDesc: 'Войдите через Google, чтобы загрузить свои слайды и получить готовые к экзамену конспекты, скрытые ловушки экзамена и тесты, адаптированные под вас.',
+        welcomeGreeting: 'Давайте настроим ваш профиль.',
+        welcomeBackGreeting: 'Добро пожаловать, {name}! Давайте настроим ваш профиль.',
+        editingProfileGreeting: 'Редактирование профиля, {name}.',
+        profileGradeLabel: 'Класс НИШ',
+        gradeNotSet: 'Не указано',
+        grade78: '7-8 класс',
+        grade910: '9-10 класс',
+        grade1112: '11-12 класс',
+        profileLanguageLabel: 'Язык',
+        langEnglish: 'Английский',
+        langKazakh: 'Казахский',
+        langRussian: 'Русский',
+        profileLanguageHint: 'Конспекты, тесты и всё остальное будут создаваться на этом языке.',
+        profileFocusLabel: 'Инструкции по умолчанию',
+        profileFocusPlaceholder: 'например, «Я уже знаю термины, сосредоточьтесь на вычислениях» — оставьте пустым для полного охвата',
+        profileFocusHint: 'Автоматически заполняет поле фокуса при каждой загрузке — вы всё равно можете изменить его для конкретного файла.',
+        enterBtn: 'Войти в ShabytBio',
+        cancelBtn: 'Отмена',
+        dropZoneText: 'Перетащите файл или ',
+        dropZoneBold: 'нажмите для выбора',
+        dropZoneHint: 'PDF, .txt или .pptx · макс. 50 МБ',
+        focusPlaceholder: "Необязательно: на чём сфокусироваться (например, «Я уже знаю термины, сосредоточьтесь на вычислениях») — оставьте пустым для полного охвата",
+        uploadBtn: 'Загрузить и анализировать',
+        recentUploads: 'Недавние загрузки',
+        reviewTitle: 'Повторение',
+        manageTopics: 'Управление темами',
+        tabObjectives: 'Цели',
+        tabNotes: 'Конспекты',
+        tabDiagrams: 'Диаграммы',
+        tabVideos: 'Видео',
+        tabAudio: 'Аудио',
+        tabHidden: 'Скрытые детали',
+        tabConcepts: 'Ключевые понятия',
+        tabSummative: 'Темы итогового теста',
+        tabSelftest: 'Проверь себя',
+        tabChecklist: 'Чек-лист',
+        headerObjectives: 'Цели обучения — раскрывает ли материал то, что должен?',
+        headerNotes: 'Конспекты',
+        headerDiagrams: 'Наглядные диаграммы — для визуалов',
+        headerVideos: 'Похожие видео — реальные видео именно на эту тему',
+        headerAudio: 'Слушать — учебный диалог по этому материалу',
+        headerHidden: 'Скрытые детали — вероятно появятся на итоговом тесте',
+        headerConcepts: 'Ключевые понятия',
+        headerSummative: 'Вероятные темы итогового теста',
+        headerSelftest: 'Время квиза — проверь себя',
+        selftestInstructions: 'Отвечайте на каждый вопрос про себя (или вслух), прежде чем открыть ответ — именно это тренирует память, а не просто чтение.',
+        headerChecklist: 'Чек-лист готовности — отметьте перед итоговым тестом',
+        signOut: 'Выйти',
+        editProfile: 'Изменить профиль',
+        reviewQuiz: 'Квиз-повторение',
+        reviewQuizTooltip: 'Практика по всему изученному материалу',
+        enlarge: 'Увеличить',
+        playConversation: 'Слушать диалог',
+        pause: 'Пауза',
+        showAnswer: 'Показать ответ',
+        hideAnswer: 'Скрыть ответ',
+        typeRecall: 'запоминание',
+        typeApplication: 'применение',
+        checkMyAnswer: 'Проверить мой ответ',
+        skipShowAnswer: 'Пропустить — просто покажи ответ',
+        typeAnswerPlaceholder: 'Введите ваш ответ здесь…',
+        gradeAgain: 'Не знал',
+        gradeHard: 'Сложно',
+        gradeGood: 'Хорошо',
+        gradeEasy: 'Легко',
+        gradeSuggestedHint: 'Ниже выделено то, что предлагает ИИ — выберите вариант, который точнее отражает, как это ощущалось.',
+        reviewDoneToday: 'На сегодня всё повторено — отличная работа.',
+        reviewNothingDue: 'Сейчас повторять нечего. Загрузите больше материала, чтобы пополнить очередь повторения.',
+        backToReview: '← Назад к повторению',
+        rename: 'Переименовать',
+        yourProgress: 'Ваш прогресс',
+        dayStreak: 'Серия: {n} дн.',
+        noStreakYet: 'Серии пока нет',
+        questionsMastered: 'Освоено: {n}',
+        dashboardEmpty: 'Загрузите первый файл, чтобы начать серию занятий и отслеживать своё освоение материала.',
+        topicsProgress: 'Прогресс по темам',
+        milestoneWeek: 'Целая неделя занятий — формируется настоящая привычка. Продолжайте в том же духе.',
+        milestoneStreak: 'Хорошая серия — не останавливайтесь!',
+        milestoneMastered50: 'Освоено более 50 вопросов — это серьёзный, готовый к экзамену прогресс.',
+        milestoneMastered10: 'Первые 10 освоенных вопросов — отличное начало!',
+        milestoneStudyToday: 'Вас ждёт материал — позанимайтесь сегодня, чтобы начать новую серию.',
+        pausedQuestions: 'На паузе · {total} вопрос(ов)',
+        dueOfTotal: '{due} к повторению · {total} всего',
+        noTopicsYet: 'Пока нет тем — загрузите материал, чтобы начать формировать очередь повторения.',
+        topicsHint: 'Отключите тему, чтобы поставить её на паузу — она перестанет появляться в повторении, но прогресс сохранится, а не удалится.',
+        resumeTopic: 'Возобновить эту тему',
+        pauseTopic: 'Поставить эту тему на паузу',
+        save: 'Сохранить',
+        deletePermanently: 'Удалить навсегда',
+        saving: 'Сохранение…',
+        saved: 'Сохранено!',
+        sessionExpired: 'Сессия истекла — перезагрузка…',
+        checking: 'Проверка…',
+        analysing: 'Анализ — это может занять некоторое время, подождите…',
+        restart: 'Начать заново',
+        audioDone: 'Готово.',
+        technicalDetails: 'Технические детали',
+        fullOverview: 'Полный обзор',
+        processDiagrams: 'Диаграммы процессов',
+        memoryTrick: 'Приём для запоминания',
+        loadingHistory: 'Загрузка из истории…',
+        cachedResult: 'Готово мгновенно — этот файл уже кто-то анализировал, поэтому вы получили готовый результат.',
+        charsExtracted: 'Готово — извлечено {count} символов из «{filename}».',
+      },
+    };
+
+    let currentLanguage = localStorage.getItem('shabytbio_lang') || 'en';
+
+    function t(key) {
+      return (TRANSLATIONS[currentLanguage] && TRANSLATIONS[currentLanguage][key]) || TRANSLATIONS.en[key] || key;
+    }
+
+    // Same as t(), but replaces {placeholder} tokens (e.g. {name}) — used for
+    // the handful of dynamic strings that interpolate a value, so each
+    // language can put the interpolated word wherever its own grammar needs
+    // it rather than always at a fixed English-word-order position.
+    function tf(key, replacements) {
+      let str = t(key);
+      for (const [token, value] of Object.entries(replacements)) {
+        str = str.split(`{${token}}`).join(value);
+      }
+      return str;
+    }
+
+    // Keeps currentLanguage in sync with the logged-in user's saved
+    // preference (the authoritative source once signed in — localStorage is
+    // only the pre-login/guest fallback) and re-renders the UI in it.
+    function syncLanguageFromUser() {
+      if (currentUser && currentUser.language && TRANSLATIONS[currentUser.language]) {
+        currentLanguage = currentUser.language;
+        localStorage.setItem('shabytbio_lang', currentLanguage);
+      }
+      applyTranslations();
+    }
+
+    // Applies the current language to every static element carrying a
+    // data-i18n* marker, and updates <html lang>. Called on load and any
+    // time the language changes (profile save, or a future switcher).
+    function applyTranslations() {
+      document.documentElement.lang = currentLanguage;
+
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = t(el.getAttribute('data-i18n'));
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+      });
+      document.querySelectorAll('[data-i18n-aria-label]').forEach(el => {
+        el.setAttribute('aria-label', t(el.getAttribute('data-i18n-aria-label')));
+      });
+
+      // Drop-zone text is a sentence split across a plain span and a bold
+      // span — rebuilt from two keys rather than one so translations can
+      // reorder words naturally instead of being stuck with English word order.
+      const dropZoneText = document.getElementById('dropZoneText');
+      if (dropZoneText) {
+        dropZoneText.innerHTML = '';
+        dropZoneText.appendChild(document.createTextNode(t('dropZoneText')));
+        const strong = document.createElement('strong');
+        strong.textContent = t('dropZoneBold');
+        dropZoneText.appendChild(strong);
+      }
+
+      // Anything already rendered dynamically (auth bar, results, review
+      // modal) needs a manual re-render to pick up the new language — static
+      // markup above is handled by the data-i18n pass, but JS-generated
+      // content isn't watching for language changes on its own.
+      if (typeof renderAuthBar === 'function' && currentUser) renderAuthBar();
+      if (typeof refreshDueCount === 'function' && currentUser) refreshDueCount();
+    }
+
+    function setLanguage(lang) {
+      currentLanguage = TRANSLATIONS[lang] ? lang : 'en';
+      localStorage.setItem('shabytbio_lang', currentLanguage);
+      applyTranslations();
+    }
 
     const fileInput  = document.getElementById('fileInput');
     const uploadBtn  = document.getElementById('uploadBtn');
@@ -1535,14 +2038,14 @@
       const reviewBtn = document.createElement('button');
       reviewBtn.className = 'review-btn';
       reviewBtn.id = 'reviewNavBtn';
-      reviewBtn.innerHTML = `${ICON_TARGET} Review Quiz`;
-      reviewBtn.title = 'Practice questions from everything you\'ve studied so far';
+      reviewBtn.innerHTML = `${ICON_TARGET} ${t('reviewQuiz')}`;
+      reviewBtn.title = t('reviewQuizTooltip');
       reviewBtn.addEventListener('click', openReviewSession);
       wrap.appendChild(reviewBtn);
 
       const profileBtn = document.createElement('button');
       profileBtn.className = 'auth-profile-btn';
-      profileBtn.title = 'Edit profile';
+      profileBtn.title = t('editProfile');
 
       if (currentUser.picture) {
         const img = document.createElement('img');
@@ -1562,7 +2065,7 @@
 
       const signOutBtn = document.createElement('button');
       signOutBtn.className = 'auth-signout';
-      signOutBtn.textContent = 'Sign out';
+      signOutBtn.textContent = t('signOut');
       signOutBtn.addEventListener('click', handleSignOut);
       wrap.appendChild(signOutBtn);
 
@@ -1590,9 +2093,9 @@
 
       const firstName = (currentUser.name || '').split(' ')[0];
       document.getElementById('welcomeGreeting').textContent = isEditMode
-        ? `Editing your profile, ${firstName}.`
-        : `Welcome, ${firstName}! Let's set up your profile.`;
-      document.getElementById('welcomeEnterBtn').textContent = isEditMode ? 'Save' : 'Enter ShabytBio';
+        ? tf('editingProfileGreeting', { name: firstName })
+        : tf('welcomeBackGreeting', { name: firstName });
+      document.getElementById('welcomeEnterBtn').textContent = isEditMode ? t('save') : t('enterBtn');
       document.getElementById('welcomeBackBtn').hidden = !isEditMode;
       document.getElementById('welcomeStatus').textContent = '';
       document.getElementById('welcomeStatus').className = 'profile-status';
@@ -1604,6 +2107,7 @@
       document.getElementById('welcomeScreen').hidden = true;
       document.getElementById('appContent').hidden = false;
       renderAuthBar();
+      renderDashboard();
 
       // Pre-fill the per-upload focus box with the saved default (only if empty,
       // so we never clobber something the student is mid-typing).
@@ -1622,7 +2126,7 @@
       const defaultFocusInstructions = document.getElementById('profileFocus').value.trim();
 
       statusEl2.className = 'profile-status';
-      statusEl2.textContent = 'Saving…';
+      statusEl2.textContent = t('saving');
 
       try {
         const res = await fetch('/api/auth/profile', {
@@ -1635,13 +2139,14 @@
         if (!res.ok) throw new Error(data.error || 'Failed to save profile.');
 
         currentUser = data;
+        syncLanguageFromUser();
         const focusInputEl = document.getElementById('focusInput');
         if (focusInputEl) focusInputEl.value = currentUser.defaultFocusInstructions || '';
 
         // Visible confirmation before the transition, so Save clearly "does something"
         // instead of just silently vanishing.
         statusEl2.className = 'profile-status success';
-        statusEl2.textContent = 'Saved!';
+        statusEl2.textContent = t('saved');
         setTimeout(() => {
           showApp();
           loadHistory();
@@ -1665,7 +2170,7 @@
     // just reloading, which re-runs initAuth() and shows the sign-in screen again.
     function handleSessionExpired() {
       statusEl.className = 'error';
-      statusEl.textContent = 'Your session expired — reloading…';
+      statusEl.textContent = t('sessionExpired');
       setTimeout(() => location.reload(), 1200);
     }
 
@@ -1681,6 +2186,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'Sign-in failed.');
         currentUser = data;
+        syncLanguageFromUser();
         // First-time sign-in (no grade yet) lands on setup; returning users go straight in.
         if (!currentUser.grade) {
           showOnboarding(false);
@@ -1720,6 +2226,7 @@
         const meRes = await fetch('/api/auth/me');
         if (meRes.ok) {
           currentUser = await meRes.json();
+          syncLanguageFromUser();
           showApp();
           loadHistory();
           return;
@@ -1737,6 +2244,7 @@
       }
     }
 
+    applyTranslations(); // pre-login shell (welcome screen) in the last-saved/default language before we know the user
     initAuth();
 
     /* ── Review (spaced repetition across ALL past uploads) ── */
@@ -1777,14 +2285,14 @@
 
       const backBtn = document.createElement('button');
       backBtn.className = 'topics-back-btn';
-      backBtn.textContent = '← Back to Review';
+      backBtn.textContent = t('backToReview');
       backBtn.addEventListener('click', openReviewSession);
       body.appendChild(backBtn);
 
       if (!topics.length) {
         const empty = document.createElement('p');
         empty.className = 'topics-empty';
-        empty.textContent = 'No topics yet — upload material to start building your review queue.';
+        empty.textContent = t('noTopicsYet');
         body.appendChild(empty);
         return;
       }
@@ -1792,7 +2300,7 @@
       const note = document.createElement('p');
       note.className = 'topic-meta';
       note.style.marginBottom = '0.6rem';
-      note.textContent = 'Turn off a topic to pause it — it stops showing up in reviews, but your progress on it is kept, not deleted.';
+      note.textContent = t('topicsHint');
       body.appendChild(note);
 
       topics.forEach(topic => {
@@ -1812,14 +2320,16 @@
         const renameBtn = document.createElement('button');
         renameBtn.className = 'topic-icon-btn';
         renameBtn.innerHTML = ICON_EDIT;
-        renameBtn.title = 'Rename';
+        renameBtn.title = t('rename');
         renameBtn.addEventListener('click', () => startRenameTopic(row, topic));
         nameRow.appendChild(name);
         nameRow.appendChild(renameBtn);
 
         const meta = document.createElement('div');
         meta.className = 'topic-meta';
-        meta.textContent = topic.archived ? `Paused · ${topic.total} question(s)` : `${topic.due} due · ${topic.total} total`;
+        meta.textContent = topic.archived
+          ? tf('pausedQuestions', { total: topic.total })
+          : tf('dueOfTotal', { due: topic.due, total: topic.total });
         info.appendChild(nameRow);
         info.appendChild(meta);
 
@@ -1828,13 +2338,13 @@
 
         const toggle = document.createElement('button');
         toggle.className = `topic-toggle${topic.archived ? ' off' : ''}`;
-        toggle.setAttribute('aria-label', topic.archived ? 'Resume this topic' : 'Pause this topic');
+        toggle.setAttribute('aria-label', topic.archived ? t('resumeTopic') : t('pauseTopic'));
         toggle.addEventListener('click', () => toggleTopicArchived(topic.sourceFilename, !topic.archived));
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'topic-icon-btn';
         deleteBtn.innerHTML = ICON_TRASH;
-        deleteBtn.title = 'Delete permanently';
+        deleteBtn.title = t('deletePermanently');
         deleteBtn.addEventListener('click', () => deleteTopicPermanently(topic));
 
         actions.appendChild(toggle);
@@ -1859,7 +2369,7 @@
       const saveBtn = document.createElement('button');
       saveBtn.className = 'topic-icon-btn';
       saveBtn.innerHTML = ICON_CHECK;
-      saveBtn.title = 'Save';
+      saveBtn.title = t('save');
       saveBtn.addEventListener('click', () => renameTopic(topic.sourceFilename, input.value));
 
       input.addEventListener('keydown', e => {
@@ -1922,8 +2432,8 @@
         if (!res.ok) return;
         const stats = await res.json();
         btn.innerHTML = stats.dueCount > 0
-          ? `${ICON_TARGET} Review Quiz <span class="review-badge">${stats.dueCount}</span>`
-          : `${ICON_TARGET} Review Quiz`;
+          ? `${ICON_TARGET} ${t('reviewQuiz')} <span class="review-badge">${stats.dueCount}</span>`
+          : `${ICON_TARGET} ${t('reviewQuiz')}`;
       } catch (err) {
         // Silent — a missing badge count isn't worth surfacing an error for.
       }
@@ -1954,6 +2464,7 @@
     function closeReviewSession() {
       document.getElementById('reviewOverlay').hidden = true;
       refreshDueCount(); // due count may have changed during the session
+      renderDashboard(); // streak/mastery may have changed during the session
     }
 
     function renderReviewCard() {
@@ -1966,8 +2477,8 @@
         const empty = document.createElement('div');
         empty.className = 'review-empty-state';
         empty.innerHTML = reviewQueue.length
-          ? `<span class="review-empty-emoji">${svgIcon('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>', 32)}</span>That's everything due for today — nice work.`
-          : `<span class="review-empty-emoji">${svgIcon('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', 32)}</span>Nothing due right now. Upload more material to build up your review queue.`;
+          ? `<span class="review-empty-emoji">${svgIcon('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>', 32)}</span>${t('reviewDoneToday')}`
+          : `<span class="review-empty-emoji">${svgIcon('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', 32)}</span>${t('reviewNothingDue')}`;
         body.appendChild(empty);
         return;
       }
@@ -2001,7 +2512,7 @@
       // just wants a quick flip-through instead.
       const textarea = document.createElement('textarea');
       textarea.className = 'review-answer-textarea';
-      textarea.placeholder = 'Type your answer here…';
+      textarea.placeholder = t('typeAnswerPlaceholder');
       body.appendChild(textarea);
 
       const checkRow = document.createElement('div');
@@ -2009,13 +2520,13 @@
 
       const checkBtn = document.createElement('button');
       checkBtn.className = 'review-check-btn';
-      checkBtn.textContent = 'Check My Answer';
+      checkBtn.textContent = t('checkMyAnswer');
       checkBtn.addEventListener('click', () => checkReviewAnswer(item, textarea.value));
       checkRow.appendChild(checkBtn);
 
       const skipBtn = document.createElement('button');
       skipBtn.className = 'review-skip-link';
-      skipBtn.textContent = 'Skip — just show me the answer';
+      skipBtn.textContent = t('skipShowAnswer');
       skipBtn.addEventListener('click', () => revealReviewAnswer(item));
       checkRow.appendChild(skipBtn);
 
@@ -2032,7 +2543,7 @@
       const checkBtn = body.querySelector('.review-check-btn');
       const skipBtn = body.querySelector('.review-skip-link');
       const textarea = body.querySelector('.review-answer-textarea');
-      if (checkBtn) { checkBtn.disabled = true; checkBtn.textContent = 'Checking…'; }
+      if (checkBtn) { checkBtn.disabled = true; checkBtn.textContent = t('checking'); }
       if (skipBtn) skipBtn.disabled = true;
       if (textarea) textarea.disabled = true;
 
@@ -2081,16 +2592,16 @@
       if (suggested) {
         const hint = document.createElement('p');
         hint.className = 'review-grade-hint';
-        hint.textContent = 'Highlighted below is what the AI suggests — pick whatever actually matches how it felt.';
+        hint.textContent = t('gradeSuggestedHint');
         body.appendChild(hint);
       }
 
       const gradeRow = document.createElement('div');
       gradeRow.className = 'review-grade-row';
-      [['again', 'Again'], ['hard', 'Hard'], ['good', 'Good'], ['easy', 'Easy']].forEach(([grade, label]) => {
+      [['again', 'gradeAgain'], ['hard', 'gradeHard'], ['good', 'gradeGood'], ['easy', 'gradeEasy']].forEach(([grade, key]) => {
         const btn = document.createElement('button');
         btn.className = `review-grade-btn ${grade}${grade === suggested ? ' suggested' : ''}`;
-        btn.textContent = label;
+        btn.textContent = t(key);
         btn.addEventListener('click', () => submitReviewGrade(item.id, grade));
         gradeRow.appendChild(btn);
       });
@@ -2138,7 +2649,7 @@
 
       uploadBtn.disabled = true;
       statusEl.className = '';
-      statusEl.textContent = 'Analysing — this can take a moment, please wait…';
+      statusEl.textContent = t('analysing');
       resultsEl.hidden = true;
 
       const form = new FormData();
@@ -2159,13 +2670,14 @@
         } else {
           statusEl.className = 'success';
           statusEl.textContent = data.fromCache
-            ? `Done instantly — someone already analysed this exact file, so you got the cached result.`
-            : `Done — ${data.charCount} characters extracted from "${data.filename}".`;
+            ? t('cachedResult')
+            : tf('charsExtracted', { count: data.charCount, filename: data.filename });
           renderResults(data.result);
           resultsEl.hidden = false;
           resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
           loadHistory();
           refreshDueCount(); // this upload just seeded new review items
+          renderDashboard(); // this upload counts toward today's streak
         }
       } catch (err) {
         statusEl.className = 'error';
@@ -2411,13 +2923,13 @@
         const playBtn = document.createElement('button');
         playBtn.className = 'audio-play-btn';
         playBtn.id = 'audioPlayBtn';
-        playBtn.innerHTML = `${ICON_PLAY} Play conversation`;
+        playBtn.innerHTML = `${ICON_PLAY} ${t('playConversation')}`;
         playBtn.addEventListener('click', toggleAudioPlayback);
         controls.appendChild(playBtn);
 
         const restartBtn = document.createElement('button');
         restartBtn.className = 'audio-restart-btn';
-        restartBtn.textContent = 'Restart';
+        restartBtn.textContent = t('restart');
         restartBtn.addEventListener('click', restartAudioPlayback);
         controls.appendChild(restartBtn);
 
@@ -2453,7 +2965,7 @@
 
     function updateAudioPlayButton() {
       const btn = document.getElementById('audioPlayBtn');
-      if (btn) btn.innerHTML = audioIsPlaying ? `${ICON_PAUSE} Pause` : `${ICON_PLAY} Play conversation`;
+      if (btn) btn.innerHTML = audioIsPlaying ? `${ICON_PAUSE} ${t('pause')}` : `${ICON_PLAY} ${t('playConversation')}`;
     }
 
     function toggleAudioPlayback() {
@@ -2501,7 +3013,7 @@
         audioIsPlaying = false;
         updateAudioPlayButton();
         const statusEl2 = document.getElementById('audioStatus');
-        if (statusEl2) statusEl2.textContent = 'Done.';
+        if (statusEl2) statusEl2.textContent = t('audioDone');
         return;
       }
 
@@ -2615,7 +3127,7 @@
 
       const expandBtn = document.createElement('button');
       expandBtn.className = 'diagram-expand-btn';
-      expandBtn.innerHTML = `${ICON_SEARCH} Enlarge`;
+      expandBtn.innerHTML = `${ICON_SEARCH} ${t('enlarge')}`;
       header.appendChild(expandBtn);
 
       wrapper.appendChild(header);
@@ -2667,7 +3179,7 @@
         const details = document.createElement('details');
         details.className = 'diagram-error-details';
         const summary = document.createElement('summary');
-        summary.textContent = 'Technical details';
+        summary.textContent = t('technicalDetails');
         details.appendChild(summary);
         const pre = document.createElement('pre');
         pre.textContent = `Error: ${err.message || err}\n\n${mermaidCode}`;
@@ -2718,7 +3230,7 @@
         if (hasDiagrams) {
           const heading = document.createElement('p');
           heading.className = 'diagram-section-heading';
-          heading.textContent = 'Full Overview';
+          heading.textContent = t('fullOverview');
           el.appendChild(heading);
         }
         await renderOneDiagram(el, 'Mind Map — full topic overview', '', mindMap.mermaid);
@@ -2728,7 +3240,7 @@
         if (hasMindMap) {
           const heading = document.createElement('p');
           heading.className = 'diagram-section-heading';
-          heading.textContent = 'Process Diagrams';
+          heading.textContent = t('processDiagrams');
           el.appendChild(heading);
         }
         for (const item of items) {
@@ -2940,7 +3452,7 @@
             mnemonicEl.className = 'mnemonic-box';
             const label = document.createElement('summary');
             label.className = 'mnemonic-label';
-            label.textContent = 'Memory trick';
+            label.textContent = t('memoryTrick');
             mnemonicEl.appendChild(label);
             const mnemonicText = document.createElement('span');
             mnemonicText.className = 'mnemonic-text';
@@ -3014,13 +3526,13 @@
         if (item.type) {
           const badge = document.createElement('span');
           badge.className = `selftest-badge ${item.type}`;
-          badge.textContent = item.type;
+          badge.textContent = item.type === 'application' ? t('typeApplication') : t('typeRecall');
           meta.appendChild(badge);
         }
 
         const btn = document.createElement('button');
         btn.className = 'selftest-reveal';
-        btn.textContent = 'Show Answer';
+        btn.textContent = t('showAnswer');
 
         const answerEl = document.createElement('div');
         answerEl.className = 'selftest-answer';
@@ -3030,7 +3542,7 @@
         btn.addEventListener('click', () => {
           const isOpen = !answerEl.hidden;
           answerEl.hidden = isOpen;
-          btn.textContent = isOpen ? 'Show Answer' : 'Hide Answer';
+          btn.textContent = isOpen ? t('showAnswer') : t('hideAnswer');
           btn.classList.toggle('open', !isOpen);
         });
 
@@ -3042,6 +3554,101 @@
     }
 
     /* ── History ── */
+    /* ── Motivational dashboard ── */
+    async function renderDashboard() {
+      const card = document.getElementById('dashboardCard');
+      const out = document.getElementById('dashboardOutput');
+      if (!card || !out) return;
+
+      let data;
+      try {
+        const res = await fetch('/api/mastery/dashboard');
+        if (!res.ok) { card.hidden = true; return; }
+        data = await res.json();
+      } catch (err) {
+        card.hidden = true; // best-effort — never blocks the rest of the app
+        return;
+      }
+
+      card.hidden = false;
+      out.innerHTML = '';
+
+      if (!data.totalTracked) {
+        const empty = document.createElement('p');
+        empty.className = 'dashboard-empty';
+        empty.textContent = t('dashboardEmpty');
+        out.appendChild(empty);
+        return;
+      }
+
+      const statsRow = document.createElement('div');
+      statsRow.className = 'dashboard-stats-row';
+
+      const streakStat = document.createElement('div');
+      streakStat.className = 'dashboard-stat';
+      streakStat.innerHTML = `
+        <span class="dashboard-stat-icon">${ICON_FLAME}</span>
+        <span>
+          <span class="dashboard-stat-num">${data.streak > 0 ? tf('dayStreak', { n: data.streak }) : t('noStreakYet')}</span>
+        </span>`;
+      statsRow.appendChild(streakStat);
+
+      const masteredStat = document.createElement('div');
+      masteredStat.className = 'dashboard-stat mastered';
+      masteredStat.innerHTML = `
+        <span class="dashboard-stat-icon">${ICON_TROPHY}</span>
+        <span>
+          <span class="dashboard-stat-num">${tf('questionsMastered', { n: data.masteredCount })}</span>
+        </span>`;
+      statsRow.appendChild(masteredStat);
+
+      out.appendChild(statsRow);
+
+      // One milestone message at a time, highest-value first — celebrating
+      // everything at once would be noisy rather than motivating.
+      let milestoneKey = null;
+      if (data.streak >= 7) milestoneKey = 'milestoneWeek';
+      else if (data.masteredCount >= 50) milestoneKey = 'milestoneMastered50';
+      else if (data.streak >= 3) milestoneKey = 'milestoneStreak';
+      else if (data.masteredCount >= 10) milestoneKey = 'milestoneMastered10';
+      else if (data.dueCount > 0 && data.streak === 0) milestoneKey = 'milestoneStudyToday';
+
+      if (milestoneKey) {
+        const milestone = document.createElement('p');
+        milestone.className = 'dashboard-milestone';
+        milestone.textContent = t(milestoneKey);
+        out.appendChild(milestone);
+      }
+
+      if (data.topics && data.topics.length) {
+        const label = document.createElement('p');
+        label.className = 'dashboard-topics-label';
+        label.textContent = t('topicsProgress');
+        out.appendChild(label);
+
+        // Cap at 5 so an active student's dashboard doesn't turn into a
+        // scrolling wall of bars — the topics list already exists for the
+        // full picture (Manage Topics), this is meant to be a glance.
+        data.topics.slice(0, 5).forEach(topic => {
+          const pct = topic.total ? Math.round((topic.mastered / topic.total) * 100) : 0;
+          const row = document.createElement('div');
+          row.className = 'dashboard-topic-row';
+          const top = document.createElement('div');
+          top.className = 'dashboard-topic-top';
+          top.innerHTML = `<span class="dashboard-topic-name">${mdToHtml(topic.label)}</span><span>${pct}%</span>`;
+          const track = document.createElement('div');
+          track.className = 'dashboard-progress-track';
+          const fill = document.createElement('div');
+          fill.className = 'dashboard-progress-fill';
+          fill.style.width = `${pct}%`;
+          track.appendChild(fill);
+          row.appendChild(top);
+          row.appendChild(track);
+          out.appendChild(row);
+        });
+      }
+    }
+
     const historyListEl = document.getElementById('historyList');
 
     function formatHistoryDate(isoString) {
@@ -3114,7 +3721,7 @@
 
     async function loadHistoryItem(id) {
       statusEl.className = '';
-      statusEl.textContent = 'Loading from history…';
+      statusEl.textContent = t('loadingHistory');
       try {
         const res = await fetch(`/api/history/${id}`);
         if (!res.ok) throw new Error((await res.json()).error || 'Not found');

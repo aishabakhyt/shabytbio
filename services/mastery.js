@@ -106,6 +106,82 @@ async function getStats(userId) {
   return { totalTracked, dueCount, masteredCount };
 }
 
+// Powers the "Your Progress" dashboard — a study streak (consecutive days
+// with real activity), overall mastery count, and per-topic mastery
+// progress. Built from data that already exists (review timestamps, upload
+// timestamps, mastery repetitions/intervals) rather than a new tracked
+// field, so it works retroactively for every student's existing history
+// instead of only counting activity from the day this feature shipped.
+async function getDashboard(userId) {
+  const db = await connectMongo();
+  const masteryCol = db.collection('mastery');
+  const historyCol = db.collection('history');
+  const now = new Date().toISOString();
+
+  const [totalTracked, dueCount, masteredCount, reviewDates, uploadDates, topicRows] = await Promise.all([
+    masteryCol.countDocuments({ userId, ...NOT_ARCHIVED }),
+    masteryCol.countDocuments({ userId, nextReviewAt: { $lte: now }, ...NOT_ARCHIVED }),
+    masteryCol.countDocuments({
+      userId,
+      repetitions: { $gte: MASTERED_REPETITIONS },
+      interval: { $gte: MASTERED_INTERVAL_DAYS },
+      ...NOT_ARCHIVED,
+    }),
+    masteryCol.distinct('lastReviewedAt', { userId, lastReviewedAt: { $ne: null } }),
+    historyCol.distinct('uploaded_at', { userId }),
+    masteryCol.aggregate([
+      { $match: { userId } },
+      {
+        $group: {
+          _id: '$sourceFilename',
+          total: { $sum: 1 },
+          mastered: {
+            $sum: {
+              $cond: [
+                { $and: [{ $gte: ['$repetitions', MASTERED_REPETITIONS] }, { $gte: ['$interval', MASTERED_INTERVAL_DAYS] }] },
+                1,
+                0,
+              ],
+            },
+          },
+          allArchived: { $min: { $cond: [{ $eq: ['$archived', true] }, 1, 0] } },
+          label: { $first: { $ifNull: ['$topicLabel', '$sourceFilename'] } },
+          latestCreatedAt: { $max: '$createdAt' },
+        },
+      },
+      { $match: { allArchived: { $ne: 1 } } }, // paused topics don't clutter the motivational view
+      { $sort: { latestCreatedAt: -1 } },
+    ]).toArray(),
+  ]);
+
+  // Collapse every timestamp down to its UTC calendar date — the exact time
+  // of day doesn't matter for a streak, only which days had any activity.
+  const activeDates = new Set();
+  for (const d of reviewDates) if (d) activeDates.add(String(d).slice(0, 10));
+  for (const d of uploadDates) if (d) activeDates.add(String(d).slice(0, 10));
+
+  // Counts consecutive active days ending today OR yesterday — a student
+  // who studied every day through yesterday but hasn't opened the app yet
+  // today shouldn't see their streak reset to 0 before the day is even over.
+  let streak = 0;
+  const cursor = new Date();
+  if (activeDates.has(cursor.toISOString().slice(0, 10))) streak++;
+  cursor.setUTCDate(cursor.getUTCDate() - 1);
+  while (activeDates.has(cursor.toISOString().slice(0, 10))) {
+    streak++;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+
+  const topics = topicRows.map(r => ({
+    sourceFilename: r._id || '(untitled)',
+    label: r.label || r._id || '(untitled)',
+    total: r.total,
+    mastered: r.mastered,
+  }));
+
+  return { streak, masteredCount, totalTracked, dueCount, topics };
+}
+
 // Groups a student's review items by source material so they can see their
 // review queue divided by topic instead of one undifferentiated pile, and
 // choose which topics stay in the long-term rotation (e.g. pause last
@@ -238,7 +314,7 @@ async function gradeReview(id, userId, grade) {
 }
 
 module.exports = {
-  seedFromSelfTest, listDue, getStats, gradeReview, getById,
+  seedFromSelfTest, listDue, getStats, getDashboard, gradeReview, getById,
   listTopics, setTopicArchived, renameTopic, deleteTopic, deleteByUploadId,
   VALID_GRADES,
 };

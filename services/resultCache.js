@@ -15,14 +15,17 @@ const CACHE_TTL_DAYS = 30;
 // existing cache entry instead of silently serving a stale-format result on
 // the next re-upload of an already-cached file — this is exactly what
 // happened with the [STEP]/[KEY] note formats before this existed.
-function hashInput(text, focusInstructions, grade) {
-  const normalized = `${PROMPT_VERSION} ${text} ${focusInstructions || ''} ${grade || ''}`;
+// language is part of the key so a Kazakh-medium student never gets served
+// an English (or Russian) classmate's cached result for the same file —
+// same content, different language, genuinely different output.
+function hashInput(text, focusInstructions, grade, language) {
+  const normalized = `${PROMPT_VERSION} ${text} ${focusInstructions || ''} ${grade || ''} ${language || 'en'}`;
   return crypto.createHash('sha256').update(normalized).digest('hex');
 }
 
-async function getCached(text, focusInstructions, grade) {
+async function getCached(text, focusInstructions, grade, language) {
   const db = await connectMongo();
-  const hash = hashInput(text, focusInstructions, grade);
+  const hash = hashInput(text, focusInstructions, grade, language);
   const entry = await db.collection('resultCache').findOne({ hash });
   if (!entry) return null;
 
@@ -36,9 +39,9 @@ async function getCached(text, focusInstructions, grade) {
   return entry.result;
 }
 
-async function setCached(text, focusInstructions, grade, result) {
+async function setCached(text, focusInstructions, grade, language, result) {
   const db = await connectMongo();
-  const hash = hashInput(text, focusInstructions, grade);
+  const hash = hashInput(text, focusInstructions, grade, language);
   await db.collection('resultCache').updateOne(
     { hash },
     { $set: { hash, result, createdAt: new Date().toISOString() } },
