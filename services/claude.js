@@ -73,11 +73,15 @@ function extractJson(raw) {
   throw new Error('The JSON object never closed — the response was likely cut off before it finished (possibly truncated).');
 }
 
-async function restructureWithClaude(text, focusInstructions = '', grade = null) {
+// Shared by every Gemini JSON call (full restructuring, answer grading,
+// anything added later) — waits for a free-tier rate-limit slot, calls the
+// API with retries, and validates/parses the JSON response the same way
+// every time instead of duplicating this ~40 lines per call site.
+async function callGeminiJSON(prompt, { maxOutputTokens = 2048, temperature = 0.3 } = {}) {
   const url = `${GEMINI_ENDPOINT}?key=${process.env.GEMINI_API_KEY}`;
 
   // Waits its turn if we're already at the free-tier RPM ceiling — turns a
-  // burst of simultaneous uploads into "queue and wait a few seconds"
+  // burst of simultaneous requests into "queue and wait a few seconds"
   // instead of "some of them fail with a 429."
   await acquireSlot();
 
@@ -85,29 +89,15 @@ async function restructureWithClaude(text, focusInstructions = '', grade = null)
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: buildPrompt(text, focusInstructions, grade) }] }],
+      contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
         // Native structured-output mode: Gemini is constrained to emit valid
         // JSON directly, instead of just being asked nicely in the prompt to
         // do so. Removes an entire class of "stray text around the JSON"
         // failures.
         responseMimeType: 'application/json',
-        // Default temperature let borderline judgment calls (e.g. a Learning
-        // Objective that's arguably "partial" vs "covered") flip between
-        // runs on the exact same material — a real inconsistency two beta
-        // testers hit independently. Lower temperature trades away a little
-        // creative variety (mnemonics/audio dialogue phrasing will vary a
-        // bit less run-to-run) for much more consistent grading verdicts,
-        // which matters more here since this is a judgment/grading feature
-        // students need to trust.
-        temperature: 0.3,
-        // The output schema has grown a lot (mnemonics on every hidden
-        // detail, a full audio dialogue, mind map, diagrams, self-test...).
-        // Gemini 2.5 Flash's "thinking" tokens also draw from this same
-        // budget, so a low/default cap can silently truncate the JSON
-        // before it's complete. Set generously — at ~$2.50/M output tokens
-        // even a full 32k-token response costs fractions of a cent.
-        maxOutputTokens: 32768,
+        temperature,
+        maxOutputTokens,
       },
     }),
   });
@@ -136,15 +126,71 @@ async function restructureWithClaude(text, focusInstructions = '', grade = null)
 
   const raw = candidate.content.parts.map(p => p.text || '').join('');
 
-  let jsonText;
   try {
-    jsonText = extractJson(raw);
-    return JSON.parse(jsonText);
+    return JSON.parse(extractJson(raw));
   } catch (err) {
     console.error('Failed to parse Gemini JSON response:', err.message);
     console.error('Raw response was:\n', raw);
     throw new Error(`Gemini's response wasn't valid JSON (${err.message}) — please try again.`);
   }
+}
+
+async function restructureWithClaude(text, focusInstructions = '', grade = null) {
+  // The output schema has grown a lot (mnemonics on every hidden detail, a
+  // full audio dialogue, mind map, diagrams, self-test...). Gemini 2.5
+  // Flash's "thinking" tokens also draw from this same budget, so a
+  // low/default cap can silently truncate the JSON before it's complete.
+  // Set generously — at ~$2.50/M output tokens even a full 32k-token
+  // response costs fractions of a cent.
+  //
+  // Temperature 0.3: default temperature let borderline judgment calls
+  // (e.g. a Learning Objective that's arguably "partial" vs "covered") flip
+  // between runs on the exact same material — a real inconsistency two beta
+  // testers hit independently. Lower temperature trades away a little
+  // creative variety (mnemonics/audio dialogue phrasing will vary a bit
+  // less run-to-run) for much more consistent grading verdicts, which
+  // matters more here since this is a judgment/grading feature students
+  // need to trust.
+  return callGeminiJSON(buildPrompt(text, focusInstructions, grade), { maxOutputTokens: 32768, temperature: 0.3 });
+}
+
+const VALID_SUGGESTED_GRADES = new Set(['again', 'hard', 'good', 'easy']);
+
+// Grades a student's own typed answer against the model answer for a single
+// review question — beta feedback specifically asked for this (Мадина:
+// "I could confidently answer verbally... but on the actual exam couldn't
+// formulate the answer or recall the important details" — self-rating
+// Easy/Good/Hard alone doesn't catch that gap, actually producing an answer
+// does). Deliberately a small, cheap, separate call — not the big
+// restructuring prompt — since this fires once per review card.
+async function gradeAnswer(question, modelAnswer, studentAnswer) {
+  const prompt = `You are grading a high school biology student's own typed answer against a model answer, for spaced-repetition review (not a formal exam) — the goal is honest, specific, encouraging feedback that helps them see exactly what they got right and what they missed, not a harsh score.
+
+QUESTION:
+${question}
+
+MODEL ANSWER:
+${modelAnswer}
+
+STUDENT'S ANSWER:
+${studentAnswer}
+
+Judge the student's answer against the model answer's actual content — reward correct understanding even if phrased differently or less formally; don't penalize for missing exact wording if the underlying biology is right. Do flag it if the student's answer is vague, missing a key fact the model answer contains, or factually wrong.
+
+Respond with ONLY a valid JSON object with exactly these keys:
+{
+  "verdict": "correct, partial, or incorrect",
+  "feedback": "2-3 sentences, speaking directly to the student ('You correctly...', 'You're missing...'). Specific — name the actual concept they got right or missed, don't just say 'good job' or 'not quite'.",
+  "suggestedGrade": "again, hard, good, or easy — matching spaced-repetition semantics: 'again' if they didn't know it / got it wrong, 'hard' if partially right but with real gaps, 'good' if solidly correct, 'easy' if correct and complete with no hesitation implied by the answer's quality."
+}
+Output must be valid JSON parseable by JSON.parse(), no markdown, no preamble.`;
+
+  const result = await callGeminiJSON(prompt, { maxOutputTokens: 1024, temperature: 0.2 });
+
+  if (!VALID_SUGGESTED_GRADES.has(result.suggestedGrade)) {
+    result.suggestedGrade = 'good'; // safe fallback if the model returns something unexpected
+  }
+  return result;
 }
 
 const GRADE_BAND_GUIDANCE = {
@@ -369,4 +415,4 @@ ${text}
 ---`;
 }
 
-module.exports = { restructureWithClaude };
+module.exports = { restructureWithClaude, gradeAnswer };

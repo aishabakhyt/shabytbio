@@ -25,15 +25,31 @@ async function seedFromSelfTest({ userId, uploadId, filename, selfTest }) {
   const db = await connectMongo();
   const now = new Date().toISOString();
 
+  // Re-uploading the same material (re-testing a file, or a cache hit off
+  // a classmate's identical upload) used to blindly insert a fresh copy of
+  // every question every time — silently duplicating the review queue and
+  // resetting progress on questions the student had already been tracking.
+  // Dedup by (userId, question text): a repeat question keeps its existing
+  // spaced-repetition progress instead of spawning a clone due immediately.
+  const questions = selfTest.map(item => item.question || '').filter(Boolean);
+  const existing = questions.length
+    ? await db.collection('mastery')
+        .find({ userId, question: { $in: questions } }, { projection: { question: 1 } })
+        .toArray()
+    : [];
+  const alreadyTracked = new Set(existing.map(e => e.question));
+
   const docs = [];
   for (const item of selfTest) {
+    const question = item.question || '';
+    if (question && alreadyTracked.has(question)) continue;
     const id = await nextSequence(db, 'mastery');
     docs.push({
       id,
       userId,
       uploadId: uploadId || null,
       sourceFilename: filename || '',
-      question: item.question || '',
+      question,
       answer: item.answer || '',
       type: item.type || 'recall',
       createdAt: now,
@@ -43,6 +59,7 @@ async function seedFromSelfTest({ userId, uploadId, filename, selfTest }) {
       nextReviewAt: now, // due right away
       lastReviewedAt: null,
       lastGrade: null,
+      archived: false,
     });
   }
 
@@ -50,11 +67,23 @@ async function seedFromSelfTest({ userId, uploadId, filename, selfTest }) {
   return docs;
 }
 
+async function getById(id, userId) {
+  const db = await connectMongo();
+  return db.collection('mastery').findOne({ id, userId }, { projection: { _id: 0 } });
+}
+
+// Archived topics (a student's own choice to pause reviewing something —
+// e.g. last year's material) are excluded from the due queue and counts by
+// default. `archived: { $ne: true }` treats older records with no archived
+// field at all (from before this feature existed) as not archived, so no
+// migration/backfill was needed for existing data.
+const NOT_ARCHIVED = { archived: { $ne: true } };
+
 async function listDue(userId, limit = 20) {
   const db = await connectMongo();
   const now = new Date().toISOString();
   return db.collection('mastery')
-    .find({ userId, nextReviewAt: { $lte: now } }, { projection: { _id: 0 } })
+    .find({ userId, nextReviewAt: { $lte: now }, ...NOT_ARCHIVED }, { projection: { _id: 0 } })
     .sort({ nextReviewAt: 1 })
     .limit(limit)
     .toArray();
@@ -65,15 +94,53 @@ async function getStats(userId) {
   const col = db.collection('mastery');
   const now = new Date().toISOString();
   const [totalTracked, dueCount, masteredCount] = await Promise.all([
-    col.countDocuments({ userId }),
-    col.countDocuments({ userId, nextReviewAt: { $lte: now } }),
+    col.countDocuments({ userId, ...NOT_ARCHIVED }),
+    col.countDocuments({ userId, nextReviewAt: { $lte: now }, ...NOT_ARCHIVED }),
     col.countDocuments({
       userId,
       repetitions: { $gte: MASTERED_REPETITIONS },
       interval: { $gte: MASTERED_INTERVAL_DAYS },
+      ...NOT_ARCHIVED,
     }),
   ]);
   return { totalTracked, dueCount, masteredCount };
+}
+
+// Groups a student's review items by source material so they can see their
+// review queue divided by topic instead of one undifferentiated pile, and
+// choose which topics stay in the long-term rotation (e.g. pause last
+// year's material without losing progress on it — archiving, not deleting).
+async function listTopics(userId) {
+  const db = await connectMongo();
+  const now = new Date().toISOString();
+  return db.collection('mastery').aggregate([
+    { $match: { userId } },
+    {
+      $group: {
+        _id: '$sourceFilename',
+        total: { $sum: 1 },
+        due: { $sum: { $cond: [{ $and: [{ $lte: ['$nextReviewAt', now] }, { $ne: ['$archived', true] }] }, 1, 0] } },
+        archived: { $max: { $cond: [{ $eq: ['$archived', true] }, 1, 0] } }, // 1 if ALL items in this topic are archived
+        allArchived: { $min: { $cond: [{ $eq: ['$archived', true] }, 1, 0] } },
+        latestCreatedAt: { $max: '$createdAt' },
+      },
+    },
+    { $sort: { latestCreatedAt: -1 } },
+  ]).toArray().then(rows => rows.map(r => ({
+    sourceFilename: r._id || '(untitled)',
+    total: r.total,
+    due: r.due,
+    archived: r.allArchived === 1, // only show as "archived" if the whole topic is paused
+  })));
+}
+
+async function setTopicArchived(userId, sourceFilename, archived) {
+  const db = await connectMongo();
+  const result = await db.collection('mastery').updateMany(
+    { userId, sourceFilename },
+    { $set: { archived: !!archived } }
+  );
+  return { matched: result.matchedCount };
 }
 
 // Applies one review's outcome and returns the updated record (or null if
@@ -130,4 +197,4 @@ async function gradeReview(id, userId, grade) {
   return record;
 }
 
-module.exports = { seedFromSelfTest, listDue, getStats, gradeReview, VALID_GRADES };
+module.exports = { seedFromSelfTest, listDue, getStats, gradeReview, getById, listTopics, setTopicArchived, VALID_GRADES };

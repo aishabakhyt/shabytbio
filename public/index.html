@@ -928,6 +928,17 @@
     }
     .review-modal-header h2 { font-size: 1.1rem; color: #2b6cb0; }
     .review-progress { font-size: 0.8rem; color: #a0aec0; }
+    .review-topics-btn {
+      background: none;
+      border: 1px solid #cbd5e0;
+      color: #4a5568;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.3rem 0.6rem;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .review-topics-btn:hover { background: #f0f4f8; }
     .review-close-btn {
       background: none;
       border: none;
@@ -937,6 +948,63 @@
       cursor: pointer;
       padding: 0.2rem 0.4rem;
     }
+
+    /* Manage Topics view */
+    .topic-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid #edf2f7;
+    }
+    .topic-row:last-child { border-bottom: none; }
+    .topic-info { min-width: 0; }
+    .topic-name {
+      font-weight: 600;
+      color: #2d3748;
+      font-size: 0.87rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .topic-meta { font-size: 0.75rem; color: #a0aec0; margin-top: 0.1rem; }
+    .topic-row.archived .topic-name, .topic-row.archived .topic-meta { color: #cbd5e0; }
+    .topic-toggle {
+      flex-shrink: 0;
+      position: relative;
+      width: 40px;
+      height: 22px;
+      border-radius: 999px;
+      background: #48bb78;
+      border: none;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .topic-toggle.off { background: #cbd5e0; }
+    .topic-toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 20px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      transition: left 0.15s;
+    }
+    .topic-toggle.off::after { left: 2px; }
+    .topics-back-btn {
+      background: none;
+      border: none;
+      color: #3182ce;
+      font-size: 0.83rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0;
+      margin-bottom: 0.9rem;
+    }
+    .topics-empty { color: #a0aec0; font-size: 0.85rem; text-align: center; padding: 1.5rem 0; }
     .review-close-btn:hover { color: #2d3748; }
     .review-type-badge {
       display: inline-block;
@@ -973,6 +1041,71 @@
       cursor: pointer;
     }
     .review-reveal-btn:hover { background: #2b6cb0; }
+    .review-answer-textarea {
+      width: 100%;
+      min-height: 90px;
+      padding: 0.7rem 0.85rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      color: #2d3748;
+      resize: vertical;
+      margin-bottom: 0.7rem;
+    }
+    .review-check-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.1rem;
+    }
+    .review-check-btn {
+      background: #3182ce;
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .review-check-btn:hover { background: #2b6cb0; }
+    .review-check-btn:disabled { background: #a0aec0; cursor: default; }
+    .review-skip-link {
+      background: none;
+      border: none;
+      color: #718096;
+      font-size: 0.82rem;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 0;
+    }
+    .review-feedback-box {
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      margin-bottom: 1rem;
+      line-height: 1.55;
+      border-left: 3px solid;
+    }
+    .review-feedback-box.correct { background: #f0fff4; border-color: #48bb78; color: #22543d; }
+    .review-feedback-box.partial { background: #fffaf0; border-color: #ed8936; color: #7b341e; }
+    .review-feedback-box.incorrect { background: #fff5f5; border-color: #e53e3e; color: #822727; }
+    .review-feedback-verdict {
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.04em;
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+    .review-grade-btn.suggested { box-shadow: 0 0 0 2.5px #2d3748 inset; }
+    .review-grade-hint {
+      font-size: 0.72rem;
+      color: #a0aec0;
+      text-align: center;
+      margin-bottom: 0.4rem;
+    }
     .review-answer-box {
       background: #f0fff4;
       border-left: 3px solid #48bb78;
@@ -1110,6 +1243,7 @@
       <div class="review-modal-header">
         <h2>Review</h2>
         <span class="review-progress" id="reviewProgress"></span>
+        <button class="review-topics-btn" id="reviewTopicsBtn" type="button">Manage Topics</button>
         <button class="review-close-btn" id="reviewCloseBtn" aria-label="Close">&times;</button>
       </div>
       <div id="reviewBody"></div>
@@ -1509,7 +1643,97 @@
     let reviewIndex = 0;
 
     document.getElementById('reviewCloseBtn').addEventListener('click', closeReviewSession);
+    document.getElementById('reviewTopicsBtn').addEventListener('click', openTopicsManager);
     document.getElementById('diagramLightboxCloseBtn').addEventListener('click', closeDiagramLightbox);
+
+    // Beta feedback: with 90+ questions piled up across a whole semester of
+    // uploads, being forced into one undifferentiated review queue wasn't
+    // useful — a student reasonably doesn't want last year's material mixed
+    // in with what they're studying right now. This lets them pause (not
+    // delete) whichever topics they don't want in the rotation.
+    async function openTopicsManager() {
+      const body = document.getElementById('reviewBody');
+      document.getElementById('reviewProgress').textContent = '';
+      body.innerHTML = '<p style="color:#a0aec0;font-size:0.85rem;">Loading…</p>';
+
+      let topics;
+      try {
+        const res = await fetch('/api/mastery/topics');
+        if (res.status === 401) { closeReviewSession(); handleSessionExpired(); return; }
+        topics = await res.json();
+        if (!res.ok) throw new Error(topics.error || 'Failed to load topics.');
+      } catch (err) {
+        body.innerHTML = `<p style="color:#e53e3e;">${err.message}</p>`;
+        return;
+      }
+
+      renderTopicsList(topics);
+    }
+
+    function renderTopicsList(topics) {
+      const body = document.getElementById('reviewBody');
+      body.innerHTML = '';
+
+      const backBtn = document.createElement('button');
+      backBtn.className = 'topics-back-btn';
+      backBtn.textContent = '← Back to Review';
+      backBtn.addEventListener('click', openReviewSession);
+      body.appendChild(backBtn);
+
+      if (!topics.length) {
+        const empty = document.createElement('p');
+        empty.className = 'topics-empty';
+        empty.textContent = 'No topics yet — upload material to start building your review queue.';
+        body.appendChild(empty);
+        return;
+      }
+
+      const note = document.createElement('p');
+      note.className = 'topic-meta';
+      note.style.marginBottom = '0.6rem';
+      note.textContent = 'Turn off a topic to pause it — it stops showing up in reviews, but your progress on it is kept, not deleted.';
+      body.appendChild(note);
+
+      topics.forEach(topic => {
+        const row = document.createElement('div');
+        row.className = `topic-row${topic.archived ? ' archived' : ''}`;
+
+        const info = document.createElement('div');
+        info.className = 'topic-info';
+        const name = document.createElement('div');
+        name.className = 'topic-name';
+        name.textContent = topic.sourceFilename;
+        const meta = document.createElement('div');
+        meta.className = 'topic-meta';
+        meta.textContent = topic.archived ? `Paused · ${topic.total} question(s)` : `${topic.due} due · ${topic.total} total`;
+        info.appendChild(name);
+        info.appendChild(meta);
+
+        const toggle = document.createElement('button');
+        toggle.className = `topic-toggle${topic.archived ? ' off' : ''}`;
+        toggle.setAttribute('aria-label', topic.archived ? 'Resume this topic' : 'Pause this topic');
+        toggle.addEventListener('click', () => toggleTopicArchived(topic.sourceFilename, !topic.archived));
+
+        row.appendChild(info);
+        row.appendChild(toggle);
+        body.appendChild(row);
+      });
+    }
+
+    async function toggleTopicArchived(sourceFilename, archived) {
+      try {
+        const res = await fetch('/api/mastery/topics/archive', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sourceFilename, archived }),
+        });
+        if (res.status === 401) { closeReviewSession(); handleSessionExpired(); return; }
+      } catch (err) {
+        console.error('Failed to update topic:', err);
+      }
+      refreshDueCount();
+      openTopicsManager(); // re-fetch so counts/toggle state reflect the change
+    }
 
     async function refreshDueCount() {
       const btn = document.getElementById('reviewNavBtn');
@@ -1589,28 +1813,104 @@
       q.innerHTML = mdToHtml(item.question);
       body.appendChild(q);
 
-      const revealBtn = document.createElement('button');
-      revealBtn.className = 'review-reveal-btn';
-      revealBtn.textContent = 'Show answer';
-      revealBtn.addEventListener('click', () => revealReviewAnswer(item));
-      body.appendChild(revealBtn);
+      // Beta feedback (Мадина): self-rating Easy/Good/Hard alone doesn't
+      // catch the gap between "I could explain this out loud" and "I could
+      // actually write/formulate the answer" — she specifically described
+      // feeling confident on a topic, then failing to produce the answer on
+      // the real exam. Typing an answer first and having it graded closes
+      // that gap. "Skip" keeps the old fast flow available for anyone who
+      // just wants a quick flip-through instead.
+      const textarea = document.createElement('textarea');
+      textarea.className = 'review-answer-textarea';
+      textarea.placeholder = 'Type your answer here…';
+      body.appendChild(textarea);
+
+      const checkRow = document.createElement('div');
+      checkRow.className = 'review-check-row';
+
+      const checkBtn = document.createElement('button');
+      checkBtn.className = 'review-check-btn';
+      checkBtn.textContent = 'Check My Answer';
+      checkBtn.addEventListener('click', () => checkReviewAnswer(item, textarea.value));
+      checkRow.appendChild(checkBtn);
+
+      const skipBtn = document.createElement('button');
+      skipBtn.className = 'review-skip-link';
+      skipBtn.textContent = 'Skip — just show me the answer';
+      skipBtn.addEventListener('click', () => revealReviewAnswer(item));
+      checkRow.appendChild(skipBtn);
+
+      body.appendChild(checkRow);
     }
 
-    function revealReviewAnswer(item) {
+    async function checkReviewAnswer(item, studentAnswer) {
       const body = document.getElementById('reviewBody');
-      const revealBtn = body.querySelector('.review-reveal-btn');
-      if (revealBtn) revealBtn.remove();
+      if (!studentAnswer || !studentAnswer.trim()) {
+        revealReviewAnswer(item); // nothing typed — just fall back to showing the answer
+        return;
+      }
+
+      const checkBtn = body.querySelector('.review-check-btn');
+      const skipBtn = body.querySelector('.review-skip-link');
+      const textarea = body.querySelector('.review-answer-textarea');
+      if (checkBtn) { checkBtn.disabled = true; checkBtn.textContent = 'Checking…'; }
+      if (skipBtn) skipBtn.disabled = true;
+      if (textarea) textarea.disabled = true;
+
+      let result = null;
+      try {
+        const res = await fetch(`/api/mastery/${item.id}/grade-answer`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ studentAnswer }),
+        });
+        if (res.status === 401) { closeReviewSession(); handleSessionExpired(); return; }
+        const data = await res.json();
+        if (res.ok) result = data;
+      } catch (err) {
+        console.error('Grading failed:', err);
+      }
+
+      // Whether grading succeeded or not, the student should never get
+      // stuck — fall back to the plain answer + manual grading either way.
+      revealReviewAnswer(item, result);
+    }
+
+    function revealReviewAnswer(item, gradeResult) {
+      const body = document.getElementById('reviewBody');
+      body.querySelectorAll('.review-reveal-btn, .review-answer-textarea, .review-check-row').forEach(el => el.remove());
+
+      if (gradeResult) {
+        const verdict = ['correct', 'partial', 'incorrect'].includes(gradeResult.verdict) ? gradeResult.verdict : 'partial';
+        const feedbackBox = document.createElement('div');
+        feedbackBox.className = `review-feedback-box ${verdict}`;
+        feedbackBox.innerHTML = `<span class="review-feedback-verdict">${verdict}</span>${mdToHtml(gradeResult.feedback || '')}`;
+        body.appendChild(feedbackBox);
+      } else if (gradeResult === null) {
+        const note = document.createElement('p');
+        note.className = 'review-grade-hint';
+        note.textContent = "Couldn't check your answer right now — here's the model answer instead.";
+        body.appendChild(note);
+      }
 
       const answerBox = document.createElement('div');
       answerBox.className = 'review-answer-box';
       answerBox.innerHTML = mdToHtml(item.answer);
       body.appendChild(answerBox);
 
+      const suggested = gradeResult && gradeResult.suggestedGrade;
+      if (suggested) {
+        const hint = document.createElement('p');
+        hint.className = 'review-grade-hint';
+        hint.textContent = 'Highlighted below is what the AI suggests — pick whatever actually matches how it felt.';
+        body.appendChild(hint);
+      }
+
       const gradeRow = document.createElement('div');
       gradeRow.className = 'review-grade-row';
       [['again', 'Again'], ['hard', 'Hard'], ['good', 'Good'], ['easy', 'Easy']].forEach(([grade, label]) => {
         const btn = document.createElement('button');
-        btn.className = `review-grade-btn ${grade}`;
+        btn.className = `review-grade-btn ${grade}${grade === suggested ? ' suggested' : ''}`;
         btn.textContent = label;
         btn.addEventListener('click', () => submitReviewGrade(item.id, grade));
         gradeRow.appendChild(btn);
