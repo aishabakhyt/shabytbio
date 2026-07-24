@@ -11,7 +11,7 @@ const GEMINI_ENDPOINT =
 // This bit us for real: the [STEP]/[KEY] note formats and the Mermaid
 // unicode-sanitization prompt rules were invisible on a re-upload of an
 // already-cached file until this existed.
-const PROMPT_VERSION = 'v7-language-support-kk-ru';
+const PROMPT_VERSION = 'v8-tighter-mindmap-comparison-template-hidden-details-bold';
 
 // 429 = rate limited (too many requests right now), 503 = model overloaded —
 // both are transient and worth retrying with backoff instead of failing
@@ -256,30 +256,32 @@ HOW NIS ACTUALLY TESTS STUDENTS — SIX PATTERNS
 ──────────────────────────────────────────────
 When scanning the content for "hidden_details", you MUST look for all six of these patterns. Each hidden detail you output should be tagged with which pattern(s) it matches.
 
+Formatting rule for every hidden_details item's "text" field (applies to all six patterns below): do NOT begin the text with a restated label like "TERMINOLOGY:", "FORMULA:", "COMPARE:", "MULTI-FACT (...):", "DIAGRAM:", or "MULTI-LEVEL (...):" — the item's "category" field already tells the student which pattern this is (it's shown as a section heading in the app), so repeating it inline is pure redundant clutter. Start directly with the actual content. Also bold (**term**) the one or two specific vocabulary terms/values a student most needs to get exactly right — not whole sentences, just the precise term(s) an NIS mark scheme would check for.
+
 PATTERN 1 — EXACT TERMINOLOGY TRAPS
 NIS mark schemes award marks only for the precise term, not a paraphrase. Slides often introduce two near-synonyms loosely; the exam forces the student to apply the correct label to a specific scenario.
 Example: A slide mentioning water transport might use "cohesion" and "adhesion" loosely.
-Hidden detail → "TERMINOLOGY: 'Cohesion' = intermolecular attraction between water molecules (same substance); 'Adhesion' = attraction between water molecules and xylem vessel walls (different substances) — NIS mark schemes reject either term used in place of the other."
+Hidden detail → "**Cohesion** = intermolecular attraction between water molecules (same substance); **adhesion** = attraction between water molecules and xylem vessel walls (different substances) — NIS mark schemes reject either term used in place of the other."
 
 PATTERN 2 — UNIT CONVERSIONS AND FORMULA APPLICATION
 If the slide states a formula or a unit, NIS will test it numerically in the SA — students are expected to apply it with new numbers, not just recite it.
-Example hidden detail → "FORMULA: Actual size = Image size ÷ Magnification. Conversion: 1 mm = 1000 µm; 1 µm = 1000 nm. A student given image size 40 mm at ×500 must calculate actual size = 80 µm — the formula itself is the hidden testable point."
+Example hidden detail → "**Actual size = Image size ÷ Magnification**. Conversion: 1 mm = 1000 µm; 1 µm = 1000 nm. A student given image size 40 mm at ×500 must calculate actual size = 80 µm — the formula itself is the hidden testable point."
 
 PATTERN 3 — SIMILARITY/DIFFERENCE COMPARISON PAIRS
 When a slide presents two related concepts (two organelles, two transport types, two molecules), NIS almost always asks for similarities AND differences as separate mark-scoring categories. Flag any pair of related concepts as a hidden detail, specifying what to compare.
-Example hidden detail → "COMPARE: Mitosis vs Meiosis — slides treat these separately, but NIS SA mark schemes award marks in two columns: shared features (both start from diploid cell, both involve DNA replication in S-phase) AND differences (mitosis → 2 diploid cells; meiosis → 4 haploid cells). Students who know one but not the other lose half the marks."
+Example hidden detail → "**Mitosis vs Meiosis** — slides treat these separately, but NIS SA mark schemes award marks in two columns: shared features (both start from diploid cell, both involve DNA replication in S-phase) AND differences (mitosis → 2 diploid cells; meiosis → 4 haploid cells). Students who know one but not the other lose half the marks."
 
 PATTERN 4 — MULTI-FACT "ANY N OF THESE" LISTS
 NIS extended-answer mark schemes give credit for "any 2 from:" or "any 3 from:" a longer list. This means a student must know MULTIPLE independent facts about a single concept, not just the one-sentence definition the slide gives.
-Example hidden detail → "MULTI-FACT (oxidative phosphorylation): mark scheme awards 'any 3 of' → (1) electrons passed along ETC, (2) energy released pumps H⁺ across inner mitochondrial membrane, (3) proton gradient drives ATP synthase, (4) O₂ is final electron acceptor forming H₂O. A slide that only mentions 'oxygen needed' hides three other testable facts."
+Example hidden detail → "**Oxidative phosphorylation**: mark scheme awards 'any 3 of' → (1) electrons passed along ETC, (2) energy released pumps H⁺ across inner mitochondrial membrane, (3) proton gradient drives ATP synthase, (4) O₂ is final electron acceptor forming H₂O. A slide that only mentions 'oxygen needed' hides three other testable facts."
 
 PATTERN 5 — DIAGRAM LABEL MATCHING
 If the slide contains a labeled diagram (letters A/B/C or K/L/M), every label is a potential exam question. NIS shows the same diagram with blank labels and asks for the name. Flag every labeled structure in the slide as a hidden detail.
-Example hidden detail → "DIAGRAM: Chloroplast cross-section — labels A=outer membrane, B=inner membrane, C=thylakoid, D=granum, E=stroma, F=thylakoid membrane. NIS will show this diagram with blank letters and ask students to name each — memorise all labels, not just the ones the slide's narrative discusses."
+Example hidden detail → "**Chloroplast cross-section** — labels A=outer membrane, B=inner membrane, C=thylakoid, D=granum, E=stroma, F=thylakoid membrane. NIS will show this diagram with blank letters and ask students to name each — memorise all labels, not just the ones the slide's narrative discusses."
 
 PATTERN 6 — SAME FACT AT MULTIPLE COGNITIVE LEVELS
 NIS re-tests the same learning objective at three levels in the same SA: (K) define/recall, (App) apply to a new number or scenario, (HOT) evaluate, compare, or design an experiment. Flag facts that will predictably be recycled this way.
-Example hidden detail → "MULTI-LEVEL (enzyme active site): K-level → define 'induced fit'; App-level → explain why increasing substrate concentration beyond Vmax has no effect; HOT-level → design an experiment to find optimum pH, including control variables and how to measure enzyme activity. All three stem from one sentence on a slide."
+Example hidden detail → "**Enzyme active site**: K-level → define 'induced fit'; App-level → explain why increasing substrate concentration beyond Vmax has no effect; HOT-level → design an experiment to find optimum pH, including control variables and how to measure enzyme activity. All three stem from one sentence on a slide."
 
 ──────────────────────────────────────────────
 MNEMONICS
@@ -316,18 +318,19 @@ MIND MAP
 ──────────────────────────────────────────────
 Always generate exactly one mind map giving a full overview of everything in the content — this is the "see it all at a glance" view, separate from the process-specific diagrams below.
 - Root node = the overall topic of the material (e.g. "Cholinergic Synapse Transmission").
-- Branch into the main sub-topics/sections actually present in the content (aim for 3–6 main branches), then 1–3 short child nodes under each branch for the key terms/facts belonging to it.
+- Branch into the main sub-topics/sections actually present in the content — 3–5 main branches, no more. Under each branch, 1–2 short leaf nodes for its single most important fact or term. Do NOT nest a third level (no grandchildren under a leaf) — root, branch, leaf, stop. A mind map a student can actually read at a glance beats one that tries to fit everything.
+- Keep total nodes to 10–16 — this is a deliberately tight cap. Mermaid's mindmap layout has no collision detection between branches, so past ~16 nodes (or with long node text) branches visually overlap and the diagram becomes unreadable clutter rather than a useful overview — every fact that doesn't fit is still covered in the Study Notes and Hidden Details tabs, so nothing is actually lost by leaving it out here.
 - Keep it grounded — every node must trace back to something in the source text, do not invent structure that isn't there.
-- Keep total nodes roughly 12–25 — enough to be a genuine overview, not so many it's unreadable.
+- Node text: 1–3 words wherever possible, 4 words maximum — this is a map to glance at, not a sentence to read. Cut articles and filler words ("the", "of a", "process of").
 - Mermaid mindmap syntax rules — CRITICAL, output must parse without errors:
   - Start with "mindmap" on its own line.
   - Hierarchy is indentation-based (2 spaces per level) — no arrows, no node IDs.
   - Root node uses double-parens: "  root((Topic Name))"
   - Child nodes are plain text lines, indented deeper than their parent, e.g. "    Branch Name" then "      Detail".
-  - Node text: plain words only, no colons, semicolons, parentheses (except the root's double-parens), quotes, or line breaks. Keep each node under 5 words.
-  - If a fact naturally has a parenthetical (e.g. a technical term), rewrite it as plain words instead of using parentheses. WRONG: "Vesicle fusion (exocytosis)". RIGHT: "Vesicle fusion via exocytosis". This rule applies to every node including deeply nested ones — a single stray parenthesis anywhere breaks the entire diagram.
+  - Node text: plain words only, no colons, semicolons, parentheses (except the root's double-parens), quotes, or line breaks.
+  - If a fact naturally has a parenthetical (e.g. a technical term), rewrite it as plain words instead of using parentheses. WRONG: "Vesicle fusion (exocytosis)". RIGHT: "Vesicle exocytosis". This rule applies to every node including deeply nested ones — a single stray parenthesis anywhere breaks the entire diagram.
   - No special/unicode symbols anywhere in node text — this is a common, easy-to-miss source of broken diagrams. Always write the plain-ASCII spelled-out version instead: "H2O" not "H₂O" or "H2O" with a real subscript, "Na+" not "Na⁺", "CO2" not "CO₂", "degrees C" not "°C", "micro" not "µ", "alpha"/"beta" not "α"/"β", "increases"/"decreases" not "↑"/"↓", "to" or "produces" not "→". Curly/smart quotes are also forbidden — if you'd normally write one, omit it instead.
-  - Syntax example: "mindmap\\n  root((Cholinergic Synapse))\\n    Structure\\n      Presynaptic terminal\\n      Postsynaptic membrane\\n    Neurotransmitter Release\\n      Calcium influx\\n      Vesicle fusion via exocytosis"
+  - Syntax example (5 branches, 2 leaves each, 11 nodes total — this is the target density): "mindmap\\n  root((Cholinergic Synapse))\\n    Structure\\n      Presynaptic terminal\\n      Postsynaptic membrane\\n    Transmitter Release\\n      Calcium influx\\n      Vesicle exocytosis\\n    Receptor Binding\\n      Nicotinic receptors\\n      Ion channel opens\\n    Termination\\n      Acetylcholinesterase breaks down ACh\\n    Clinical Relevance\\n      Myasthenia gravis"
 
 ──────────────────────────────────────────────
 VISUAL DIAGRAMS
@@ -344,8 +347,10 @@ In addition to the mind map, generate targeted diagrams as Mermaid flowchart syn
   - No special/unicode symbols anywhere in node labels — this is a common, easy-to-miss source of broken diagrams, and biology content is full of tempting ones. Always write the plain-ASCII spelled-out version instead: "H2O" not a version with a real subscript, "Na+" not "Na⁺", "CO2" not "CO₂", "degrees C" not "°C", "micro" not "µ", "alpha"/"beta" not "α"/"β", "increases"/"decreases" not "↑"/"↓". Curly/smart quotes and ampersands (&) are also forbidden — rewrite "salt & water" as "salt and water".
   - Node IDs: short alphanumeric (A, B, C1, C2...), no spaces.
   - Edge labels (describing what happens on an arrow, e.g. "releases energy") are allowed and encouraged when they add real information: A -->|label text| B. The label text follows the exact same rules as node labels (plain words, no colons/semicolons/parentheses/quotes/special symbols) but MAY include a plain "+" or a comma if genuinely needed (e.g. "releases 30 kJ per mol"). Keep edge labels short — under 8 words.
-  - Syntax example: "graph TD\\nA[Prophase] --> B[Metaphase]\\nB --> C[Anaphase]\\nC --> D[Telophase]"
+  - NEVER use the "subgraph" keyword — it is not covered by these rules and has caused unrenderable diagrams in the past. A comparison diagram must be built the same way as a sequence diagram: plain nodes and arrows only (see the comparison template below).
+  - Syntax example (sequence): "graph TD\\nA[Prophase] --> B[Metaphase]\\nB --> C[Anaphase]\\nC --> D[Telophase]"
   - Syntax example with an edge label: "graph TD\\nA[ATP] -->|hydrolysis releases energy| B[ADP plus Pi]\\nB -->|phosphorylation requires energy| A"
+  - Comparison template (type: "comparison") — two independent top-to-bottom chains in one "graph LR" diagram, one per side being compared. Give each side's nodes their own ID prefix (e.g. "L" for the left/first side, "R" for the right/second side) so the two chains never share a node ID, and do NOT draw arrows between the two chains — they stay visually separate columns because they're never connected, not because of a subgraph box. Each chain's first node is that side's label, e.g. "Relaxed Sarcomere" / "Contracted Sarcomere", followed by that side's distinguishing facts as its own chain of nodes: "graph LR\\nL0[Relaxed Sarcomere] --> L1[Sarcomere is long]\\nL1 --> L2[H zone is wide]\\nL1 --> L3[I band is wide]\\nR0[Contracted Sarcomere] --> R1[Sarcomere is short]\\nR1 --> R2[H zone is narrow]\\nR1 --> R3[I band is narrow]"
   - Escape nothing else — keep it simple, this will be rendered directly by mermaid.js.
 
 ──────────────────────────────────────────────

@@ -76,6 +76,29 @@
       text-decoration: underline;
     }
     .auth-signout:hover { color: #e53e3e; }
+    /* One-click language switch, visible in the main nav instead of buried
+       inside Edit Profile — Kazakh/Russian output is a core feature, not a
+       settings-page afterthought. */
+    .lang-switch {
+      display: flex;
+      gap: 0.15rem;
+      background: #f0f4f8;
+      border-radius: 999px;
+      padding: 0.2rem;
+    }
+    .lang-switch-btn {
+      border: none;
+      background: none;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      padding: 0.3rem 0.5rem;
+      border-radius: 999px;
+      cursor: pointer;
+      color: #718096;
+    }
+    .lang-switch-btn:hover:not(.active) { color: #4a5568; }
+    .lang-switch-btn.active { background: #fff; color: #2b6cb0; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 
     /* ── Welcome / onboarding screen ── */
     .welcome-screen {
@@ -440,6 +463,13 @@
     }
 
     /* ── Hidden details (grouped) ── */
+    /* Each hidden-detail category gets its own color (set as CSS custom
+       properties on .hidden-group by renderHiddenDetails) instead of every
+       card being the same amber — six categories that all look identical
+       read as one undifferentiated wall of yellow, which was the complaint.
+       --cat-heading/--cat-bg/--cat-border/--cat-text/--cat-badge-bg drive
+       every child element below so adding a color only means editing the
+       CATEGORY_STYLES lookup in JS, not touching CSS. */
     .hidden-group { margin-bottom: 1rem; }
     .hidden-group:last-child { margin-bottom: 0; }
     .hidden-category-heading {
@@ -447,7 +477,7 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      color: #b7791f;
+      color: var(--cat-heading, #b7791f);
       margin-bottom: 0.4rem;
     }
     .hidden-list {
@@ -458,12 +488,13 @@
       gap: 0.4rem;
     }
     .hidden-list li {
-      background: #fffbeb;
-      border-left: 3px solid #f6ad55;
+      background: var(--cat-bg, #fffbeb);
+      border-left: 3px solid var(--cat-border, #f6ad55);
       border-radius: 0 6px 6px 0;
       padding: 0.5rem 0.75rem;
-      color: #744210;
+      color: var(--cat-text, #744210);
     }
+    .hidden-list li strong { color: var(--cat-heading, #b7791f); }
     /* Mnemonics are collapsed behind a <details> toggle by default — with a
        mnemonic on every hidden-detail item, showing all of them expanded at
        once made the tab feel cluttered/wall-of-text. Click to reveal one at
@@ -479,14 +510,14 @@
       font-size: 0.68rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      color: #b7791f;
-      background: #fef3c7;
+      color: var(--cat-heading, #b7791f);
+      background: var(--cat-badge-bg, #fef3c7);
       padding: 0.15em 0.6em;
       border-radius: 3px;
       user-select: none;
     }
     .mnemonic-box summary.mnemonic-label:hover {
-      background: #fde68a;
+      filter: brightness(0.94);
     }
     .mnemonic-box[open] summary.mnemonic-label {
       margin-bottom: 0.4rem;
@@ -495,11 +526,11 @@
       display: block;
       padding: 0.5rem 0.65rem;
       background: #fff;
-      border: 1px dashed #d69e2e;
+      border: 1px dashed var(--cat-border, #d69e2e);
       border-radius: 6px;
       font-size: 0.85rem;
       font-style: italic;
-      color: #92400e;
+      color: var(--cat-text, #92400e);
       line-height: 1.5;
     }
 
@@ -806,6 +837,10 @@
        blown up, and a diagram with many nodes doesn't get squashed unreadably
        small — click "Enlarge" for the full-size lightbox view instead. */
     .diagram-canvas svg { max-width: 100%; max-height: 340px; height: auto; }
+    /* Mind maps spread out across multiple branches instead of running
+       top-to-bottom like a process diagram — the same 340px cap was
+       squeezing them until branch labels overlapped. */
+    .diagram-canvas-mindmap svg { max-height: 560px; }
     .diagram-caption {
       margin-top: 0.6rem;
       font-size: 0.83rem;
@@ -2141,12 +2176,40 @@
       // content isn't watching for language changes on its own.
       if (typeof renderAuthBar === 'function' && currentUser) renderAuthBar();
       if (typeof refreshDueCount === 'function' && currentUser) refreshDueCount();
+      if (typeof renderDashboard === 'function' && currentUser) renderDashboard();
     }
 
     function setLanguage(lang) {
       currentLanguage = TRANSLATIONS[lang] ? lang : 'en';
       localStorage.setItem('shabytbio_lang', currentLanguage);
       applyTranslations();
+    }
+
+    // One-click switch from the nav bar's EN/KK/RU pills — applyTranslations()
+    // (called inside setLanguage) updates the UI immediately, and if signed
+    // in this also persists the choice to the profile via the same PATCH
+    // saveProfileAndEnter() uses, so new AI-generated content (study notes,
+    // quizzes, etc.) comes back in the new language too, not just the UI chrome.
+    async function quickSwitchLanguage(lang) {
+      if (lang === currentLanguage) return;
+      setLanguage(lang);
+      if (!currentUser) return;
+      try {
+        const res = await fetch('/api/auth/profile', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            grade: currentUser.grade || null,
+            language: lang,
+            defaultFocusInstructions: currentUser.defaultFocusInstructions || '',
+          }),
+        });
+        if (res.status === 401) { handleSessionExpired(); return; }
+        const data = await res.json();
+        if (res.ok) currentUser = data;
+      } catch (err) {
+        console.error('Failed to save language preference:', err);
+      }
     }
 
     const fileInput  = document.getElementById('fileInput');
@@ -2188,6 +2251,19 @@
       reviewBtn.title = t('reviewQuizTooltip');
       reviewBtn.addEventListener('click', openReviewSession);
       wrap.appendChild(reviewBtn);
+
+      const langSwitch = document.createElement('div');
+      langSwitch.className = 'lang-switch';
+      [['en', 'langEnglish'], ['kk', 'langKazakh'], ['ru', 'langRussian']].forEach(([lang, labelKey]) => {
+        const btn = document.createElement('button');
+        btn.className = `lang-switch-btn${currentLanguage === lang ? ' active' : ''}`;
+        btn.textContent = lang.toUpperCase();
+        btn.title = t(labelKey);
+        btn.type = 'button';
+        btn.addEventListener('click', () => quickSwitchLanguage(lang));
+        langSwitch.appendChild(btn);
+      });
+      wrap.appendChild(langSwitch);
 
       const profileBtn = document.createElement('button');
       profileBtn.className = 'auth-profile-btn';
@@ -3331,7 +3407,7 @@
         .join('\n');
     }
 
-    async function renderOneDiagram(container, title, caption, mermaidCode) {
+    async function renderOneDiagram(container, title, caption, mermaidCode, isMindMap = false) {
       const wrapper = document.createElement('div');
       wrapper.className = 'diagram-item';
 
@@ -3352,8 +3428,12 @@
 
       wrapper.appendChild(header);
 
+      // Mind maps are inherently wider/busier than a linear process diagram
+      // (multiple branches spreading out, not one top-to-bottom sequence) —
+      // squeezing one into the same height cap as a simple 5-step sequence
+      // was forcing it to shrink until labels overlapped. Give it more room.
       const canvas = document.createElement('div');
-      canvas.className = 'diagram-canvas';
+      canvas.className = isMindMap ? 'diagram-canvas diagram-canvas-mindmap' : 'diagram-canvas';
       wrapper.appendChild(canvas);
 
       if (caption) {
@@ -3453,7 +3533,7 @@
           heading.textContent = t('fullOverview');
           el.appendChild(heading);
         }
-        await renderOneDiagram(el, 'Mind Map — full topic overview', '', mindMap.mermaid);
+        await renderOneDiagram(el, 'Mind Map — full topic overview', '', mindMap.mermaid, true);
       }
 
       if (hasDiagrams) {
@@ -3625,6 +3705,26 @@
       return wrapper;
     }
 
+    // Six fixed categories come back from the AI (services/claude.js's
+    // hidden_details schema) — map each to its own palette so the tab reads
+    // as distinct sections at a glance instead of one uniform block of
+    // yellow. Matched by keyword since the AI's exact category wording can
+    // vary slightly (e.g. "Calculations & Formulas" vs "Calculations and
+    // Formulas"); falls back to the original amber for anything unmatched.
+    const CATEGORY_STYLES = [
+      { match: /terminolog/i, heading: '#b7791f', bg: '#fffbeb', border: '#f6ad55', text: '#744210', badgeBg: '#fef3c7' },
+      { match: /calculat|formula/i, heading: '#2b6cb0', bg: '#ebf8ff', border: '#63b3ed', text: '#2c5282', badgeBg: '#bee3f8' },
+      { match: /compar/i, heading: '#6b46c1', bg: '#faf5ff', border: '#b794f4', text: '#553c9a', badgeBg: '#e9d8fd' },
+      { match: /multi-?fact/i, heading: '#285e61', bg: '#e6fffa', border: '#4fd1c5', text: '#234e52', badgeBg: '#b2f5ea' },
+      { match: /diagram/i, heading: '#b83280', bg: '#fff5f7', border: '#f687b3', text: '#97266d', badgeBg: '#fed7e2' },
+      { match: /task type|cognitive|multi-?level/i, heading: '#434190', bg: '#ebf4ff', border: '#7f9cf5', text: '#3c366b', badgeBg: '#c3dafe' },
+    ];
+    const DEFAULT_CATEGORY_STYLE = CATEGORY_STYLES[0];
+    function categoryStyle(category) {
+      const found = CATEGORY_STYLES.find(c => c.match.test(category || ''));
+      return found || DEFAULT_CATEGORY_STYLE;
+    }
+
     function renderHiddenDetails(groups) {
       const el = document.getElementById('hiddenDetailsOutput');
       el.innerHTML = '';
@@ -3646,6 +3746,12 @@
       groups.forEach(group => {
         const groupEl = document.createElement('div');
         groupEl.className = 'hidden-group';
+        const style = categoryStyle(group.category);
+        groupEl.style.setProperty('--cat-heading', style.heading);
+        groupEl.style.setProperty('--cat-bg', style.bg);
+        groupEl.style.setProperty('--cat-border', style.border);
+        groupEl.style.setProperty('--cat-text', style.text);
+        groupEl.style.setProperty('--cat-badge-bg', style.badgeBg);
 
         const heading = document.createElement('p');
         heading.className = 'hidden-category-heading';
