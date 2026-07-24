@@ -22,7 +22,8 @@ Aisha prioritized these two of the real gaps below — both are now built:
   - Per-topic progress is a color-coded dot (grey = not studied, light green = studied a little, deep green = reviewed several times) instead of a percentage bar, with a "could use a revisit" flag on neglected topics — a glance, not a score.
   - Copy follows Aisha's confidence-language rules throughout: no evaluative percentages, no comparison to other students, "yet"/invitation framing on empty and reset states.
   - One milestone message at a time (highest-value first: 7-day streak > 50 mastered > 3-day streak > 10 mastered > "study today" nudge). Refreshes after every upload and every review session.
-  - Not yet built from Aisha's fuller spec: pre-summative exam-date encouragement, and reflection prompts with a tracked 1-5 confidence rating — both need new data model fields and haven't been scoped yet.
+  - **Pre-summative exam-date encouragement (built Jul 25, per-topic scope, as Aisha requested):** each topic in Manage Topics can have an optional exam date (`services/mastery.js`'s `setTopicExamDate`, denormalized onto the topic's items same as rename/archive). When an exam is within 30 days, the dashboard shows a calm, factual reminder — "12 days until your X exam — you've reviewed 4 of 9 questions here" — never a countdown-timer or hype framing. Up to 3 upcoming reminders shown, soonest first.
+  - **Not yet built:** reflection prompts with a tracked 1-5 confidence rating — Aisha chose to hold this for after launch (bigger scope: new DB collection, new post-analysis UI flow).
 
 ## Original plan vs. what's built (checked Jul 24, 2026)
 
