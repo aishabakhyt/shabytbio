@@ -3,6 +3,16 @@ const { acquireSlot } = require('./rateLimiter');
 const GEMINI_ENDPOINT =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
+// Bump this whenever buildPrompt's output format changes (new fields, new
+// formatting rules, new syntax constraints, etc.) — resultCache mixes this
+// into its cache key, so a version bump makes every existing cache entry a
+// miss going forward, and re-uploads regenerate with the new prompt instead
+// of silently replaying an old response that doesn't reflect the change.
+// This bit us for real: the [STEP]/[KEY] note formats and the Mermaid
+// unicode-sanitization prompt rules were invisible on a re-upload of an
+// already-cached file until this existed.
+const PROMPT_VERSION = 'v4-step-key-unicode-diagram-fix';
+
 // 429 = rate limited (too many requests right now), 503 = model overloaded —
 // both are transient and worth retrying with backoff instead of failing
 // the student's upload outright. Everything else (400 bad request, 401/403
@@ -417,4 +427,4 @@ ${text}
 ---`;
 }
 
-module.exports = { restructureWithClaude, gradeAnswer };
+module.exports = { restructureWithClaude, gradeAnswer, PROMPT_VERSION };
