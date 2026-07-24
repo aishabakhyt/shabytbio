@@ -2274,12 +2274,19 @@
         } else if (isKeyLine) {
           if (inList) { html += '</ul>'; inList = false; }
           html += renderCallout(trimmed);
-        } else if (trimmed.startsWith('### ')) {
+        } else if (/^#{1,6}\s+/.test(trimmed)) {
+          // Handles any heading level 1–6, not just exactly "## "/"### " — the
+          // model has occasionally emitted "#### " despite only ##/### being
+          // asked for, which used to fall through every branch below and show
+          // up as literal "#### Some Heading" text to the student. Level 1-2
+          // renders as a main header, 3+ as a sub-header, same as before.
           if (inList) { html += '</ul>'; inList = false; }
-          html += `<p class="notes-heading">${mdToHtml(trimmed.slice(4))}</p>`;
-        } else if (trimmed.startsWith('## ') || trimmed.startsWith('# ')) {
-          if (inList) { html += '</ul>'; inList = false; }
-          html += `<p class="notes-title" style="margin-top:1rem">${mdToHtml(trimmed.replace(/^#{1,2} /, ''))}</p>`;
+          const match = trimmed.match(/^(#{1,6})\s+(.*)$/);
+          const level = match[1].length;
+          const text = match[2];
+          html += level <= 2
+            ? `<p class="notes-title" style="margin-top:1rem">${mdToHtml(text)}</p>`
+            : `<p class="notes-heading">${mdToHtml(text)}</p>`;
         } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
           if (!inList) { html += '<ul class="notes-list">'; inList = true; }
           html += `<li>${mdToHtml(trimmed.slice(2))}</li>`;
@@ -2555,6 +2562,17 @@
       return out
         .replace(/\(\(/g, '§§OPEN§§')
         .replace(/\)\)/g, '§§CLOSE§§')
+        // Normalize round-shape node syntax "B(some text)" to square-bracket
+        // syntax "B[some text]" BEFORE the blanket paren strip below — the
+        // model is told to use square brackets only, but occasionally still
+        // emits a round-shape node (e.g. "B(ADP + Pi)"), and blindly deleting
+        // its parens (the old behavior) turned it into "BADP + Pi" — no
+        // longer valid syntax at all, breaking the whole diagram. Converting
+        // to brackets first preserves the node instead of mangling it.
+        .replace(/([A-Za-z][A-Za-z0-9_]*)\(([^()]*)\)/g, '$1[$2]')
+        // Any parens/colons/semicolons/quotes still left at this point are a
+        // genuine rule violation (e.g. inside a label) rather than valid
+        // node-shape syntax, so it's safe to strip them outright.
         .replace(/[():;"]/g, '')
         .replace(/§§OPEN§§/g, '((')
         .replace(/§§CLOSE§§/g, '))');
@@ -2566,11 +2584,15 @@
     // the theory that some still-unknown stray character (not just the ones above) is the culprit.
     // Never applied on the first attempt because it would also mangle legitimate content in edge
     // cases (e.g. a hyphenated word split oddly) — it's a fallback, not the default path.
+    // Must keep "|" (edge labels: A -->|label text| B), "," and "+" (common in
+    // biology/chemistry text like "ADP + Pi" or "Na+/K+ pump") — an earlier
+    // version stripped all three, which broke otherwise-valid diagrams using
+    // edge labels (confirmed via a real failing diagram's error output).
     function aggressivelySanitizeMermaid(code) {
       if (typeof code !== 'string') return '';
       return sanitizeMermaid(code)
         .split('\n')
-        .map(line => line.replace(/[^A-Za-z0-9 \-\[\]()>\.]/g, ''))
+        .map(line => line.replace(/[^A-Za-z0-9 \-\[\]()>|,+\.]/g, ''))
         .join('\n');
     }
 

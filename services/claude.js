@@ -11,7 +11,7 @@ const GEMINI_ENDPOINT =
 // This bit us for real: the [STEP]/[KEY] note formats and the Mermaid
 // unicode-sanitization prompt rules were invisible on a re-upload of an
 // already-cached file until this existed.
-const PROMPT_VERSION = 'v5-step-key-no-bullet-prefix';
+const PROMPT_VERSION = 'v6-diagram-edge-labels-square-brackets';
 
 // 429 = rate limited (too many requests right now), 503 = model overloaded —
 // both are transient and worth retrying with backoff instead of failing
@@ -316,11 +316,14 @@ In addition to the mind map, generate targeted diagrams as Mermaid flowchart syn
 - Maximum 3 diagrams total; skip this section entirely (empty array) if nothing in the content is diagram-worthy. It's fine for the mind map to be the only diagram output.
 - Mermaid syntax rules — CRITICAL, output must parse without errors:
   - Use "graph TD" (top-down) for sequences/cycles, or "graph LR" for comparisons.
+  - EVERY node, with no exceptions, must use square-bracket shape: NodeID[Label text]. NEVER use round brackets NodeID(Label text), curly braces NodeID{Label text}, or any other Mermaid node shape — square brackets only, for every single node in every diagram, even for states/molecules that might intuitively feel "round". WRONG: "B(ADP + Pi)". RIGHT: "B[ADP + Pi]".
   - Node labels: plain words only, no colons, semicolons, parentheses, quotes, or line breaks inside labels. Keep each label under 6 words.
   - If a fact naturally has a parenthetical (e.g. a technical term), rewrite it as plain words instead of using parentheses. WRONG: "D[Vesicle fuses with presynaptic membrane (exocytosis)]". RIGHT: "D[Vesicle fuses with presynaptic membrane via exocytosis]". A single stray parenthesis anywhere breaks the entire diagram.
   - No special/unicode symbols anywhere in node labels — this is a common, easy-to-miss source of broken diagrams, and biology content is full of tempting ones. Always write the plain-ASCII spelled-out version instead: "H2O" not a version with a real subscript, "Na+" not "Na⁺", "CO2" not "CO₂", "degrees C" not "°C", "micro" not "µ", "alpha"/"beta" not "α"/"β", "increases"/"decreases" not "↑"/"↓". Curly/smart quotes and ampersands (&) are also forbidden — rewrite "salt & water" as "salt and water".
   - Node IDs: short alphanumeric (A, B, C1, C2...), no spaces.
+  - Edge labels (describing what happens on an arrow, e.g. "releases energy") are allowed and encouraged when they add real information: A -->|label text| B. The label text follows the exact same rules as node labels (plain words, no colons/semicolons/parentheses/quotes/special symbols) but MAY include a plain "+" or a comma if genuinely needed (e.g. "releases 30 kJ per mol"). Keep edge labels short — under 8 words.
   - Syntax example: "graph TD\\nA[Prophase] --> B[Metaphase]\\nB --> C[Anaphase]\\nC --> D[Telophase]"
+  - Syntax example with an edge label: "graph TD\\nA[ATP] -->|hydrolysis releases energy| B[ADP plus Pi]\\nB -->|phosphorylation requires energy| A"
   - Escape nothing else — keep it simple, this will be rendered directly by mermaid.js.
 
 ──────────────────────────────────────────────
