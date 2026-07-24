@@ -1456,7 +1456,8 @@
       const reviewBtn = document.createElement('button');
       reviewBtn.className = 'review-btn';
       reviewBtn.id = 'reviewNavBtn';
-      reviewBtn.innerHTML = '📚 Review';
+      reviewBtn.innerHTML = '🎯 Review Quiz';
+      reviewBtn.title = 'Practice questions from everything you\'ve studied so far';
       reviewBtn.addEventListener('click', openReviewSession);
       wrap.appendChild(reviewBtn);
 
@@ -1842,8 +1843,8 @@
         if (!res.ok) return;
         const stats = await res.json();
         btn.innerHTML = stats.dueCount > 0
-          ? `📚 Review <span class="review-badge">${stats.dueCount}</span>`
-          : '📚 Review';
+          ? `🎯 Review Quiz <span class="review-badge">${stats.dueCount}</span>`
+          : '🎯 Review Quiz';
       } catch (err) {
         // Silent — a missing badge count isn't worth surfacing an error for.
       }
