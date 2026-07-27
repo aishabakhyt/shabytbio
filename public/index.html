@@ -17,6 +17,23 @@
        element — the standard fix for this well-known footgun. */
     [hidden] { display: none !important; }
 
+    /* Global "feels smooth, not laggy" pass — every button gets a subtle
+       press-down and consistent hover/color transition by default (more
+       specific selectors below still override this for their own colors,
+       they just inherit the timing), and switching tabs settles in with a
+       brief fade instead of snapping instantly. Kept intentionally light
+       (150-220ms) — this is about removing abruptness, not adding
+       animation for its own sake, which would feel slow instead of smooth. */
+    button {
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+    }
+    button:active:not(:disabled) { transform: scale(0.97); }
+    button:disabled { cursor: default; }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     body {
       font-family: system-ui, sans-serif;
       background: #f0f4f8;
@@ -296,7 +313,7 @@
       overflow: hidden;
       display: none;
     }
-    .result-card.active-tab { display: block; }
+    .result-card.active-tab { display: block; animation: fadeInUp 0.2s ease; }
 
     /* ── Tabs ── */
     .tabs-nav {
@@ -470,7 +487,7 @@
        --cat-heading/--cat-bg/--cat-border/--cat-text/--cat-badge-bg drive
        every child element below so adding a color only means editing the
        CATEGORY_STYLES lookup in JS, not touching CSS. */
-    .hidden-group { margin-bottom: 1rem; }
+    .hidden-group { margin-bottom: 1rem; animation: fadeInUp 0.25s ease; }
     .hidden-group:last-child { margin-bottom: 0; }
     .hidden-category-heading {
       font-size: 0.75rem;
@@ -797,6 +814,7 @@
       border: 1px solid #e2e8f0;
       border-radius: 10px;
       padding: 1rem;
+      animation: fadeInUp 0.25s ease;
     }
     .diagram-item:last-child { margin-bottom: 0; }
     .diagram-item-header {
@@ -977,6 +995,7 @@
        green theme and gives a "tending something alive" feeling that a
        flame or raw counter doesn't. */
     .dashboard-plant-hero {
+      animation: fadeInUp 0.25s ease;
       display: flex;
       align-items: center;
       gap: 0.9rem;
@@ -3226,19 +3245,26 @@
       return score;
     }
 
+    // Was hardcoded to always pick an English voice regardless of the
+    // dialogue's actual language — so Russian/Kazakh dialogue text got read
+    // aloud in an English voice's pronunciation, sounding wrong throughout.
+    // Now matches the voice to the student's current language, and finds
+    // nothing (on purpose — no fallback to a different language's voice) if
+    // the browser has no voice installed for it, e.g. Kazakh is essentially
+    // never available in mainstream browsers today.
     async function pickAudioVoices() {
       const voices = await getVoicesAsync();
-      const en = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
-      const pool = (en.length ? en : voices).slice().sort((a, b) => voiceQualityScore(b) - voiceQualityScore(a));
-      if (!pool.length) { audioVoices = { alex: null, sam: null }; return; }
+      const matching = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith(currentLanguage));
+      if (!matching.length) { audioVoices = { alex: null, sam: null }; return; }
+      const pool = matching.slice().sort((a, b) => voiceQualityScore(b) - voiceQualityScore(a));
 
-      const female = pool.find(v => /female|zira|samantha|victoria|karen|aria|jenny|ana/i.test(v.name));
-      const male = pool.find(v => v !== female && /male|david|daniel|fred|guy/i.test(v.name));
+      const female = pool.find(v => /female|zira|samantha|victoria|karen|aria|jenny|ana|elena|milena|katya/i.test(v.name));
+      const male = pool.find(v => v !== female && /male|david|daniel|fred|guy|yuri|pavel|dmitry/i.test(v.name));
       audioVoices.alex = male || pool[0];
       audioVoices.sam = female || pool.find(v => v !== audioVoices.alex) || pool[0];
     }
 
-    function renderAudioDialogue(turns) {
+    async function renderAudioDialogue(turns) {
       const tabBtn = document.getElementById('tabBtn-audio');
       const el = document.getElementById('audioOutput');
       el.innerHTML = '';
@@ -3249,9 +3275,22 @@
         tabBtn.hidden = true;
         return;
       }
-      tabBtn.hidden = false;
 
       const supported = typeof window.speechSynthesis !== 'undefined';
+      let hasVoice = false;
+      if (supported) {
+        await pickAudioVoices();
+        hasVoice = !!(audioVoices.alex || audioVoices.sam);
+      }
+
+      // No voice at all for the student's language — rather than mispronounce
+      // the dialogue in the wrong language (the actual bug), hide the whole
+      // tab. The dialogue's content is still fully covered in Study Notes.
+      if (supported && !hasVoice) {
+        tabBtn.hidden = true;
+        return;
+      }
+      tabBtn.hidden = false;
 
       if (!supported) {
         const note = document.createElement('div');

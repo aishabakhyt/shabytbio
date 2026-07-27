@@ -11,7 +11,7 @@ const GEMINI_ENDPOINT =
 // This bit us for real: the [STEP]/[KEY] note formats and the Mermaid
 // unicode-sanitization prompt rules were invisible on a re-upload of an
 // already-cached file until this existed.
-const PROMPT_VERSION = 'v8-tighter-mindmap-comparison-template-hidden-details-bold';
+const PROMPT_VERSION = 'v9-mindmap-meaningful-phrases-not-bare-keywords';
 
 // 429 = rate limited (too many requests right now), 503 = model overloaded —
 // both are transient and worth retrying with backoff instead of failing
@@ -318,10 +318,10 @@ MIND MAP
 ──────────────────────────────────────────────
 Always generate exactly one mind map giving a full overview of everything in the content — this is the "see it all at a glance" view, separate from the process-specific diagrams below.
 - Root node = the overall topic of the material (e.g. "Cholinergic Synapse Transmission").
-- Branch into the main sub-topics/sections actually present in the content — 3–5 main branches, no more. Under each branch, 1–2 short leaf nodes for its single most important fact or term. Do NOT nest a third level (no grandchildren under a leaf) — root, branch, leaf, stop. A mind map a student can actually read at a glance beats one that tries to fit everything.
+- Branch into the main sub-topics/sections actually present in the content — 3–5 main branches, no more. Under each branch, 1–2 leaf nodes for its single most important fact. Do NOT nest a third level (no grandchildren under a leaf) — root, branch, leaf, stop. A mind map a student can actually read at a glance beats one that tries to fit everything.
 - Keep total nodes to 10–16 — this is a deliberately tight cap. Mermaid's mindmap layout has no collision detection between branches, so past ~16 nodes (or with long node text) branches visually overlap and the diagram becomes unreadable clutter rather than a useful overview — every fact that doesn't fit is still covered in the Study Notes and Hidden Details tabs, so nothing is actually lost by leaving it out here.
 - Keep it grounded — every node must trace back to something in the source text, do not invent structure that isn't there.
-- Node text: 1–3 words wherever possible, 4 words maximum — this is a map to glance at, not a sentence to read. Cut articles and filler words ("the", "of a", "process of").
+- Node text — this is the single most important rule in this section: every node must be a short, SPECIFIC, meaningful phrase that states an actual fact or relationship, never a bare vocabulary word on its own. A node just saying "Cristae" or "Depolarization" teaches nothing a student didn't already have from the slide title — it's a keyword, not information. The same node should instead say what's actually true about it: "Cristae increase surface area" or "Depolarization opens Na+ channels". Aim for 2–6 words — long enough to state the fact, short enough to still read at a glance. This applies to leaf nodes especially (they're the actual payload of the map) but branch nodes benefit from it too where a short fact fits.
 - Mermaid mindmap syntax rules — CRITICAL, output must parse without errors:
   - Start with "mindmap" on its own line.
   - Hierarchy is indentation-based (2 spaces per level) — no arrows, no node IDs.
@@ -330,7 +330,7 @@ Always generate exactly one mind map giving a full overview of everything in the
   - Node text: plain words only, no colons, semicolons, parentheses (except the root's double-parens), quotes, or line breaks.
   - If a fact naturally has a parenthetical (e.g. a technical term), rewrite it as plain words instead of using parentheses. WRONG: "Vesicle fusion (exocytosis)". RIGHT: "Vesicle exocytosis". This rule applies to every node including deeply nested ones — a single stray parenthesis anywhere breaks the entire diagram.
   - No special/unicode symbols anywhere in node text — this is a common, easy-to-miss source of broken diagrams. Always write the plain-ASCII spelled-out version instead: "H2O" not "H₂O" or "H2O" with a real subscript, "Na+" not "Na⁺", "CO2" not "CO₂", "degrees C" not "°C", "micro" not "µ", "alpha"/"beta" not "α"/"β", "increases"/"decreases" not "↑"/"↓", "to" or "produces" not "→". Curly/smart quotes are also forbidden — if you'd normally write one, omit it instead.
-  - Syntax example (5 branches, 2 leaves each, 11 nodes total — this is the target density): "mindmap\\n  root((Cholinergic Synapse))\\n    Structure\\n      Presynaptic terminal\\n      Postsynaptic membrane\\n    Transmitter Release\\n      Calcium influx\\n      Vesicle exocytosis\\n    Receptor Binding\\n      Nicotinic receptors\\n      Ion channel opens\\n    Termination\\n      Acetylcholinesterase breaks down ACh\\n    Clinical Relevance\\n      Myasthenia gravis"
+  - Syntax example (5 branches, mostly 2 leaves each, 11 nodes total — this is the target density, and note every leaf states an actual fact, not a bare term): "mindmap\\n  root((Cholinergic Synapse))\\n    Structure\\n      Vesicles store ACh\\n      Receptors sit on postsynaptic membrane\\n    Transmitter Release\\n      Calcium triggers vesicle fusion\\n      ACh released into cleft\\n    Receptor Binding\\n      ACh binds nicotinic receptors\\n      Na channels open\\n    Termination\\n      Acetylcholinesterase breaks down ACh\\n    Clinical Relevance\\n      Myasthenia gravis blocks receptors"
 
 ──────────────────────────────────────────────
 VISUAL DIAGRAMS
