@@ -8,6 +8,7 @@ const { getUserById } = require('../services/users');
 const { seedFromSelfTest, deleteByUploadId } = require('../services/mastery');
 const { getCached, setCached } = require('../services/resultCache');
 const { searchVideos } = require('../services/youtube');
+const { validateStudyPack } = require('../services/validateStudyPack');
 
 const router = express.Router();
 
@@ -90,6 +91,25 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     return res.status(500).json({ error: `Claude call failed: ${err.message}` });
   }
 
+  // Checks the response against the structural rules already written into
+  // the prompt (mind map node count/depth, banned hidden_details prefixes,
+  // diagram syntax) — only on a fresh generation, since a cache hit was
+  // already checked the first time it was generated. This is the only
+  // thing standing between "Gemini quietly drifted from a prompt rule" and
+  // someone finding out from a support screenshot days later — never blocks
+  // the response, just logs and records what it found.
+  let qualityWarnings = [];
+  if (!fromCache) {
+    try {
+      qualityWarnings = validateStudyPack(result).warnings;
+      if (qualityWarnings.length) {
+        console.warn(`[quality] ${req.file.originalname} (user ${req.session.userId}, school ${school || 'unset'}, lang ${language}):`, qualityWarnings);
+      }
+    } catch (err) {
+      console.error('Quality validation crashed (non-fatal):', err.message);
+    }
+  }
+
   let historyId = null;
   try {
     historyId = await saveUpload({
@@ -98,6 +118,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       charCount: extractedText.length,
       focusInstructions,
       result,
+      qualityWarnings,
     });
   } catch (err) {
     // Persistence is a nice-to-have — don't fail the request if saving history breaks.

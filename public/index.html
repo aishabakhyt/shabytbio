@@ -1210,6 +1210,17 @@
       font-size: 0.75rem;
       color: #a0aec0;
     }
+    /* Visible only to the developer, not styled as a student-facing
+       warning — a small flag when validateStudyPack() found the AI
+       response drifting from the prompt's own rules, so quality issues
+       show up here instead of only in server logs. */
+    .history-item-quality-flag {
+      display: inline-block;
+      margin-left: 0.4rem;
+      font-size: 0.7rem;
+      color: #dd6b20;
+      cursor: help;
+    }
     .history-item-delete {
       flex-shrink: 0;
       background: none;
@@ -1872,6 +1883,7 @@
     const ICON_FLAME = svgIcon('<path d="M12 2c1 3-2 4-2 7a3 3 0 006 0c0-1-1-2-1-2 2 1 3 3 3 5a6 6 0 01-12 0c0-4 3-6 4-8 .5 1 1 2 2 2 0-2 0-3 0-4z" fill="currentColor" stroke="none"/>', 17);
     const ICON_TROPHY = svgIcon('<path d="M8 4h8v5a4 4 0 01-8 0V4z"/><path d="M8 5H5a2 2 0 002 4M16 5h3a2 2 0 01-2 4"/><path d="M12 13v3M9 20h6M9 20a3 3 0 003-3 3 3 0 003 3" stroke-linecap="round"/>', 17);
     const ICON_CHART = svgIcon('<rect x="4" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="16" y="3" width="4" height="17" rx="1"/>', 15);
+    const ICON_WARNING = svgIcon('<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/>', 12);
 
     /* Streak visual: a growing plant instead of a flame — fits the biology
        theme and the "tending something over time" feeling a streak should
@@ -4415,6 +4427,13 @@
         const meta = document.createElement('div');
         meta.className = 'history-item-meta';
         meta.textContent = `${formatHistoryDate(item.uploaded_at)} · ${item.char_count.toLocaleString()} chars`;
+        if (Array.isArray(item.quality_warnings) && item.quality_warnings.length) {
+          const flag = document.createElement('span');
+          flag.className = 'history-item-quality-flag';
+          flag.innerHTML = `${ICON_WARNING} ${item.quality_warnings.length}`;
+          flag.title = item.quality_warnings.join('\n');
+          meta.appendChild(flag);
+        }
         main.appendChild(name);
         main.appendChild(meta);
 

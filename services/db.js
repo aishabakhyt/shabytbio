@@ -6,7 +6,7 @@ const { nextSequence } = require('./counters');
 // persistent disk, and the container filesystem resets on every restart —
 // so anything meant to outlive a single request has to live somewhere else.
 
-async function saveUpload({ userId, filename, charCount, focusInstructions, result }) {
+async function saveUpload({ userId, filename, charCount, focusInstructions, result, qualityWarnings }) {
   const db = await connectMongo();
   const id = await nextSequence(db, 'history');
   const record = {
@@ -17,6 +17,11 @@ async function saveUpload({ userId, filename, charCount, focusInstructions, resu
     char_count: charCount,
     focus_instructions: focusInstructions || '',
     result,
+    // Structural rule violations validateStudyPack() found in this exact
+    // response (empty array = clean) — kept on the record itself so a
+    // pattern of quality drift is visible per-upload, not just in logs
+    // that scroll away.
+    quality_warnings: Array.isArray(qualityWarnings) ? qualityWarnings : [],
   };
   await db.collection('history').insertOne(record);
   return id;
