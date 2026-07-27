@@ -1516,6 +1516,15 @@
         </div>
 
         <div class="profile-field">
+          <label for="profileSchool" data-i18n="profileSchoolLabel">School</label>
+          <select id="profileSchool">
+            <option value="nis" data-i18n="schoolNis">NIS</option>
+            <option value="other" data-i18n="schoolOther">Other school</option>
+          </select>
+          <p class="profile-field-hint" data-i18n="profileSchoolHint">NIS-specific exam patterns (like "NIS mark schemes") only get mentioned by name if you're actually at an NIS school — either way you get the same exam-pattern analysis.</p>
+        </div>
+
+        <div class="profile-field">
           <label for="profileFocus" data-i18n="profileFocusLabel">Default focus instructions</label>
           <textarea id="profileFocus" rows="2" data-i18n-placeholder="profileFocusPlaceholder" placeholder="e.g. 'I already know the vocab, focus on calculations' — leave blank for full coverage"></textarea>
           <p class="profile-field-hint" data-i18n="profileFocusHint">Pre-fills the focus box on every upload — you can still edit it per file.</p>
@@ -1611,7 +1620,7 @@
       <button class="tab-btn" data-tab="diagrams" id="tabBtn-diagrams" data-i18n="tabDiagrams">Diagrams</button>
       <button class="tab-btn" data-tab="videos" id="tabBtn-videos" data-i18n="tabVideos">Videos</button>
       <button class="tab-btn" data-tab="audio" id="tabBtn-audio" data-i18n="tabAudio">Audio</button>
-      <button class="tab-btn" data-tab="hidden" id="tabBtn-hidden" data-i18n="tabHidden">Hidden Details</button>
+      <button class="tab-btn" data-tab="hidden" id="tabBtn-hidden" data-i18n="tabHidden">Easy to Miss</button>
       <button class="tab-btn" data-tab="concepts" id="tabBtn-concepts" data-i18n="tabConcepts">Key Concepts</button>
       <button class="tab-btn" data-tab="summative" id="tabBtn-summative" data-i18n="tabSummative">Summative Topics</button>
       <button class="tab-btn" data-tab="selftest" id="tabBtn-selftest" data-i18n="tabSelftest">Test Yourself</button>
@@ -1685,7 +1694,7 @@
           <circle cx="12" cy="12" r="9"/>
           <path d="M12 8v4M12 16h.01" stroke-linecap="round"/>
         </svg>
-        <h2 data-i18n="headerHidden">Hidden Details — likely to appear on your summative</h2>
+        <h2 data-i18n="headerHidden">Easy to Miss — likely to appear on your summative</h2>
       </div>
       <div class="result-card-body" id="hiddenDetailsOutput"></div>
     </div>
@@ -1813,7 +1822,7 @@
         welcomeGreeting: "Let's set up your profile.",
         welcomeBackGreeting: "Welcome, {name}! Let's set up your profile.",
         editingProfileGreeting: 'Editing your profile, {name}.',
-        profileGradeLabel: 'NIS grade',
+        profileGradeLabel: 'Grade',
         gradeNotSet: 'Not set',
         grade78: 'Grade 7-8',
         grade910: 'Grade 9-10',
@@ -1823,6 +1832,10 @@
         langKazakh: 'Kazakh',
         langRussian: 'Russian',
         profileLanguageHint: 'Study notes, quizzes, and everything else will be generated in this language.',
+        profileSchoolLabel: 'School',
+        schoolNis: 'NIS',
+        schoolOther: 'Other school',
+        profileSchoolHint: "NIS-specific exam patterns (like \"NIS mark schemes\") only get mentioned by name if you're actually at an NIS school — either way you get the same exam-pattern analysis.",
         profileFocusLabel: 'Default focus instructions',
         profileFocusPlaceholder: "e.g. 'I already know the vocab, focus on calculations' — leave blank for full coverage",
         profileFocusHint: 'Pre-fills the focus box on every upload — you can still edit it per file.',
@@ -1841,7 +1854,7 @@
         tabDiagrams: 'Diagrams',
         tabVideos: 'Videos',
         tabAudio: 'Audio',
-        tabHidden: 'Hidden Details',
+        tabHidden: 'Easy to Miss',
         tabConcepts: 'Key Concepts',
         tabSummative: 'Summative Topics',
         tabSelftest: 'Test Yourself',
@@ -1851,7 +1864,7 @@
         headerDiagrams: 'Visual Diagrams — for visual learners',
         headerVideos: 'Related Videos — real videos on this exact topic',
         headerAudio: 'Listen — a study conversation about this material',
-        headerHidden: 'Hidden Details — likely to appear on your summative',
+        headerHidden: 'Easy to Miss — likely to appear on your summative',
         headerConcepts: 'Key Concepts',
         headerSummative: 'Likely Summative Topics',
         headerSelftest: 'Quiz Time — test yourself',
@@ -1936,7 +1949,7 @@
         welcomeGreeting: 'Профиліңізді баптайық.',
         welcomeBackGreeting: 'Қош келдіңіз, {name}! Профиліңізді баптайық.',
         editingProfileGreeting: 'Профиліңізді өзгертуде, {name}.',
-        profileGradeLabel: 'НЗМ сыныбы',
+        profileGradeLabel: 'Сынып',
         gradeNotSet: 'Көрсетілмеген',
         grade78: '7-8 сынып',
         grade910: '9-10 сынып',
@@ -1946,6 +1959,10 @@
         langKazakh: 'Қазақ',
         langRussian: 'Орыс',
         profileLanguageHint: 'Конспектілер, тесттер және басқа барлық нәрсе осы тілде жасалады.',
+        profileSchoolLabel: 'Мектеп',
+        schoolNis: 'НЗМ',
+        schoolOther: 'Басқа мектеп',
+        profileSchoolHint: 'НЗМ-ге тән емтихан үлгілері («НЗМ бағалау кестелері» сияқты) тек сен шынымен НЗМ оқушысы болсаң ғана аталады — екі жағдайда да емтихан үлгісін талдау бірдей.',
         profileFocusLabel: 'Әдепкі назар аудару нұсқаулары',
         profileFocusPlaceholder: 'мысалы, «Мен терминдерді білемін, есептеулерге назар аударыңыз» — толық қамту үшін бос қалдырыңыз',
         profileFocusHint: 'Әр жүктеу кезінде назар аудару өрісін автоматты түрде толтырады — оны әр файл үшін өзгертуге болады.',
@@ -1964,7 +1981,7 @@
         tabDiagrams: 'Диаграммалар',
         tabVideos: 'Видеолар',
         tabAudio: 'Аудио',
-        tabHidden: 'Жасырын мәліметтер',
+        tabHidden: 'Байқаусыз қалатын',
         tabConcepts: 'Негізгі ұғымдар',
         tabSummative: 'Жиынтық бағалау тақырыптары',
         tabSelftest: 'Өзіңді тексер',
@@ -1974,7 +1991,7 @@
         headerDiagrams: 'Көрнекі диаграммалар — көрнекілікті қалайтындарға',
         headerVideos: 'Қатысты видеолар — дәл осы тақырып бойынша нақты видеолар',
         headerAudio: 'Тыңдау — осы материал бойынша оқу диалогы',
-        headerHidden: 'Жасырын мәліметтер — жиынтық бағалауда кездесуі мүмкін',
+        headerHidden: 'Байқаусыз қалатын — жиынтық бағалауда кездесуі мүмкін',
         headerConcepts: 'Негізгі ұғымдар',
         headerSummative: 'Ықтимал жиынтық бағалау тақырыптары',
         headerSelftest: 'Викторина уақыты — өзіңді тексер',
@@ -2059,7 +2076,7 @@
         welcomeGreeting: 'Давайте настроим ваш профиль.',
         welcomeBackGreeting: 'Добро пожаловать, {name}! Давайте настроим ваш профиль.',
         editingProfileGreeting: 'Редактирование профиля, {name}.',
-        profileGradeLabel: 'Класс НИШ',
+        profileGradeLabel: 'Класс',
         gradeNotSet: 'Не указано',
         grade78: '7-8 класс',
         grade910: '9-10 класс',
@@ -2069,6 +2086,10 @@
         langKazakh: 'Казахский',
         langRussian: 'Русский',
         profileLanguageHint: 'Конспекты, тесты и всё остальное будут создаваться на этом языке.',
+        profileSchoolLabel: 'Школа',
+        schoolNis: 'НИШ',
+        schoolOther: 'Другая школа',
+        profileSchoolHint: 'Специфика НИШ (например, «критерии НИШ») упоминается по названию только если вы действительно учитесь в НИШ — в любом случае вы получаете тот же анализ экзаменационных паттернов.',
         profileFocusLabel: 'Инструкции по умолчанию',
         profileFocusPlaceholder: 'например, «Я уже знаю термины, сосредоточьтесь на вычислениях» — оставьте пустым для полного охвата',
         profileFocusHint: 'Автоматически заполняет поле фокуса при каждой загрузке — вы всё равно можете изменить его для конкретного файла.',
@@ -2087,7 +2108,7 @@
         tabDiagrams: 'Диаграммы',
         tabVideos: 'Видео',
         tabAudio: 'Аудио',
-        tabHidden: 'Скрытые детали',
+        tabHidden: 'Легко упустить',
         tabConcepts: 'Ключевые понятия',
         tabSummative: 'Темы итогового теста',
         tabSelftest: 'Проверь себя',
@@ -2097,7 +2118,7 @@
         headerDiagrams: 'Наглядные диаграммы — для визуалов',
         headerVideos: 'Похожие видео — реальные видео именно на эту тему',
         headerAudio: 'Слушать — учебный диалог по этому материалу',
-        headerHidden: 'Скрытые детали — вероятно появятся на итоговом тесте',
+        headerHidden: 'Легко упустить — вероятно появится на итоговом тесте',
         headerConcepts: 'Ключевые понятия',
         headerSummative: 'Вероятные темы итогового теста',
         headerSelftest: 'Время квиза — проверь себя',
@@ -2376,6 +2397,7 @@
 
       document.getElementById('profileGrade').value = currentUser.grade || '';
       document.getElementById('profileLanguage').value = currentUser.language || 'en';
+      document.getElementById('profileSchool').value = currentUser.school || 'nis';
       document.getElementById('profileFocus').value = currentUser.defaultFocusInstructions || '';
 
       const firstName = (currentUser.name || '').split(' ')[0];
@@ -2410,6 +2432,7 @@
       const statusEl2 = document.getElementById('welcomeStatus');
       const grade = document.getElementById('profileGrade').value || null;
       const language = document.getElementById('profileLanguage').value || 'en';
+      const school = document.getElementById('profileSchool').value || 'nis';
       const defaultFocusInstructions = document.getElementById('profileFocus').value.trim();
 
       statusEl2.className = 'profile-status';
@@ -2419,7 +2442,7 @@
         const res = await fetch('/api/auth/profile', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ grade, language, defaultFocusInstructions }),
+          body: JSON.stringify({ grade, language, school, defaultFocusInstructions }),
         });
         if (res.status === 401) { handleSessionExpired(); return; }
         const data = await res.json();

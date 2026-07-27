@@ -11,7 +11,7 @@ const GEMINI_ENDPOINT =
 // This bit us for real: the [STEP]/[KEY] note formats and the Mermaid
 // unicode-sanitization prompt rules were invisible on a re-upload of an
 // already-cached file until this existed.
-const PROMPT_VERSION = 'v9-mindmap-meaningful-phrases-not-bare-keywords';
+const PROMPT_VERSION = 'v10-school-aware-nis-mentions';
 
 // 429 = rate limited (too many requests right now), 503 = model overloaded —
 // both are transient and worth retrying with backoff instead of failing
@@ -147,7 +147,7 @@ async function callGeminiJSON(prompt, { maxOutputTokens = 2048, temperature = 0.
 
 const LANGUAGE_NAMES = { en: 'English', kk: 'Kazakh', ru: 'Russian' };
 
-async function restructureWithClaude(text, focusInstructions = '', grade = null, language = 'en') {
+async function restructureWithClaude(text, focusInstructions = '', grade = null, language = 'en', school = null) {
   // The output schema has grown a lot (mnemonics on every hidden detail, a
   // full audio dialogue, mind map, diagrams, self-test...). Gemini 2.5
   // Flash's "thinking" tokens also draw from this same budget, so a
@@ -163,7 +163,7 @@ async function restructureWithClaude(text, focusInstructions = '', grade = null,
   // less run-to-run) for much more consistent grading verdicts, which
   // matters more here since this is a judgment/grading feature students
   // need to trust.
-  return callGeminiJSON(buildPrompt(text, focusInstructions, grade, language), { maxOutputTokens: 32768, temperature: 0.3 });
+  return callGeminiJSON(buildPrompt(text, focusInstructions, grade, language, school), { maxOutputTokens: 32768, temperature: 0.3 });
 }
 
 const VALID_SUGGESTED_GRADES = new Set(['again', 'hard', 'good', 'easy']);
@@ -208,13 +208,34 @@ Output must be valid JSON parseable by JSON.parse(), no markdown, no preamble.`;
   return result;
 }
 
-const GRADE_BAND_GUIDANCE = {
-  '7-8': 'The student is in NIS grade 7-8. Use foundational framing: simpler vocabulary, define every technical term the first time it appears, and keep hidden_details/self_test questions at a more basic recall level. Avoid assuming prior knowledge from later grades.',
-  '9-10': 'The student is in NIS grade 9-10. Use intermediate depth: technical terms are fine but briefly clarify less common ones, and mix recall with some application-level questions.',
-  '11-12': 'The student is in NIS grade 11-12. Use full SA-level rigor: exact NIS terminology throughout, no simplification, and weight self_test toward application/HOT-level questions as already specified above.',
-};
+// NIS grade-band guidance now takes isNis so the wording only names NIS for
+// students who actually said they're at an NIS school — see buildPrompt's
+// "school" param. Everyone else still gets the same depth calibration by
+// grade, just without a school name that doesn't apply to them.
+function gradeBandGuidance(grade, isNis) {
+  const gradeLabel = isNis ? `NIS grade ${grade}` : `grade ${grade}`;
+  const rigor = isNis ? 'SA-level' : 'exam-level';
+  const termPhrase = isNis ? 'exact NIS terminology' : 'exact terminology';
+  const guidance = {
+    '7-8': `The student is in ${gradeLabel}. Use foundational framing: simpler vocabulary, define every technical term the first time it appears, and keep hidden_details/self_test questions at a more basic recall level. Avoid assuming prior knowledge from later grades.`,
+    '9-10': `The student is in ${gradeLabel}. Use intermediate depth: technical terms are fine but briefly clarify less common ones, and mix recall with some application-level questions.`,
+    '11-12': `The student is in ${gradeLabel}. Use full ${rigor} rigor: ${termPhrase} throughout, no simplification, and weight self_test toward application/HOT-level questions as already specified above.`,
+  };
+  return guidance[grade];
+}
 
-function buildPrompt(text, focusInstructions = '', grade = null, language = 'en') {
+// "school" is the student's profile field ('nis' or null/anything else).
+// Aisha's beta testers are all NIS students and the exam-pattern tuning
+// below is genuinely NIS-specific knowledge, but a student from any other
+// school gets the same six-pattern exam intelligence without the prompt
+// (and therefore the notes/hidden-details the student reads) claiming
+// "NIS" applies to them specifically.
+function buildPrompt(text, focusInstructions = '', grade = null, language = 'en', school = null) {
+  const isNis = school === 'nis';
+  const examMarkScheme = isNis ? 'NIS mark schemes' : 'exam mark schemes';
+  const examSaFull = isNis ? 'summative assessments (SA1/SA2)' : 'summative/final assessments';
+  const examPatternsHeader = isNis ? 'HOW NIS ACTUALLY TESTS STUDENTS' : 'HOW RIGOROUS EXAMS ACTUALLY TEST STUDENTS';
+
   const focusBlock = focusInstructions
     ? `\n──────────────────────────────────────────────
 STUDENT FOCUS INSTRUCTIONS
@@ -225,11 +246,11 @@ ${focusInstructions}
 Spend more depth on areas they flagged; reduce detail on areas they say they already know. Still return all five JSON sections in full.\n`
     : '';
 
-  const gradeBlock = grade && GRADE_BAND_GUIDANCE[grade]
+  const gradeBlock = grade && gradeBandGuidance(grade, isNis)
     ? `\n──────────────────────────────────────────────
 STUDENT GRADE LEVEL
 ──────────────────────────────────────────────
-${GRADE_BAND_GUIDANCE[grade]}\n`
+${gradeBandGuidance(grade, isNis)}\n`
     : '';
 
   // NIS Grade 7-10 students study in Kazakh- or Russian-medium classes, not
@@ -244,43 +265,43 @@ ${GRADE_BAND_GUIDANCE[grade]}\n`
     ? `\n──────────────────────────────────────────────
 OUTPUT LANGUAGE
 ──────────────────────────────────────────────
-The student studies in ${LANGUAGE_NAMES[language]}-medium classes. Write ALL text content in ${LANGUAGE_NAMES[language]} — restructured notes, hidden_details, key_concepts, likely_summative_topics, readiness_checklist, self_test questions and answers, audio_dialogue lines, mind_map and visual_diagrams node labels/captions, mnemonics, learning_objectives text. Use the actual ${LANGUAGE_NAMES[language]} biology terminology as it is taught in NIS ${LANGUAGE_NAMES[language]}-medium classrooms (the real vocabulary NIS teachers and mark schemes use), not a literal word-for-word translation from an English textbook.
+The student studies in ${LANGUAGE_NAMES[language]}-medium classes. Write ALL text content in ${LANGUAGE_NAMES[language]} — restructured notes, hidden_details, key_concepts, likely_summative_topics, readiness_checklist, self_test questions and answers, audio_dialogue lines, mind_map and visual_diagrams node labels/captions, mnemonics, learning_objectives text. Use the actual ${LANGUAGE_NAMES[language]} biology terminology as it is taught in ${isNis ? 'NIS ' : ''}${LANGUAGE_NAMES[language]}-medium classrooms (the real vocabulary ${isNis ? 'NIS ' : ''}teachers and mark schemes use), not a literal word-for-word translation from an English textbook.
 EXCEPTION: video_search_query must stay in English regardless of this setting — it's used to search YouTube, and English search terms surface far better biology education videos.
 The JSON keys in the schema below (e.g. "restructured", "hidden_details") always stay exactly as written in English — this instruction only affects the actual text values you write into those fields.\n`
     : '';
 
-  return `You are an expert biology tutor specializing in the NIS (Nazarbayev Intellectual Schools) curriculum in Kazakhstan. Analyze biology slide or PDF content and help a high school student prepare for their NIS summative assessments (SA1/SA2).
+  return `You are an expert biology tutor${isNis ? ' specializing in the NIS (Nazarbayev Intellectual Schools) curriculum in Kazakhstan' : ''}. Analyze biology slide or PDF content and help a high school student prepare for their ${examSaFull}.
 
 ──────────────────────────────────────────────
-HOW NIS ACTUALLY TESTS STUDENTS — SIX PATTERNS
+${examPatternsHeader} — SIX PATTERNS
 ──────────────────────────────────────────────
 When scanning the content for "hidden_details", you MUST look for all six of these patterns. Each hidden detail you output should be tagged with which pattern(s) it matches.
 
-Formatting rule for every hidden_details item's "text" field (applies to all six patterns below): do NOT begin the text with a restated label like "TERMINOLOGY:", "FORMULA:", "COMPARE:", "MULTI-FACT (...):", "DIAGRAM:", or "MULTI-LEVEL (...):" — the item's "category" field already tells the student which pattern this is (it's shown as a section heading in the app), so repeating it inline is pure redundant clutter. Start directly with the actual content. Also bold (**term**) the one or two specific vocabulary terms/values a student most needs to get exactly right — not whole sentences, just the precise term(s) an NIS mark scheme would check for.
+Formatting rule for every hidden_details item's "text" field (applies to all six patterns below): do NOT begin the text with a restated label like "TERMINOLOGY:", "FORMULA:", "COMPARE:", "MULTI-FACT (...):", "DIAGRAM:", or "MULTI-LEVEL (...):" — the item's "category" field already tells the student which pattern this is (it's shown as a section heading in the app), so repeating it inline is pure redundant clutter. Start directly with the actual content. Also bold (**term**) the one or two specific vocabulary terms/values a student most needs to get exactly right — not whole sentences, just the precise term(s) ${isNis ? 'an NIS mark scheme' : 'a mark scheme'} would check for.
 
 PATTERN 1 — EXACT TERMINOLOGY TRAPS
-NIS mark schemes award marks only for the precise term, not a paraphrase. Slides often introduce two near-synonyms loosely; the exam forces the student to apply the correct label to a specific scenario.
+${examMarkScheme} award marks only for the precise term, not a paraphrase. Slides often introduce two near-synonyms loosely; the exam forces the student to apply the correct label to a specific scenario.
 Example: A slide mentioning water transport might use "cohesion" and "adhesion" loosely.
-Hidden detail → "**Cohesion** = intermolecular attraction between water molecules (same substance); **adhesion** = attraction between water molecules and xylem vessel walls (different substances) — NIS mark schemes reject either term used in place of the other."
+Hidden detail → "**Cohesion** = intermolecular attraction between water molecules (same substance); **adhesion** = attraction between water molecules and xylem vessel walls (different substances) — ${examMarkScheme} reject either term used in place of the other."
 
 PATTERN 2 — UNIT CONVERSIONS AND FORMULA APPLICATION
-If the slide states a formula or a unit, NIS will test it numerically in the SA — students are expected to apply it with new numbers, not just recite it.
+If the slide states a formula or a unit, ${isNis ? 'NIS will test it numerically in the SA' : 'the exam will test it numerically'} — students are expected to apply it with new numbers, not just recite it.
 Example hidden detail → "**Actual size = Image size ÷ Magnification**. Conversion: 1 mm = 1000 µm; 1 µm = 1000 nm. A student given image size 40 mm at ×500 must calculate actual size = 80 µm — the formula itself is the hidden testable point."
 
 PATTERN 3 — SIMILARITY/DIFFERENCE COMPARISON PAIRS
-When a slide presents two related concepts (two organelles, two transport types, two molecules), NIS almost always asks for similarities AND differences as separate mark-scoring categories. Flag any pair of related concepts as a hidden detail, specifying what to compare.
-Example hidden detail → "**Mitosis vs Meiosis** — slides treat these separately, but NIS SA mark schemes award marks in two columns: shared features (both start from diploid cell, both involve DNA replication in S-phase) AND differences (mitosis → 2 diploid cells; meiosis → 4 haploid cells). Students who know one but not the other lose half the marks."
+When a slide presents two related concepts (two organelles, two transport types, two molecules), ${isNis ? 'NIS' : 'a rigorous exam'} almost always asks for similarities AND differences as separate mark-scoring categories. Flag any pair of related concepts as a hidden detail, specifying what to compare.
+Example hidden detail → "**Mitosis vs Meiosis** — slides treat these separately, but ${isNis ? 'NIS SA mark schemes' : examMarkScheme} award marks in two columns: shared features (both start from diploid cell, both involve DNA replication in S-phase) AND differences (mitosis → 2 diploid cells; meiosis → 4 haploid cells). Students who know one but not the other lose half the marks."
 
 PATTERN 4 — MULTI-FACT "ANY N OF THESE" LISTS
-NIS extended-answer mark schemes give credit for "any 2 from:" or "any 3 from:" a longer list. This means a student must know MULTIPLE independent facts about a single concept, not just the one-sentence definition the slide gives.
+${isNis ? 'NIS extended-answer mark schemes give credit' : 'Extended-answer exam mark schemes give credit'} for "any 2 from:" or "any 3 from:" a longer list. This means a student must know MULTIPLE independent facts about a single concept, not just the one-sentence definition the slide gives.
 Example hidden detail → "**Oxidative phosphorylation**: mark scheme awards 'any 3 of' → (1) electrons passed along ETC, (2) energy released pumps H⁺ across inner mitochondrial membrane, (3) proton gradient drives ATP synthase, (4) O₂ is final electron acceptor forming H₂O. A slide that only mentions 'oxygen needed' hides three other testable facts."
 
 PATTERN 5 — DIAGRAM LABEL MATCHING
-If the slide contains a labeled diagram (letters A/B/C or K/L/M), every label is a potential exam question. NIS shows the same diagram with blank labels and asks for the name. Flag every labeled structure in the slide as a hidden detail.
-Example hidden detail → "**Chloroplast cross-section** — labels A=outer membrane, B=inner membrane, C=thylakoid, D=granum, E=stroma, F=thylakoid membrane. NIS will show this diagram with blank letters and ask students to name each — memorise all labels, not just the ones the slide's narrative discusses."
+If the slide contains a labeled diagram (letters A/B/C or K/L/M), every label is a potential exam question. ${isNis ? 'NIS shows' : 'Exams show'} the same diagram with blank labels and asks for the name. Flag every labeled structure in the slide as a hidden detail.
+Example hidden detail → "**Chloroplast cross-section** — labels A=outer membrane, B=inner membrane, C=thylakoid, D=granum, E=stroma, F=thylakoid membrane. ${isNis ? 'NIS will show' : 'The exam will show'} this diagram with blank letters and ask students to name each — memorise all labels, not just the ones the slide's narrative discusses."
 
 PATTERN 6 — SAME FACT AT MULTIPLE COGNITIVE LEVELS
-NIS re-tests the same learning objective at three levels in the same SA: (K) define/recall, (App) apply to a new number or scenario, (HOT) evaluate, compare, or design an experiment. Flag facts that will predictably be recycled this way.
+${isNis ? 'NIS re-tests the same learning objective at three levels in the same SA' : 'Exams often re-test the same learning objective at three cognitive levels'}: (K) define/recall, (App) apply to a new number or scenario, (HOT) evaluate, compare, or design an experiment. Flag facts that will predictably be recycled this way.
 Example hidden detail → "**Enzyme active site**: K-level → define 'induced fit'; App-level → explain why increasing substrate concentration beyond Vmax has no effect; HOT-level → design an experiment to find optimum pH, including control variables and how to measure enzyme activity. All three stem from one sentence on a slide."
 
 ──────────────────────────────────────────────
@@ -308,7 +329,7 @@ Write a short two-speaker study conversation covering the content — a student 
 ──────────────────────────────────────────────
 LEARNING OBJECTIVES
 ──────────────────────────────────────────────
-NIS slide decks typically open with a "Learning objectives" / "Lesson objectives" / "Success criteria" slide (e.g. "By the end of this lesson, students will be able to..."). Locate this if present.
+${isNis ? 'NIS slide decks' : 'Slide decks'} typically open with a "Learning objectives" / "Lesson objectives" / "Success criteria" slide (e.g. "By the end of this lesson, students will be able to..."). Locate this if present.
 - Extract each stated objective as written (lightly cleaned up, not paraphrased into something unrecognisable).
 - For each objective, judge whether the REST of the content (not just the objectives slide itself) actually gives the student enough to achieve it: "covered" (content fully supports it), "partial" (content touches it but leaves gaps — say what's missing), or "not addressed" (objective stated but content doesn't deliver on it).
 - If the material has no explicit objectives slide, return an empty array — do NOT invent objectives that weren't stated.
@@ -401,7 +422,7 @@ Respond with ONLY a valid JSON object (no markdown, no preamble) with exactly th
     },
     {
       "category": "Comparisons",
-      "items": [{ "text": "Similarity/difference pair NIS will ask about.", "mnemonic": "..." }]
+      "items": [{ "text": "Similarity/difference pair ${isNis ? 'NIS' : 'the exam'} will ask about.", "mnemonic": "..." }]
     },
     {
       "category": "Multi-Fact Concepts",
@@ -413,14 +434,14 @@ Respond with ONLY a valid JSON object (no markdown, no preamble) with exactly th
     },
     {
       "category": "Likely Task Types",
-      "items": [{ "text": "A higher-order task the student will likely face on the SA — describe the task type and the thinking required. Example: 'You'll likely be asked to predict what happens to postsynaptic transmission if calcium channels are blocked — practice applying the mechanism to a novel scenario, not recalling steps.'", "mnemonic": "..." }]
+      "items": [{ "text": "A higher-order task the student will likely face on ${isNis ? 'the SA' : 'the exam'} — describe the task type and the thinking required. Example: 'You'll likely be asked to predict what happens to postsynaptic transmission if calcium channels are blocked — practice applying the mechanism to a novel scenario, not recalling steps.'", "mnemonic": "..." }]
     }
   ],
   "key_concepts": [
     "Start with **the concept name or core term** in bold (2-5 words), then 1–2 plain sentences: what it is, and the one thing students most commonly get wrong or confuse. No lengthy explanations."
   ],
   "likely_summative_topics": [
-    "A specific question type or topic likely to appear on an NIS SA, with **the key term or skill being tested** bolded inline — e.g. 'Define **osmosis** and distinguish it from diffusion', 'Label the stages of **mitosis** in order', 'Explain how **enzyme shape** determines substrate specificity'."
+    "A specific question type or topic likely to appear on ${isNis ? 'an NIS SA' : 'the exam'}, with **the key term or skill being tested** bolded inline — e.g. 'Define **osmosis** and distinguish it from diffusion', 'Label the stages of **mitosis** in order', 'Explain how **enzyme shape** determines substrate specificity'."
   ],
   "readiness_checklist": [
     "I can [concise, first-person, actionable — ticking this off confirms exam readiness]"

@@ -17,15 +17,18 @@ const CACHE_TTL_DAYS = 30;
 // happened with the [STEP]/[KEY] note formats before this existed.
 // language is part of the key so a Kazakh-medium student never gets served
 // an English (or Russian) classmate's cached result for the same file —
-// same content, different language, genuinely different output.
-function hashInput(text, focusInstructions, grade, language) {
-  const normalized = `${PROMPT_VERSION} ${text} ${focusInstructions || ''} ${grade || ''} ${language || 'en'}`;
+// same content, different language, genuinely different output. school is
+// part of the key for the same reason — an NIS student and a non-NIS
+// student uploading the identical file must not share a cached result now
+// that the prompt's wording (mentioning "NIS" or not) depends on it.
+function hashInput(text, focusInstructions, grade, language, school) {
+  const normalized = `${PROMPT_VERSION} ${text} ${focusInstructions || ''} ${grade || ''} ${language || 'en'} ${school || ''}`;
   return crypto.createHash('sha256').update(normalized).digest('hex');
 }
 
-async function getCached(text, focusInstructions, grade, language) {
+async function getCached(text, focusInstructions, grade, language, school) {
   const db = await connectMongo();
-  const hash = hashInput(text, focusInstructions, grade, language);
+  const hash = hashInput(text, focusInstructions, grade, language, school);
   const entry = await db.collection('resultCache').findOne({ hash });
   if (!entry) return null;
 
@@ -39,9 +42,9 @@ async function getCached(text, focusInstructions, grade, language) {
   return entry.result;
 }
 
-async function setCached(text, focusInstructions, grade, language, result) {
+async function setCached(text, focusInstructions, grade, language, school, result) {
   const db = await connectMongo();
-  const hash = hashInput(text, focusInstructions, grade, language);
+  const hash = hashInput(text, focusInstructions, grade, language, school);
   await db.collection('resultCache').updateOne(
     { hash },
     { $set: { hash, result, createdAt: new Date().toISOString() } },

@@ -12,6 +12,7 @@ function serializeUser(user) {
     picture: user.picture,
     grade: user.grade,
     language: user.language,
+    school: user.school,
     defaultFocusInstructions: user.defaultFocusInstructions,
   };
 }
@@ -79,10 +80,10 @@ router.patch('/profile', async (req, res) => {
   if (!req.session.userId) {
     return res.status(401).json({ error: 'Not signed in.' });
   }
-  const { grade, language, defaultFocusInstructions } = req.body;
+  const { grade, language, defaultFocusInstructions, school } = req.body;
   let updated;
   try {
-    updated = await updateUserProfile(req.session.userId, { grade, language, defaultFocusInstructions });
+    updated = await updateUserProfile(req.session.userId, { grade, language, defaultFocusInstructions, school });
   } catch (err) {
     return res.status(400).json({ error: err.message });
   }
