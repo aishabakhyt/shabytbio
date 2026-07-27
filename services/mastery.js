@@ -204,6 +204,24 @@ async function getDashboard(userId) {
     prevDate = dateStr;
   }
 
+  // Last 7 calendar days (oldest first) as a simple active/inactive list —
+  // powers a Duolingo/GitHub-style dot row on the dashboard so the streak is
+  // self-evident at a glance instead of needing a text explanation of the
+  // underlying rule.
+  const last7Days = [];
+  const dayCursor = new Date();
+  dayCursor.setUTCDate(dayCursor.getUTCDate() - 6);
+  const WEEKDAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  for (let i = 0; i < 7; i++) {
+    const dateStr = dayCursor.toISOString().slice(0, 10);
+    last7Days.push({
+      label: WEEKDAY_LABELS[dayCursor.getUTCDay()],
+      active: activeDates.has(dateStr),
+      isToday: i === 6,
+    });
+    dayCursor.setUTCDate(dayCursor.getUTCDate() + 1);
+  }
+
   const nowMs = Date.now();
   const todayStr = new Date(nowMs).toISOString().slice(0, 10);
   const topics = topicRows.map(r => {
@@ -247,7 +265,7 @@ async function getDashboard(userId) {
     .slice(0, 3)
     .map(t => ({ label: t.label, daysUntilExam: t.daysUntilExam, mastered: t.mastered, total: t.total }));
 
-  return { streak, longestStreak, masteredCount, totalTracked, dueCount, topics, examReminders };
+  return { streak, longestStreak, masteredCount, totalTracked, dueCount, topics, examReminders, last7Days };
 }
 
 // Groups a student's review items by source material so they can see their

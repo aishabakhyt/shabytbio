@@ -953,6 +953,52 @@
     }
     .diagram-lightbox-canvas svg { max-width: none; max-height: none; }
 
+    /* ── Dedicated dashboard page ── */
+    .dashboard-page-back {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: #4a5568;
+      margin-bottom: 1.2rem;
+      padding: 0.3rem 0;
+    }
+    .dashboard-page-back:hover { color: #2d3748; }
+    .dashboard-page-hero {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      animation: fadeInUp 0.25s ease;
+    }
+    .dashboard-page-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 760px) {
+      .dashboard-page-grid { grid-template-columns: 1fr; }
+    }
+    .dashboard-page-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      padding: 1.25rem 1.5rem;
+      animation: fadeInUp 0.25s ease;
+    }
+    .dashboard-page-card h3 { font-size: 0.95rem; color: #2d3748; margin-bottom: 0.9rem; }
+    .dashboard-page-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem; }
+    .dashboard-page-card-header h3 { margin-bottom: 0; }
+    .dashboard-page-topic-row {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #edf2f7;
+    }
+    .dashboard-page-topic-row:last-child { border-bottom: none; }
+
     /* ── Motivational dashboard ── */
     .dashboard-card {
       background: #fff;
@@ -962,7 +1008,36 @@
       width: 100%;
       max-width: 100%;
     }
-    .dashboard-card-header { margin-bottom: 0.9rem; }
+    .dashboard-card-header { margin-bottom: 0.9rem; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+    /* A week-at-a-glance dot row (GitHub/Duolingo-style) — the streak
+       explained itself is a mystery, but "which of the last 7 days did I
+       show up" needs zero words to understand. */
+    .streak-dots { display: flex; gap: 0.3rem; margin: 0.7rem 0 1rem; }
+    .streak-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #a0aec0;
+      background: #edf2f7;
+      flex-shrink: 0;
+    }
+    .streak-dot.active { background: #38a169; color: #fff; }
+    .streak-dot.today { box-shadow: 0 0 0 2px #90cdf4; }
+    .dashboard-view-link {
+      font-size: 0.76rem;
+      color: #3182ce;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: none;
+    }
+    .dashboard-view-link:hover { text-decoration: underline; }
     .dashboard-card h3 {
       font-size: 0.95rem;
       color: #2d3748;
@@ -1577,6 +1652,7 @@
       <div class="dashboard-card" id="dashboardCard" hidden>
         <div class="dashboard-card-header">
           <h3 data-i18n="yourProgress">Your Progress</h3>
+          <button class="dashboard-view-link" id="dashboardViewFullBtn" type="button" data-i18n="viewFullDashboard">View full dashboard →</button>
         </div>
         <div id="dashboardOutput"></div>
         <details class="dashboard-explain">
@@ -1751,6 +1827,31 @@
   </div>
   </div><!-- /#appContent -->
 
+  <!-- Dedicated dashboard page — motivation, full progress, upload history,
+       and a profile shortcut all in one place, reachable from the nav
+       instead of squeezed into a sidebar card. -->
+  <div id="dashboardPage" style="width:100%;max-width:900px;margin:0 auto;" hidden>
+    <button class="dashboard-page-back" id="dashboardBackBtn" type="button">
+      ← <span data-i18n="backToApp">Back to upload</span>
+    </button>
+
+    <div class="dashboard-page-hero" id="dashboardPageHero"></div>
+
+    <div class="dashboard-page-grid">
+      <div class="dashboard-page-card">
+        <h3 data-i18n="topicsProgress">Progress by topic</h3>
+        <div id="dashboardPageTopics"></div>
+      </div>
+      <div class="dashboard-page-card">
+        <div class="dashboard-page-card-header">
+          <h3 data-i18n="recentUploads">Recent uploads</h3>
+          <button class="dashboard-view-link" id="dashboardEditProfileBtn" type="button" data-i18n="editProfile">Edit profile</button>
+        </div>
+        <ul class="history-list" id="dashboardPageHistory"></ul>
+      </div>
+    </div>
+  </div>
+
   <script>
     /* ── Icons ── a small, consistent line-icon set (feather-icons style:
        thin stroke, currentColor) used everywhere the UI needs a small
@@ -1770,6 +1871,7 @@
     const ICON_PAUSE = svgIcon('<rect x="6" y="4" width="4" height="16" fill="currentColor" stroke="none"/><rect x="14" y="4" width="4" height="16" fill="currentColor" stroke="none"/>');
     const ICON_FLAME = svgIcon('<path d="M12 2c1 3-2 4-2 7a3 3 0 006 0c0-1-1-2-1-2 2 1 3 3 3 5a6 6 0 01-12 0c0-4 3-6 4-8 .5 1 1 2 2 2 0-2 0-3 0-4z" fill="currentColor" stroke="none"/>', 17);
     const ICON_TROPHY = svgIcon('<path d="M8 4h8v5a4 4 0 01-8 0V4z"/><path d="M8 5H5a2 2 0 002 4M16 5h3a2 2 0 01-2 4"/><path d="M12 13v3M9 20h6M9 20a3 3 0 003-3 3 3 0 003 3" stroke-linecap="round"/>', 17);
+    const ICON_CHART = svgIcon('<rect x="4" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="16" y="3" width="4" height="17" rx="1"/>', 15);
 
     /* Streak visual: a growing plant instead of a flame — fits the biology
        theme and the "tending something over time" feeling a streak should
@@ -1915,6 +2017,9 @@
         charsExtracted: 'Done — {count} characters extracted from "{filename}".',
         yourProgress: 'Your Progress',
         dashboardHowItWorks: 'How does this work?',
+        dashboardNav: 'Dashboard',
+        viewFullDashboard: 'View full dashboard →',
+        backToApp: 'Back to upload',
         dayStreakWord: 'Streak',
         masteredWord: 'Mastered',
         dashboardStreakExplain: "Counts any day you upload new material or review questions — both count as studying. Missing a day resets the count, but nothing you've learned is lost, and your best streak is always shown so you can beat it again.",
@@ -2022,6 +2127,9 @@
         rename: 'Атын өзгерту',
         yourProgress: 'Сенің жетістігің',
         dashboardHowItWorks: 'Бұл қалай жұмыс істейді?',
+        dashboardNav: 'Тақта',
+        viewFullDashboard: 'Толық тақтаны көру →',
+        backToApp: 'Жүктеуге оралу',
         dayStreakWord: 'Серия',
         masteredWord: 'Меңгерілді',
         dashboardStreakExplain: 'Серияң жаңа материал жүктеген немесе сұрақтарды қайталаған әрбір күнді санайды — екеуі де оқу болып есептеледі. Бір күнді өткізіп алсаң, санақ қайта басталады, бірақ үйренгендерің жоғалмайды, әрі ең жақсы серияң әрқашан көрсетіліп тұрады, оны қайта жеңуге болады.',
@@ -2149,6 +2257,9 @@
         rename: 'Переименовать',
         yourProgress: 'Ваш прогресс',
         dashboardHowItWorks: 'Как это работает?',
+        dashboardNav: 'Панель',
+        viewFullDashboard: 'Открыть полную панель →',
+        backToApp: 'Назад к загрузке',
         dayStreakWord: 'Серия',
         masteredWord: 'Освоено',
         dashboardStreakExplain: 'Серия считает каждый день, когда вы загружаете новый материал или повторяете вопросы — оба действия считаются занятием. Пропуск дня обнуляет счётчик, но всё изученное никуда не исчезает, а ваш лучший результат всегда показан, чтобы его можно было побить снова.',
@@ -2263,6 +2374,10 @@
       if (typeof renderAuthBar === 'function' && currentUser) renderAuthBar();
       if (typeof refreshDueCount === 'function' && currentUser) refreshDueCount();
       if (typeof renderDashboard === 'function' && currentUser) renderDashboard();
+      const dashboardPageEl = document.getElementById('dashboardPage');
+      if (typeof renderDashboardPageContent === 'function' && currentUser && dashboardPageEl && !dashboardPageEl.hidden) {
+        renderDashboardPageContent();
+      }
     }
 
     function setLanguage(lang) {
@@ -2337,6 +2452,12 @@
       reviewBtn.title = t('reviewQuizTooltip');
       reviewBtn.addEventListener('click', openReviewSession);
       wrap.appendChild(reviewBtn);
+
+      const dashboardBtn = document.createElement('button');
+      dashboardBtn.className = 'review-btn';
+      dashboardBtn.innerHTML = `${ICON_CHART} ${t('dashboardNav')}`;
+      dashboardBtn.addEventListener('click', showDashboardPage);
+      wrap.appendChild(dashboardBtn);
 
       const langSwitch = document.createElement('div');
       langSwitch.className = 'lang-switch';
@@ -2415,6 +2536,7 @@
     function showApp() {
       document.getElementById('welcomeScreen').hidden = true;
       document.getElementById('appContent').hidden = false;
+      document.getElementById('dashboardPage').hidden = true;
       renderAuthBar();
       renderDashboard();
 
@@ -2425,6 +2547,18 @@
         focusInputEl.value = currentUser.defaultFocusInstructions;
       }
 
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // The dedicated dashboard page — motivation, full progress, upload
+    // history, and a profile shortcut together, reachable from the nav
+    // instead of squeezed into the home sidebar's compact card.
+    function showDashboardPage() {
+      document.getElementById('welcomeScreen').hidden = true;
+      document.getElementById('appContent').hidden = true;
+      document.getElementById('dashboardPage').hidden = false;
+      renderAuthBar();
+      renderDashboardPageContent();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
@@ -2469,6 +2603,9 @@
 
     document.getElementById('welcomeEnterBtn').addEventListener('click', saveProfileAndEnter);
     document.getElementById('welcomeBackBtn').addEventListener('click', () => showApp());
+    document.getElementById('dashboardViewFullBtn').addEventListener('click', showDashboardPage);
+    document.getElementById('dashboardBackBtn').addEventListener('click', showApp);
+    document.getElementById('dashboardEditProfileBtn').addEventListener('click', () => showOnboarding(true));
 
     async function handleSignOut() {
       await fetch('/api/auth/logout', { method: 'POST' });
@@ -3989,6 +4126,16 @@
 
     /* ── History ── */
     /* ── Motivational dashboard ── */
+
+    // A week-at-a-glance dot row — self-evident without reading anything,
+    // unlike a raw streak number or a paragraph explaining the rule.
+    function renderStreakDots(last7Days) {
+      if (!Array.isArray(last7Days) || !last7Days.length) return '';
+      return `<div class="streak-dots">${last7Days.map(d =>
+        `<span class="streak-dot${d.active ? ' active' : ''}${d.isToday ? ' today' : ''}">${d.label}</span>`
+      ).join('')}</div>`;
+    }
+
     async function renderDashboard() {
       const card = document.getElementById('dashboardCard');
       const out = document.getElementById('dashboardOutput');
@@ -4044,6 +4191,7 @@
       }
       hero.appendChild(textWrap);
       out.appendChild(hero);
+      out.insertAdjacentHTML('beforeend', renderStreakDots(data.last7Days));
 
       const masteredStat = document.createElement('div');
       masteredStat.className = 'dashboard-stats-row';
@@ -4106,6 +4254,114 @@
       }
     }
 
+    // Full version of the same dashboard data, for the dedicated page —
+    // same streak/mastery/topic data as the sidebar card, just without the
+    // 5-topic cap, and with the full upload history and a profile shortcut
+    // alongside it instead of split across the app.
+    async function renderDashboardPageContent() {
+      const heroEl = document.getElementById('dashboardPageHero');
+      const topicsEl = document.getElementById('dashboardPageTopics');
+      const historyEl = document.getElementById('dashboardPageHistory');
+      if (!heroEl) return;
+
+      let data;
+      try {
+        const res = await fetch('/api/mastery/dashboard');
+        data = res.ok ? await res.json() : null;
+      } catch (err) {
+        data = null;
+      }
+
+      heroEl.innerHTML = '';
+      topicsEl.innerHTML = '';
+
+      if (!data || !data.totalTracked) {
+        heroEl.innerHTML = `<p class="dashboard-empty">${t('dashboardEmpty')}</p>`;
+      } else {
+        const longest = data.longestStreak || 0;
+        const hero = document.createElement('div');
+        hero.className = 'dashboard-plant-hero';
+        const iconWrap = document.createElement('div');
+        iconWrap.className = 'dashboard-plant-icon';
+        iconWrap.innerHTML = plantIcon(plantStageForStreak(data.streak));
+        hero.appendChild(iconWrap);
+
+        const textWrap = document.createElement('div');
+        if (data.streak > 0) {
+          textWrap.innerHTML = `
+            <div class="dashboard-streak-num">${tf('dayStreak', { n: data.streak })}</div>
+            ${longest > data.streak ? `<div class="dashboard-streak-record">${tf('streakBest', { n: longest })}</div>` : ''}`;
+        } else if (longest > 0) {
+          textWrap.innerHTML = `
+            <div class="dashboard-comeback">${t('streakComeback')}</div>
+            <div class="dashboard-streak-record">${tf('streakBest', { n: longest })}</div>`;
+        } else {
+          textWrap.innerHTML = `<div class="dashboard-comeback">${t('noStreakYet')}</div>`;
+        }
+        hero.appendChild(textWrap);
+        heroEl.appendChild(hero);
+        heroEl.insertAdjacentHTML('beforeend', renderStreakDots(data.last7Days));
+
+        const masteredStat = document.createElement('div');
+        masteredStat.className = 'dashboard-stats-row';
+        masteredStat.innerHTML = `
+          <div class="dashboard-stat">
+            <div class="dashboard-stat-num">${data.masteredCount}</div>
+            <div class="dashboard-stat-label">${t('questionsMasteredLabel')}</div>
+          </div>`;
+        heroEl.appendChild(masteredStat);
+
+        if (data.examReminders && data.examReminders.length) {
+          data.examReminders.forEach(r => {
+            const reminder = document.createElement('p');
+            reminder.className = 'dashboard-exam-reminder';
+            const key = r.daysUntilExam === 0 ? 'examReminderToday' : r.daysUntilExam === 1 ? 'examReminderTomorrow' : 'examReminder';
+            reminder.textContent = tf(key, { days: r.daysUntilExam, topic: r.label, mastered: r.mastered, total: r.total });
+            heroEl.appendChild(reminder);
+          });
+        }
+
+        let milestoneKey = null;
+        if (data.streak >= 7) milestoneKey = 'milestoneWeek';
+        else if (data.masteredCount >= 50) milestoneKey = 'milestoneMastered50';
+        else if (data.streak >= 3) milestoneKey = 'milestoneStreak';
+        else if (data.masteredCount >= 10) milestoneKey = 'milestoneMastered10';
+        else if (data.dueCount > 0 && data.streak === 0) milestoneKey = 'milestoneStudyToday';
+        if (milestoneKey) {
+          const milestone = document.createElement('p');
+          milestone.className = 'dashboard-milestone';
+          milestone.textContent = t(milestoneKey);
+          heroEl.appendChild(milestone);
+        }
+
+        // No 5-topic cap here — this page exists specifically to show the
+        // full picture the sidebar card has to truncate.
+        if (data.topics && data.topics.length) {
+          data.topics.forEach(topic => {
+            const row = document.createElement('div');
+            row.className = 'dashboard-page-topic-row';
+            const dot = `<span class="dashboard-topic-dot ${topic.status}"></span>`;
+            const name = `<span class="dashboard-topic-name">${mdToHtml(topic.label)}</span>`;
+            const attention = topic.needsAttention ? `<span class="dashboard-topic-attention">${t('topicNeedsAttention')}</span>` : '';
+            row.innerHTML = dot + name + attention;
+            topicsEl.appendChild(row);
+          });
+        } else {
+          topicsEl.innerHTML = `<p class="dashboard-empty">${t('dashboardEmpty')}</p>`;
+        }
+      }
+
+      if (historyEl) {
+        try {
+          const res = await fetch('/api/history');
+          const items = await res.json();
+          renderHistoryList(items, historyEl, { fromDashboardPage: true });
+        } catch (err) {
+          historyEl.innerHTML = '<li class="history-empty">Couldn\'t load history.</li>';
+        }
+      }
+    }
+
     const historyListEl = document.getElementById('historyList');
 
     function formatHistoryDate(isoString) {
@@ -4136,10 +4392,14 @@
       }
     }
 
-    function renderHistoryList(items) {
-      historyListEl.innerHTML = '';
+    // targetEl lets the same renderer serve both the home page's compact
+    // history card and the dashboard page's full history list.
+    // fromDashboardPage switches back to the upload view before loading an
+    // item, since results render into the upload page, not the dashboard.
+    function renderHistoryList(items, targetEl = historyListEl, { fromDashboardPage = false } = {}) {
+      targetEl.innerHTML = '';
       if (!Array.isArray(items) || items.length === 0) {
-        historyListEl.innerHTML = '<li class="history-empty">No uploads yet — analyse a file to start building your history.</li>';
+        targetEl.innerHTML = '<li class="history-empty">No uploads yet — analyse a file to start building your history.</li>';
         return;
       }
 
@@ -4166,13 +4426,16 @@
           e.stopPropagation();
           if (!confirm(`Delete "${item.filename}" from history?`)) return;
           await fetch(`/api/history/${item.id}`, { method: 'DELETE' });
-          loadHistory();
+          if (fromDashboardPage) renderDashboardPageContent(); else loadHistory();
         });
 
-        li.addEventListener('click', () => loadHistoryItem(item.id));
+        li.addEventListener('click', () => {
+          if (fromDashboardPage) showApp();
+          loadHistoryItem(item.id);
+        });
         li.appendChild(main);
         li.appendChild(del);
-        historyListEl.appendChild(li);
+        targetEl.appendChild(li);
       });
     }
 
