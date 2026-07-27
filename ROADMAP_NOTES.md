@@ -1,6 +1,21 @@
 # ShabytBio — Roadmap Notes
 
-_Last updated: Jul 24, 2026_
+_Last updated: Jul 28, 2026_
+
+## Second beta feedback round (built Jul 27-28, 2026)
+
+Aisha's response to the dashboard/language rollout raised 8 points; all built except reflection prompts (deferred, see below):
+
+- **Dedicated dashboard page.** New `/` nav "Dashboard" button (and a "View full dashboard →" link from the home sidebar card) opens a full page: motivation hero, per-topic progress with no 5-item cap, full upload history, and an "Edit profile" shortcut — consolidating what was split across the sidebar card, Recent Uploads, and Manage Topics. Streak is now also a 7-day dot row (GitHub/Duolingo-style, active/inactive per day) — self-evident without reading the "How does this work?" explainer, which stays as an optional collapsed fallback.
+- **UI smoothness pass.** Every button now has a consistent hover/press transition; tabs, diagram cards, hidden-detail groups, and the dashboard hero fade in instead of snapping into place.
+- **Audio was a real bug, not a limitation.** The voice-picker was hardcoded to always select an English voice regardless of the chosen language, so Kazakh/Russian dialogue (already correctly translated) was read aloud with English pronunciation. Fixed to match the actual voice to the student's language; the Audio tab now hides itself entirely if the browser has no voice for that language at all (expected for Kazakh — mainstream browsers essentially never ship one) rather than mispronouncing it.
+- **NIS is now conditional, not hardcoded.** New `school` profile field (`nis` | `other`, defaults to `nis` for the current all-NIS audience). ~20 places in the prompt that said "NIS" unconditionally now only do so for students who actually said they're at an NIS school; everyone else gets the same six-pattern exam intelligence with generic wording. Cache key updated to include `school`.
+- **"Hidden Details" renamed to "Easy to Miss."**
+- **Mind map density fix, take two.** The first density fix (fewer nodes so branches stop overlapping) accidentally pushed toward bare 1-4 word keyword nodes — exactly what Aisha then flagged as "meaningless." Corrected: every node must now state an actual fact or relationship ("Cristae increase surface area", not "Cristae"), 2-6 words. Researched mind-map design principles (see PROMPT_VERSION v9 commit) — the conclusion: density belongs in Study Notes/Hidden Details, the mind map's job is a readable overview made of meaningful phrases, not more bare nodes.
+- **Comparison diagrams** (`graph LR`, e.g. "Relaxed vs Contracted Sarcomere") got an explicit two-chain template after one failed to render — steers the model away from untested "subgraph" syntax toward the same node+arrow syntax process diagrams already use reliably.
+- **Not built yet, deliberately deferred:** motivation-block ideas beyond what exists (weekly recap, visible milestone history) — proposed to Aisha, no build decision yet. Subject/brand scope (stay ShabytBio, biology-only through launch) — recommended, not a code change.
+
+Known limitation: cached/already-saved upload results don't retroactively pick up any of the above — a student has to re-upload (or re-run "Upload & Analyse" on the same file) to get the new diagram/prompt behavior on old content.
 
 ## Language support + motivational dashboard (built Jul 24, 2026)
 
