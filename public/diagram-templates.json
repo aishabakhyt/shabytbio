@@ -1,0 +1,97 @@
+{
+  "templates": [
+    {
+      "id": "synapse",
+      "name": "Chemical Synapse Cross-Section",
+      "description": "A labeled cross-section of a chemical synapse (axon terminal, synaptic cleft, postsynaptic membrane). Use for content describing synaptic transmission, neurotransmitter release, cholinergic/adrenergic synapses, the neuromuscular junction, or any chemical-synapse mechanism.",
+      "viewBox": "0 0 700 500",
+      "svgBody": "<defs><marker id='sb-arrow' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='6' markerHeight='6' orient='auto-start-reverse'><path d='M0,0 L10,5 L0,10 z' fill='#d69e2e'/></marker></defs><rect x='0' y='210' width='150' height='60' rx='28' fill='#fef6e0' stroke='#d69e2e' stroke-width='2'/><path d='M45,240 L95,240' stroke='#d69e2e' stroke-width='2.5' marker-end='url(#sb-arrow)'/><ellipse cx='290' cy='205' rx='155' ry='115' fill='#fef6e0' stroke='#d69e2e' stroke-width='2'/><ellipse cx='225' cy='150' rx='42' ry='24' fill='#feb2b2' stroke='#c53030' stroke-width='1.5'/><path d='M195,150 Q205,140 215,150 Q225,160 235,150 Q245,140 255,150' fill='none' stroke='#c53030' stroke-width='1.2'/><circle cx='245' cy='255' r='11' fill='#d6bcfa' stroke='#6b46c1' stroke-width='1.5'/><circle cx='278' cy='248' r='11' fill='#d6bcfa' stroke='#6b46c1' stroke-width='1.5'/><circle cx='310' cy='258' r='11' fill='#d6bcfa' stroke='#6b46c1' stroke-width='1.5'/><circle cx='340' cy='250' r='11' fill='#d6bcfa' stroke='#6b46c1' stroke-width='1.5'/><rect x='192' y='298' width='16' height='26' rx='4' fill='#4fd1c5' stroke='#285e61' stroke-width='1.5'/><path d='M282,300 Q300,285 318,300 Q318,312 300,312 Q282,312 282,300 Z' fill='#b794f4' stroke='#6b46c1' stroke-width='1.5'/><circle cx='300' cy='322' r='3' fill='#805ad5'/><circle cx='308' cy='330' r='3' fill='#805ad5'/><circle cx='292' cy='330' r='3' fill='#805ad5'/><rect x='140' y='308' width='300' height='8' fill='#a0522d' opacity='0.55'/><rect x='140' y='316' width='300' height='30' fill='#fffef5' opacity='0.4'/><path d='M395,332 Q405,322 415,332 Q420,342 410,346 Q400,348 392,342 Z' fill='#9ae6b4' stroke='#276749' stroke-width='1.5'/><rect x='120' y='346' width='340' height='8' fill='#a0522d' opacity='0.55'/><rect x='288' y='346' width='20' height='16' rx='3' fill='#fbd38d' stroke='#c05621' stroke-width='1.5'/><path d='M110,354 Q110,460 290,460 Q470,460 470,354 Z' fill='#fed7e2' stroke='#b83280' stroke-width='1.5' opacity='0.55'/>",
+      "anchors": [
+        {
+          "id": "axon",
+          "x": 75,
+          "y": 240,
+          "side": "left",
+          "hint": "the incoming axon/nerve fiber carrying the electrical signal into the terminal"
+        },
+        {
+          "id": "presynaptic_terminal",
+          "x": 150,
+          "y": 100,
+          "side": "left",
+          "hint": "the swollen end of the axon (the synaptic knob) where neurotransmitter is stored and released"
+        },
+        {
+          "id": "mitochondrion",
+          "x": 225,
+          "y": 150,
+          "side": "left",
+          "hint": "mitochondrion inside the terminal, supplying ATP for the energy-demanding release process"
+        },
+        {
+          "id": "calcium_channel",
+          "x": 200,
+          "y": 311,
+          "side": "left",
+          "hint": "voltage-gated calcium channel in the presynaptic membrane that opens when the action potential arrives"
+        },
+        {
+          "id": "vesicle",
+          "x": 278,
+          "y": 248,
+          "side": "left",
+          "hint": "a synaptic vesicle storing neurotransmitter molecules before release"
+        },
+        {
+          "id": "vesicle_fusing",
+          "x": 300,
+          "y": 305,
+          "side": "right",
+          "hint": "a vesicle fusing with the presynaptic membrane to release neurotransmitter (exocytosis)"
+        },
+        {
+          "id": "presynaptic_membrane",
+          "x": 380,
+          "y": 312,
+          "side": "right",
+          "hint": "the presynaptic cell membrane the vesicle fuses with"
+        },
+        {
+          "id": "synaptic_cleft",
+          "x": 380,
+          "y": 330,
+          "side": "right",
+          "hint": "the fluid-filled gap the neurotransmitter diffuses across"
+        },
+        {
+          "id": "enzyme",
+          "x": 405,
+          "y": 338,
+          "side": "right",
+          "hint": "an enzyme in the cleft (e.g. acetylcholinesterase) that breaks down neurotransmitter to stop the signal"
+        },
+        {
+          "id": "postsynaptic_membrane",
+          "x": 380,
+          "y": 350,
+          "side": "right",
+          "hint": "the membrane of the next neuron, containing receptors"
+        },
+        {
+          "id": "receptor",
+          "x": 298,
+          "y": 354,
+          "side": "right",
+          "hint": "a receptor protein neurotransmitter binds to, opening an ion channel on the postsynaptic side"
+        },
+        {
+          "id": "postsynaptic_neuron",
+          "x": 290,
+          "y": 430,
+          "side": "right",
+          "hint": "the next neuron/cell receiving and propagating the signal onward"
+        }
+      ]
+    }
+  ]
+}

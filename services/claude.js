@@ -1,4 +1,9 @@
 const { acquireSlot } = require('./rateLimiter');
+const { describeTemplatesForPrompt } = require('./diagramTemplates');
+// Reuses the exact same required-field list validateStudyPack.js checks
+// against, so the retry-on-incomplete-response logic below can never drift
+// out of sync with what the tripwire considers "required."
+const { REQUIRED_KEYS } = require('./validateStudyPack');
 
 const GEMINI_ENDPOINT =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
@@ -11,7 +16,7 @@ const GEMINI_ENDPOINT =
 // This bit us for real: the [STEP]/[KEY] note formats and the Mermaid
 // unicode-sanitization prompt rules were invisible on a re-upload of an
 // already-cached file until this existed.
-const PROMPT_VERSION = 'v10-school-aware-nis-mentions';
+const PROMPT_VERSION = 'v13-self-test-reliability-fix';
 
 // 429 = rate limited (too many requests right now), 503 = model overloaded —
 // both are transient and worth retrying with backoff instead of failing
@@ -163,7 +168,41 @@ async function restructureWithClaude(text, focusInstructions = '', grade = null,
   // less run-to-run) for much more consistent grading verdicts, which
   // matters more here since this is a judgment/grading feature students
   // need to trust.
-  return callGeminiJSON(buildPrompt(text, focusInstructions, grade, language, school), { maxOutputTokens: 32768, temperature: 0.3 });
+  // Bumped from 32768: the audio dialogue now scales with content depth
+  // (no fixed ceiling on turns for dense material) instead of a flat 10-16
+  // turn cap, so the shared output budget needs more headroom to avoid
+  // truncating a long response before it finishes.
+  const prompt = buildPrompt(text, focusInstructions, grade, language, school);
+  const genOpts = { maxOutputTokens: 49152, temperature: 0.3 };
+
+  // Confirmed live (Aug 28, 2026 supervised test run): Gemini can return a
+  // syntactically valid, non-MAX_TOKENS-truncated JSON object that's still
+  // missing a required key entirely (self_test, in the case that surfaced
+  // this) — not a parsing bug, just the model losing coverage of one field
+  // on an unusually long/dense response. validateStudyPack's tripwire only
+  // warns, by design, so nothing upstream of this would have caught it
+  // before it reached a student. self_test in particular is what the whole
+  // spaced-repetition system runs on, so losing it silently is worse than
+  // the extra cost/latency of one retry. Reusing REQUIRED_KEYS (the same
+  // list validateStudyPack checks) instead of a separate hardcoded list, so
+  // this can't quietly drift out of sync with the tripwire.
+  const MAX_ATTEMPTS = 2;
+  let lastIssues = [];
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const result = await callGeminiJSON(prompt, genOpts);
+    const missing = REQUIRED_KEYS.filter((k) => !(k in result));
+    // Present-but-empty self_test passes the `in` check above but still
+    // leaves nothing for seedFromSelfTest to seed — just as broken as a
+    // missing key, so it's checked separately.
+    const selfTestEmpty = Array.isArray(result.self_test) && result.self_test.length === 0;
+    if (missing.length === 0 && !selfTestEmpty) {
+      return result;
+    }
+    lastIssues = selfTestEmpty ? [...missing, 'self_test (present but empty)'] : missing;
+    console.warn(`restructureWithClaude: attempt ${attempt}/${MAX_ATTEMPTS} missing required field(s): ${lastIssues.join(', ')}${attempt < MAX_ATTEMPTS ? ' — retrying' : ' — giving up'}.`);
+  }
+
+  throw new Error(`Gemini's response was missing required content (${lastIssues.join(', ')}) after ${MAX_ATTEMPTS} attempts — please try again.`);
 }
 
 const VALID_SUGGESTED_GRADES = new Set(['again', 'hard', 'good', 'easy']);
@@ -318,11 +357,11 @@ For every item in hidden_details, write one memory hook using elaborative encodi
 ──────────────────────────────────────────────
 AUDIO DIALOGUE
 ──────────────────────────────────────────────
-Write a short two-speaker study conversation covering the content — a student can listen to this instead of reading, and hearing concepts explained/questioned out loud reinforces retention differently than reading does.
+Write a full two-speaker study conversation covering the content — a student can listen to this INSTEAD of reading, so it needs to actually carry the material, not just tease it. Hearing concepts explained/questioned out loud also reinforces retention differently than reading does.
 - Two speakers: "Alex" (curious, asks genuine questions, occasionally gets something slightly wrong or half-right so it can be corrected — this models active recall, not just two people reciting facts at each other) and "Sam" (explains clearly, corrects Alex's mistakes, occasionally quizzes Alex back).
-- Cover the highest-yield content: the core mechanism/concepts and the trickiest hidden_details — not just a surface-level readthrough of the restructured notes.
+- Systematically walk through the content section by section (following the same structure as the restructured notes) rather than sampling a few highlights — every major concept-area header in the notes should get real coverage in the conversation, plus the trickiest hidden_details along the way. A student who only listens to this should come away with close to the same coverage as reading the notes, not a superficial preview.
 - Conversational spoken register — contractions, natural phrasing ("So wait, does that mean..."), not written-essay sentences. This will be read aloud by text-to-speech, so avoid anything that only makes sense in writing (no bullet points, no "see above").
-- 10–16 total turns (a turn = one speaker's line). Each line 1–3 sentences — short enough to sound natural spoken aloud, not a monologue.
+- Scale total turns to the actual amount of content (a turn = one speaker's line) — roughly 3-4 turns per major concept-area header in the notes, with a floor of 20 turns even for shorter material and no fixed ceiling for dense material; err toward more coverage rather than cutting it short. Each line 1–3 sentences — short enough to sound natural spoken aloud, not a monologue; a longer conversation should mean more turns, not longer individual lines.
 - Every fact stated MUST be grounded in the source content — Alex's "wrong" guesses should be plausible near-misses grounded in the material, not fabricated nonsense.
 - End on Sam giving Alex (and the listener) one final high-value exam tip drawn from the content.
 
@@ -354,6 +393,18 @@ Always generate exactly one mind map giving a full overview of everything in the
   - Syntax example (5 branches, mostly 2 leaves each, 11 nodes total — this is the target density, and note every leaf states an actual fact, not a bare term): "mindmap\\n  root((Cholinergic Synapse))\\n    Structure\\n      Vesicles store ACh\\n      Receptors sit on postsynaptic membrane\\n    Transmitter Release\\n      Calcium triggers vesicle fusion\\n      ACh released into cleft\\n    Receptor Binding\\n      ACh binds nicotinic receptors\\n      Na channels open\\n    Termination\\n      Acetylcholinesterase breaks down ACh\\n    Clinical Relevance\\n      Myasthenia gravis blocks receptors"
 
 ──────────────────────────────────────────────
+ILLUSTRATED DIAGRAM
+──────────────────────────────────────────────
+Separate from the mind map and the flowchart-style diagrams below: a small library of pre-built, spatially-accurate illustrations exists for a few recurring biology structures. When the content matches one of these, using it produces a real labeled cross-section instead of a generic box-and-arrow flowchart — closer to what a textbook diagram looks like, and far more useful for a "label this structure" exam question.
+
+You do NOT draw or generate any image or shape — the illustration itself is fixed, pre-built, and already verified accurate. Your only job is: (1) decide if the content genuinely matches one of the templates below, and (2) for each fact you'd otherwise put in a hidden_detail or diagram about that structure, attach it to the correct existing anchor id in that template. Never invent an anchor id that isn't listed. If nothing in the content matches a template, omit illustrated_diagram entirely (null) — do not force a mismatched template onto unrelated content, and do not use this for content that's better served by the mind map or a process diagram.
+
+Available templates:
+${describeTemplatesForPrompt()}
+
+For each anchor you use, also assign a "category" — this drives the color of its label so a student can visually group facts at a glance: "structure" (what a part IS / is made of), "process" (what happens / a step in a mechanism), or "clinical" (a drug, disorder, or applied/exam-relevant consequence — e.g. what a toxin or medication does at that site). Only include anchors the content actually gives you a real fact for — an anchor with nothing to say should simply be left out, not filled with a filler sentence.
+
+──────────────────────────────────────────────
 VISUAL DIAGRAMS
 ──────────────────────────────────────────────
 In addition to the mind map, generate targeted diagrams as Mermaid flowchart syntax (NOT images) for specific sequences — this keeps every diagram text-grounded and 100% accurate to the source, since a hallucinated biology diagram (wrong stage order, wrong labels) would actively mislead a student studying for an exam.
@@ -381,12 +432,6 @@ Respond with ONLY a valid JSON object (no markdown, no preamble) with exactly th
 
 {
   "video_search_query": "A short, specific English search phrase (4-8 words) for finding real YouTube videos that explain this exact topic — e.g. 'ADH kidney water reabsorption mechanism' or 'mitosis vs meiosis stages comparison'. Use precise terminology from the content, not vague words like 'biology lesson'.",
-  "audio_dialogue": [
-    {
-      "speaker": "Alex or Sam",
-      "line": "One conversational turn, 1-3 sentences, following the AUDIO DIALOGUE rules above."
-    }
-  ],
   "learning_objectives": [
     {
       "objective": "The objective as stated in the material (cleaned up, not paraphrased beyond recognition).",
@@ -405,6 +450,16 @@ Respond with ONLY a valid JSON object (no markdown, no preamble) with exactly th
       "caption": "1 sentence: what this diagram shows and why it's testable."
     }
   ],
+  "illustrated_diagram": {
+    "template": "The exact template id from the ILLUSTRATED DIAGRAM section above (e.g. 'synapse') — or null if no template genuinely matches this content.",
+    "labels": [
+      {
+        "anchor": "An exact anchor id from that template's list — never an invented id.",
+        "text": "The actual fact for this anchor, grounded in the content — same voice/density as a mind_map leaf (a short stated fact, not a bare term).",
+        "category": "structure, process, or clinical"
+      }
+    ]
+  },
   "restructured": "Study notes formatted as a scannable reference — NOT a numbered list or a wall of text. Rules: (1) Use ## for main concept-area headers, ### for sub-concept headers. (2) Under each header write 1–3 short sentences OR a tight bullet list (- item) — never a paragraph longer than 3 sentences before the next header or list breaks it up; long undivided paragraphs are the #1 thing that makes notes feel like a wall of text, so favor more, smaller headed chunks over fewer, longer ones. (3) Bold (**term**) only the single most testable term per paragraph — not every noun. (4) Leave a blank line between sections. (5) Do NOT use numbered lists (1. 2. 3.) — headers create the structure, except for genuine ordered processes as described in rule (7) below. (6) When the content is naturally tabular — comparing 2+ things across the same attributes (e.g. mitosis vs meiosis, a list of organelles with their functions, stages with their durations) — use a markdown pipe table instead of prose or bullets: a header row, a separator row of dashes (---), then data rows, each cell short (a few words, not a sentence). Tables make this kind of content far faster to scan and compare than the equivalent bullet list. Only use a table when there's a genuine multi-attribute comparison; don't force one otherwise. (7) When a section describes a genuine ordered process (e.g. the sequence filtrate travels through in the PCT, the steps of the light-dependent reactions) — as opposed to a loose list of features — mark EACH step as its own line starting with EXACTLY '[STEP] ' as the very first characters of the line, one step per line, in order. Do NOT put a bullet dash, asterisk, or any other marker before '[STEP]' — the line must begin directly with the literal text '[STEP] ', e.g. '[STEP] Filtrate enters the PCT from Bowman's capsule', NOT '- [STEP] Filtrate enters...'. This renders as a connected step sequence, distinct from a plain bullet list, so the flow is visually obvious. Only use this for content that is truly sequential (each step follows from the last); a list of unordered features stays as normal bullets. (8) Within a section, if there is one single term/definition pair that is THE most critical, easy-to-confuse, or highest-yield fact in that section, you may mark it as '[KEY] Term: one-sentence definition' on its own line, with the same rule — the line must begin directly with the literal text '[KEY] ', never prefixed with a bullet dash or other marker. This renders as a highlighted callout that stands out from the rest of the notes. Use this sparingly (at most one per section, and only when a fact genuinely deserves to stand out) — overusing it defeats the purpose. (9) Preserve all facts from the slides; reorganise them into headed, bite-sized chunks a student can scan and review in under 60 seconds.",
   "hidden_details": [
     {
@@ -452,15 +507,21 @@ Respond with ONLY a valid JSON object (no markdown, no preamble) with exactly th
       "answer": "Concise model answer, 2–4 sentences — enough for the student to self-check against, not a full essay. Bold (**term**) the single key term the answer hinges on.",
       "type": "recall or application — recall for terminology/formulas/defined facts; application for novel scenarios requiring the student to apply a mechanism to a new context"
     }
+  ],
+  "audio_dialogue": [
+    {
+      "speaker": "Alex or Sam",
+      "line": "One conversational turn, 1-3 sentences, following the AUDIO DIALOGUE rules above."
+    }
   ]
 }
 
 Strict rules:
 - video_search_query: always generate one, grounded in the actual topic of the content — specific enough to surface genuinely relevant videos, not generic enough to return unrelated results.
-- audio_dialogue: always generate one, 10-16 turns, alternating naturally between Alex and Sam (not strictly one-for-one — a real conversation has follow-ups). Every fact grounded in the source content.
 - learning_objectives: only include objectives explicitly stated in the material; never fabricate them. Omit the key's content (empty array) if none are stated.
 - mind_map: always generate exactly one, grounded entirely in the content — this key must never be missing or empty.
 - visual_diagrams: only include diagrams for genuine sequences/cycles/pathways/comparisons found in the text; return an empty array rather than forcing an irrelevant diagram. Follow the Mermaid syntax rules exactly — invalid syntax will break rendering for the student.
+- illustrated_diagram: set "template" to null (and "labels" to an empty array) unless the content genuinely matches one of the templates listed in the ILLUSTRATED DIAGRAM section — never force a mismatched template. Every "anchor" MUST be one of that template's exact listed anchor ids; an invented anchor id will simply be dropped, so only use the ones given. Leave out any anchor the content has no real fact for rather than padding it.
 - Every item in every hidden_details category MUST be grounded in the provided text — do not invent facts.
 - Every hidden_details item is an object with "text" and "mnemonic" — never a bare string. Every item MUST have a non-empty mnemonic following the MNEMONICS rules above.
 - Map patterns to categories: Pattern 1→Terminology, Pattern 2→Calculations & Formulas, Pattern 3→Comparisons, Patterns 4+6→Multi-Fact Concepts, Pattern 5→Diagram Labels. Use "Likely Task Types" for any applied-thinking or multi-mechanism scenario that cuts across patterns.
@@ -470,6 +531,7 @@ Strict rules:
 - readiness_checklist: 3–5 items max, first-person "I can…", short and actionable — only the highest-impact things a student must be able to do before their summative; quality over coverage.
 - The "Likely Task Types" category should always be included when the content contains any mechanism, process, or biological pathway; provide 1–3 applied-thinking prompts that connect multiple facts rather than isolating them.
 - self_test: 10–16 questions total (this is the student's main self-check — err toward more, not fewer, as long as every question is grounded and non-redundant); aim for roughly half recall, half application; draw from across hidden_details, key_concepts, and likely_summative_topics so the set reinforces the highest-yield content from all sections without being redundant with any one; answers 2–4 sentences max; do NOT include "Question 1:" or any preamble in the question field itself.
+- audio_dialogue: always generate one, scaled to content depth per the AUDIO DIALOGUE rules above (roughly 3-4 turns per major notes header, 20-turn floor, no fixed ceiling), alternating naturally between Alex and Sam (not strictly one-for-one — a real conversation has follow-ups). Every fact grounded in the source content.
 - Output must be valid JSON parseable by JSON.parse() with no trailing commas or comments.
 ${gradeBlock}${focusBlock}${languageBlock}
 Biology content:

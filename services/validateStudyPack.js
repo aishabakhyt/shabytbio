@@ -12,10 +12,12 @@
 // for) — the goal is catching real drift, not flagging every response that
 // isn't textbook-perfect.
 
+const { isValidAnchor, findTemplate } = require('./diagramTemplates');
+
 const REQUIRED_KEYS = [
   'video_search_query', 'audio_dialogue', 'learning_objectives', 'mind_map',
-  'visual_diagrams', 'restructured', 'hidden_details', 'key_concepts',
-  'likely_summative_topics', 'readiness_checklist', 'self_test',
+  'visual_diagrams', 'illustrated_diagram', 'restructured', 'hidden_details',
+  'key_concepts', 'likely_summative_topics', 'readiness_checklist', 'self_test',
 ];
 
 const BANNED_HIDDEN_DETAIL_PREFIXES = [
@@ -112,6 +114,43 @@ function validateDiagrams(diagrams, warnings) {
   });
 }
 
+// Unlike Mermaid's syntax rules (checked but never corrected here), a bad
+// anchor id in illustrated_diagram is fixable in code with total confidence
+// — the registry is the ground truth — so this doesn't just warn, it
+// mutates `diagram` in place to drop anything invalid before the record is
+// ever saved/cached. A dropped label still shows up in this function's
+// warnings so the drift is visible, same as everything else this file logs.
+function validateAndSanitizeIllustratedDiagram(diagram, warnings) {
+  if (!diagram || typeof diagram !== 'object' || !diagram.template) return;
+  const template = findTemplate(diagram.template);
+  if (!template) {
+    warnings.push(`illustrated_diagram references unknown template "${diagram.template}" — dropping it.`);
+    diagram.template = null;
+    diagram.labels = [];
+    return;
+  }
+  if (!Array.isArray(diagram.labels)) {
+    diagram.labels = [];
+    return;
+  }
+  const validCategories = new Set(['structure', 'process', 'clinical']);
+  const before = diagram.labels.length;
+  diagram.labels = diagram.labels.filter(l => {
+    if (!l || typeof l.anchor !== 'string' || !isValidAnchor(diagram.template, l.anchor)) return false;
+    if (!l.text || typeof l.text !== 'string' || !l.text.trim()) return false;
+    if (!validCategories.has(l.category)) l.category = 'structure'; // safe default rather than dropping an otherwise-good label
+    return true;
+  });
+  const dropped = before - diagram.labels.length;
+  if (dropped > 0) {
+    warnings.push(`illustrated_diagram ("${diagram.template}") had ${dropped} label(s) with an invalid/unknown anchor id — dropped.`);
+  }
+  if (diagram.labels.length === 0) {
+    warnings.push(`illustrated_diagram ("${diagram.template}") ended up with zero valid labels — clearing template so it doesn't render empty.`);
+    diagram.template = null;
+  }
+}
+
 function validateHiddenDetails(groups, warnings) {
   if (!Array.isArray(groups)) {
     warnings.push('hidden_details is not an array.');
@@ -158,10 +197,11 @@ function validateStudyPack(result) {
 
   try { validateMindMap(result.mind_map, warnings); } catch (err) { warnings.push(`mind_map validation crashed: ${err.message}`); }
   try { validateDiagrams(result.visual_diagrams, warnings); } catch (err) { warnings.push(`visual_diagrams validation crashed: ${err.message}`); }
+  try { validateAndSanitizeIllustratedDiagram(result.illustrated_diagram, warnings); } catch (err) { warnings.push(`illustrated_diagram validation crashed: ${err.message}`); }
   try { validateHiddenDetails(result.hidden_details, warnings); } catch (err) { warnings.push(`hidden_details validation crashed: ${err.message}`); }
   try { validateSelfTest(result.self_test, warnings); } catch (err) { warnings.push(`self_test validation crashed: ${err.message}`); }
 
   return { warnings };
 }
 
-module.exports = { validateStudyPack };
+module.exports = { validateStudyPack, REQUIRED_KEYS };
