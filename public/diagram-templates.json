@@ -91,6 +91,31 @@
           "side": "right",
           "hint": "the next neuron/cell receiving and propagating the signal onward"
         }
+      ],
+      "keywords": [
+        "synapse",
+        "synaptic",
+        "neuron",
+        "neurotransmitter",
+        "acetylcholine",
+        "cholinergic",
+        "adrenergic",
+        "presynaptic",
+        "postsynaptic",
+        "action potential",
+        "vesicle",
+        "axon",
+        "dendrite",
+        "nerve impulse",
+        "acetylcholinesterase",
+        "синапс",
+        "нейрон",
+        "нейромедиатор",
+        "медиатор",
+        "аксон",
+        "ацетилхолин",
+        "везикул",
+        "көпіршік"
       ]
     }
   ]

@@ -12,7 +12,7 @@
 // for) — the goal is catching real drift, not flagging every response that
 // isn't textbook-perfect.
 
-const { isValidAnchor, findTemplate } = require('./diagramTemplates');
+const { isValidAnchor, findTemplate, templateMatchesText } = require('./diagramTemplates');
 
 const REQUIRED_KEYS = [
   'video_search_query', 'audio_dialogue', 'learning_objectives', 'mind_map',
@@ -120,11 +120,25 @@ function validateDiagrams(diagrams, warnings) {
 // mutates `diagram` in place to drop anything invalid before the record is
 // ever saved/cached. A dropped label still shows up in this function's
 // warnings so the drift is visible, same as everything else this file logs.
-function validateAndSanitizeIllustratedDiagram(diagram, warnings) {
+function validateAndSanitizeIllustratedDiagram(diagram, warnings, sourceText) {
   if (!diagram || typeof diagram !== 'object' || !diagram.template) return;
   const template = findTemplate(diagram.template);
   if (!template) {
     warnings.push(`illustrated_diagram references unknown template "${diagram.template}" — dropping it.`);
+    diagram.template = null;
+    diagram.labels = [];
+    return;
+  }
+  // Confirmed live (Aug 28, 2026): the model can select a template whose
+  // topic has nothing to do with the uploaded content -- it picked
+  // "synapse" for an ADH/kidney upload, directly against its own
+  // instruction to omit illustrated_diagram when nothing matches. That
+  // instruction alone isn't a reliable enough gate, especially with few
+  // templates to contrast against, so this checks the actual source text
+  // deterministically instead of trusting the model's own judgment on its
+  // own pick.
+  if (!templateMatchesText(diagram.template, sourceText)) {
+    warnings.push(`illustrated_diagram picked template "${diagram.template}" but the source content shows no real topical match for it — clearing (likely a forced/incorrect template pick).`);
     diagram.template = null;
     diagram.labels = [];
     return;
@@ -184,7 +198,7 @@ function validateSelfTest(items, warnings) {
 // Returns { warnings: string[] } — never throws. A validation failure
 // should never take down an otherwise-successful upload; it's purely for
 // visibility into how often Gemini drifts from the rules we've written.
-function validateStudyPack(result) {
+function validateStudyPack(result, sourceText) {
   const warnings = [];
   if (!result || typeof result !== 'object') {
     return { warnings: ['Result is not an object.'] };
@@ -197,7 +211,7 @@ function validateStudyPack(result) {
 
   try { validateMindMap(result.mind_map, warnings); } catch (err) { warnings.push(`mind_map validation crashed: ${err.message}`); }
   try { validateDiagrams(result.visual_diagrams, warnings); } catch (err) { warnings.push(`visual_diagrams validation crashed: ${err.message}`); }
-  try { validateAndSanitizeIllustratedDiagram(result.illustrated_diagram, warnings); } catch (err) { warnings.push(`illustrated_diagram validation crashed: ${err.message}`); }
+  try { validateAndSanitizeIllustratedDiagram(result.illustrated_diagram, warnings, sourceText); } catch (err) { warnings.push(`illustrated_diagram validation crashed: ${err.message}`); }
   try { validateHiddenDetails(result.hidden_details, warnings); } catch (err) { warnings.push(`hidden_details validation crashed: ${err.message}`); }
   try { validateSelfTest(result.self_test, warnings); } catch (err) { warnings.push(`self_test validation crashed: ${err.message}`); }
 

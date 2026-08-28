@@ -2,6 +2,16 @@
 
 _Last updated: Aug 28, 2026_
 
+## Illustrated diagram topic-relevance gate (Aug 28, 2026, found during Aisha's live supervised test)
+
+Real, more serious bug than the anchor-mapping risk the illustrated-diagram architecture was designed around: Gemini picked the `synapse` template for an upload that was actually about ADH and kidney collecting-duct water reabsorption (V2 receptors, aquaporin-2, basolateral/apical membrane) — nothing to do with a synapse. This directly contradicted the prompt's own instruction to omit `illustrated_diagram` when nothing genuinely matches. With only one template in the registry, the model apparently defaulted to using it rather than correctly abstaining.
+
+Considered and rejected: switching to ready-made/sourced diagrams instead of custom templates. That wouldn't have fixed this — the bug is in the *selection* step (the model force-picking the only option offered), not in who drew the art. The same failure mode would reproduce with sourced images under the same "pick one or say none" instruction.
+
+Fix, deterministic rather than trusting the model's own judgment on its own pick (same philosophy as the anchor-id validator): each template in `public/diagram-templates.json` now carries a `keywords` list (English + Russian + Kazakh core terms). `services/diagramTemplates.js` exports `templateMatchesText(templateId, sourceText)`, requiring 2+ distinct keyword hits against the *original uploaded text* (not the AI's own output) before a template pick is trusted. `validateAndSanitizeIllustratedDiagram` (`services/validateStudyPack.js`) now calls this before accepting a template pick at all, clearing it if the source content shows no real topical match. `validateStudyPack`'s signature grew a `sourceText` param; both call sites in `routes/upload.js` (fresh upload + regenerate-language) now pass it through.
+
+**Verified**: syntax-checked all changed files. **Not yet verified**: a live re-test on the same ADH content to confirm it now correctly gets no illustrated diagram (falls back to the mind map) instead of the wrong one. **Known residual risk**: any upload already cached with a wrong template from before this fix keeps serving the bad diagram, since cache hits skip validation entirely by design (see the caching-order note above) — only a fresh generation re-runs this check.
+
 ## Self-test reliability fix (Aug 28, 2026, found during Aisha's supervised test run)
 
 Live test (`scripts/test-language-regenerate.js`, real Gemini calls) caught a real bug: Gemini can return a syntactically complete, non-MAX_TOKENS JSON response that's still missing a required key — specifically `self_test`, on a Russian-language generation. Not a parsing bug (braces balanced, `finishReason` wasn't `MAX_TOKENS`) — the model just lost coverage of the last field in an increasingly long response. `validateStudyPack`'s tripwire warns on this but is deliberately non-blocking, so it would have reached a student silently: a regenerated upload with a broken or empty quiz tab, since `self_test` is what the whole spaced-repetition system runs on.

@@ -24,6 +24,28 @@ function isValidAnchor(templateId, anchorId) {
   return template.anchors.some(a => a.id === anchorId);
 }
 
+// Deterministic backstop for a real failure mode caught in supervised
+// testing (Aug 28, 2026): with only one template in the registry, Gemini
+// picked "synapse" for content that was actually about ADH/kidney water
+// reabsorption -- directly contradicting its own instruction to omit
+// illustrated_diagram when nothing genuinely matches. The instruction
+// alone isn't reliable, especially with few templates to contrast against,
+// so this checks the ORIGINAL uploaded text (not the AI's own output --
+// asking the model to grade its own template choice would have the same
+// blind spot) against that template's keyword list. Requires 2+ distinct
+// keyword hits, not just 1, so a single incidental word (e.g. a stray use
+// of "channel") can't pass a genuinely unrelated upload.
+function templateMatchesText(templateId, sourceText) {
+  const template = findTemplate(templateId);
+  if (!template || !Array.isArray(template.keywords) || !sourceText) return false;
+  const haystack = sourceText.toLowerCase();
+  const hits = new Set();
+  for (const kw of template.keywords) {
+    if (haystack.includes(kw.toLowerCase())) hits.add(kw.toLowerCase());
+  }
+  return hits.size >= 2;
+}
+
 // Builds the prompt-facing description of every available template — one
 // paragraph naming it, when to use it, and the exact anchor ids it's allowed
 // to use. Generated from the same registry the validator checks against, so
@@ -36,4 +58,4 @@ function describeTemplatesForPrompt() {
   }).join('\n');
 }
 
-module.exports = { getTemplates, findTemplate, isValidAnchor, describeTemplatesForPrompt };
+module.exports = { getTemplates, findTemplate, isValidAnchor, describeTemplatesForPrompt, templateMatchesText };

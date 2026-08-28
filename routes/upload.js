@@ -97,7 +97,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       // forever. Never blocks the response either way — just logs/records
       // what it found and fixed.
       try {
-        qualityWarnings = validateStudyPack(result).warnings;
+        qualityWarnings = validateStudyPack(result, extractedText).warnings;
         if (qualityWarnings.length) {
           console.warn(`[quality] ${req.file.originalname} (user ${req.session.userId}, school ${school || 'unset'}, lang ${language}):`, qualityWarnings);
         }
@@ -227,7 +227,7 @@ router.post('/history/:id/regenerate-language', async (req, res) => {
       // route above) — validation now mutates result in place, and that has
       // to land before this object is written to the shared cache.
       try {
-        qualityWarnings = validateStudyPack(result).warnings;
+        qualityWarnings = validateStudyPack(result, record.extracted_text).warnings;
         if (qualityWarnings.length) {
           console.warn(`[quality] regenerate #${uploadId} (user ${req.session.userId}, school ${school || 'unset'}, lang ${language}):`, qualityWarnings);
         }
