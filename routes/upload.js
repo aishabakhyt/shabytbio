@@ -9,6 +9,7 @@ const { seedFromSelfTest, deleteByUploadId } = require('../services/mastery');
 const { getCached, setCached } = require('../services/resultCache');
 const { searchVideos } = require('../services/youtube');
 const { validateStudyPack } = require('../services/validateStudyPack');
+const { queueLength, RPM_LIMIT } = require('../services/rateLimiter');
 
 const router = express.Router();
 
@@ -22,6 +23,17 @@ function requireAuth(req, res, next) {
 }
 
 router.use(requireAuth);
+
+// Lets the frontend show a real "the server is busy, here's roughly how
+// long" message instead of a dead spinner during a burst (e.g. a whole
+// class uploading around the same time) — polled while a request is
+// waiting on the Gemini rate limiter (see services/rateLimiter.js).
+// Deliberately cheap/synchronous: just reads in-memory counters, no DB
+// or network call, safe to poll every few seconds.
+router.get('/queue-status', (req, res) => {
+  res.json({ queueLength: queueLength(), rpmLimit: RPM_LIMIT });
+});
+
 
 const upload = multer({
   storage: multer.memoryStorage(),

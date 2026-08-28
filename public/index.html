@@ -2058,6 +2058,7 @@
         sessionExpired: 'Your session expired — reloading…',
         checking: 'Checking…',
         analysing: 'Analysing — this can take a moment, please wait…',
+        queueBusy: 'Gemini is busy right now — {count} request(s) waiting, about {seconds}s left…',
         restart: 'Restart',
         audioDone: 'Done.',
         technicalDetails: 'Technical details',
@@ -2226,6 +2227,7 @@
         sessionExpired: 'Сеанс мерзімі аяқталды — қайта жүктелуде…',
         checking: 'Тексерілуде…',
         analysing: 'Талдануда — бұл біраз уақыт алуы мүмкін, күте тұрыңыз…',
+        queueBusy: 'Gemini қазір бос емес — {count} сұрау кезекте, шамамен {seconds} секунд қалды…',
         restart: 'Қайта бастау',
         audioDone: 'Аяқталды.',
         technicalDetails: 'Техникалық мәліметтер',
@@ -2362,6 +2364,7 @@
         sessionExpired: 'Сессия истекла — перезагрузка…',
         checking: 'Проверка…',
         analysing: 'Анализ — это может занять некоторое время, подождите…',
+        queueBusy: 'Gemini сейчас занят — {count} запрос(ов) в очереди, осталось примерно {seconds} с…',
         restart: 'Начать заново',
         audioDone: 'Готово.',
         technicalDetails: 'Технические детали',
@@ -3234,6 +3237,30 @@
       setFile(e.dataTransfer.files[0]);
     });
 
+    // Polls the rate-limiter's current backlog (see GET /api/queue-status)
+    // while an upload is in flight, so a burst of simultaneous uploads (a
+    // whole class around the same time) shows "the server is busy, ~Ns
+    // left" instead of a spinner that looks dead for however long the
+    // request sits queued behind everyone else's. Cheap/best-effort: a
+    // failed poll just leaves the previous status text showing.
+    let queuePollTimer = null;
+    async function pollQueueStatus() {
+      try {
+        const res = await fetch('/api/queue-status');
+        if (!res.ok || queuePollTimer === null) return; // upload finished while this was in flight — don't clobber the final status text
+        const { queueLength, rpmLimit } = await res.json();
+        if (queuePollTimer === null) return; // same race, second await
+        if (queueLength > 0 && rpmLimit > 0) {
+          const seconds = Math.max(5, Math.ceil((queueLength / rpmLimit) * 60));
+          statusEl.textContent = tf('queueBusy', { count: queueLength, seconds });
+        } else {
+          statusEl.textContent = t('analysing');
+        }
+      } catch (err) {
+        // Non-fatal — worst case the status text just doesn't update this tick.
+      }
+    }
+
     uploadBtn.addEventListener('click', async () => {
       const file = fileInput._selectedFile || fileInput.files[0];
       if (!file) return;
@@ -3247,6 +3274,9 @@
       form.append('file', file);
       const focus = document.getElementById('focusInput').value.trim();
       if (focus) form.append('focusInstructions', focus);
+
+      queuePollTimer = setInterval(pollQueueStatus, 3000);
+      pollQueueStatus(); // check immediately in case there's already a backlog
 
       try {
         const res  = await fetch('/api/upload', { method: 'POST', body: form });
@@ -3275,6 +3305,8 @@
         statusEl.textContent = `Network error: ${err.message}`;
       } finally {
         uploadBtn.disabled = false;
+        clearInterval(queuePollTimer);
+        queuePollTimer = null;
       }
     });
 

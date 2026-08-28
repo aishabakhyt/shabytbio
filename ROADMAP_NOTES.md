@@ -2,6 +2,16 @@
 
 _Last updated: Aug 28, 2026_
 
+## Surface the Gemini rate-limit queue in the UI (Aug 28, 2026)
+
+Prompted by hitting a real 429 during today's testing and asking "will this crash at launch." Root cause: the free-tier Gemini limit is 5 requests/minute (`services/rateLimiter.js`'s `RPM_LIMIT`) — already queued server-side rather than just erroring, but the frontend gave no indication a request was waiting, so a burst (e.g. a class uploading distinct files around the same time) would look like a dead/broken spinner for however long it sat in queue, even though the server itself never goes down (server.js already isolates errors per-request).
+
+- `routes/upload.js`: new `GET /api/queue-status` (cheap, synchronous, reads `rateLimiter.js`'s in-memory counters — no DB/network call, safe to poll every few seconds) returning `{ queueLength, rpmLimit }`.
+- `public/index.html`: the upload flow now polls this every 3s while a request is in flight. If there's a backlog, the status text switches from "Analysing…" to "Gemini is busy right now — N request(s) waiting, about Ns left…" (new `queueBusy` key, en/kk/ru) instead of leaving a static message with no signal anything is happening. Guarded against a late-arriving poll overwriting the final success/error message after the upload actually completes.
+- Deliberately shows the real current backlog size, not a fabricated "you are #4" personal position — there's no per-request tracking, and the honest number is more trustworthy than a precise-looking fake one.
+- **Not yet done**: the same treatment on `regenerate-language` (task, not urgent — same rate limiter, same failure mode, lower traffic path).
+- **Still open, bigger question**: whether the free-tier 5 RPM ceiling itself is enough for a real launch beyond a small pilot — Google no longer publishes a fixed free/paid RPM table, so this needs checking directly in Aisha's AI Studio console/billing before a wider rollout, plus an actual burst test (several people uploading distinct content at once) to see real-world behavior under load.
+
 ## Illustrated diagram topic-relevance gate (Aug 28, 2026, found during Aisha's live supervised test)
 
 Real, more serious bug than the anchor-mapping risk the illustrated-diagram architecture was designed around: Gemini picked the `synapse` template for an upload that was actually about ADH and kidney collecting-duct water reabsorption (V2 receptors, aquaporin-2, basolateral/apical membrane) — nothing to do with a synapse. This directly contradicted the prompt's own instruction to omit `illustrated_diagram` when nothing genuinely matches. With only one template in the registry, the model apparently defaulted to using it rather than correctly abstaining.
