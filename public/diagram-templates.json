@@ -117,6 +117,120 @@
         "везикул",
         "көпіршік"
       ]
+    },
+    {
+      "id": "nephron",
+      "name": "Nephron Cross-Section",
+      "description": "A labeled cross-section of a single nephron (renal corpuscle, proximal/distal convoluted tubules, loop of Henle, collecting duct) with the surrounding blood supply. Use for content describing kidney/nephron structure, ultrafiltration, selective reabsorption, urine formation, or the role of ADH in water reabsorption.",
+      "viewBox": "0 0 440 645",
+      "svgBody": "<defs><marker id='neph-artery-arrow' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='9' markerHeight='9' markerUnits='userSpaceOnUse' orient='auto-start-reverse'><path d='M0,0 L10,5 L0,10 z' fill='#e53e3e'/></marker><marker id='neph-vein-arrow' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='9' markerHeight='9' markerUnits='userSpaceOnUse' orient='auto-start-reverse'><path d='M0,0 L10,5 L0,10 z' fill='#9b2c2c'/></marker></defs><rect x='0' y='0' width='440' height='180' fill='#fef6e0'/><rect x='0' y='180' width='440' height='465' fill='#ebf4f8'/><line x1='0' y1='180' x2='440' y2='180' stroke='#cbd5e0' stroke-width='1.5' stroke-dasharray='4,3'/><text x='400' y='16' font-size='11' fill='#a08a5c' text-anchor='end'>cortex</text><text x='400' y='196' font-size='11' fill='#7d9db3' text-anchor='end'>medulla</text><path d='M215,50 Q400,160 380,300 Q365,400 320,460 Q290,485 255,468 Q290,400 320,300 Q340,180 190,65' stroke='#e53e3e' stroke-width='2.5' fill='none' stroke-dasharray='2,3' opacity='0.65'/><path d='M190,65 L70,45' stroke='#9b2c2c' stroke-width='4' fill='none' stroke-linecap='round' marker-end='url(#neph-vein-arrow)'/><ellipse cx='95' cy='102' rx='62' ry='60' fill='#fffef5' opacity='0.7'/><path d='M115,35 C55,35 25,68 25,102 C25,136 55,169 115,169' fill='none' stroke='#4a5568' stroke-width='5' stroke-linecap='round'/><path d='M55,90 Q70,68 88,82 Q104,64 120,86 Q136,70 148,95 Q132,116 116,100 Q100,122 84,103 Q68,120 55,90 Z' fill='#feb2b2' stroke='#c53030' stroke-width='1.5'/><path d='M0,88 L58,88' stroke='#e53e3e' stroke-width='8' fill='none' stroke-linecap='round' marker-end='url(#neph-artery-arrow)'/><path d='M132,78 Q150,68 165,60' stroke='#e53e3e' stroke-width='6' fill='none' stroke-linecap='round' marker-end='url(#neph-artery-arrow)'/><path d='M140,150 Q175,175 200,145 Q225,115 250,148 Q275,180 300,145 Q320,118 335,105' stroke='#3182ce' stroke-width='11' fill='none' stroke-linecap='round'/><path d='M335,105 Q360,150 345,185 L345,460' stroke='#63b3ed' stroke-width='7' fill='none' stroke-linecap='round'/><path d='M345,460 Q300,495 255,460' stroke='#63b3ed' stroke-width='7' fill='none' stroke-linecap='round'/><path d='M255,460 L255,185 Q255,150 225,140' stroke='#ed8936' stroke-width='13' fill='none' stroke-linecap='round'/><path d='M225,140 Q195,100 165,132 Q140,160 115,135' stroke='#3182ce' stroke-width='11' fill='none' stroke-linecap='round'/><path d='M115,135 Q85,160 95,195 L95,610' stroke='#9f7aea' stroke-width='15' fill='none' stroke-linecap='round'/><path d='M80,610 L95,632 L110,610 Z' fill='#805ad5'/>",
+      "anchors": [
+        {
+          "id": "afferent_arteriole",
+          "x": 25,
+          "y": 88,
+          "side": "left",
+          "hint": "the vessel bringing blood into the glomerulus from the renal artery; wider than the efferent arteriole, which raises blood pressure inside the glomerulus"
+        },
+        {
+          "id": "glomerulus",
+          "x": 100,
+          "y": 100,
+          "side": "left",
+          "hint": "the tangled capillary knot inside Bowman's capsule; high blood pressure here forces water, ions, glucose, and other small molecules out of the blood (ultrafiltration) — blood cells and large proteins are too big to pass through and stay in the blood"
+        },
+        {
+          "id": "bowmans_capsule",
+          "x": 40,
+          "y": 150,
+          "side": "left",
+          "hint": "the cup-shaped capsule surrounding the glomerulus that collects the filtered fluid and funnels it into the tubule"
+        },
+        {
+          "id": "efferent_arteriole",
+          "x": 165,
+          "y": 60,
+          "side": "left",
+          "hint": "the vessel carrying blood out of the glomerulus; narrower than the afferent arteriole, which keeps pressure inside the glomerulus high enough to keep filtering"
+        },
+        {
+          "id": "proximal_convoluted_tubule",
+          "x": 250,
+          "y": 148,
+          "side": "right",
+          "hint": "the first coiled section of the tubule, where most reabsorption happens — essentially all glucose and amino acids, and most water, sodium and other ions, are reabsorbed back into the blood here"
+        },
+        {
+          "id": "descending_limb",
+          "x": 345,
+          "y": 300,
+          "side": "right",
+          "hint": "the descending limb of the loop of Henle; its wall is permeable to water, so as filtrate flows down into the increasingly salty medulla, water is drawn out by osmosis, concentrating the filtrate"
+        },
+        {
+          "id": "loop_of_henle_tip",
+          "x": 300,
+          "y": 478,
+          "side": "right",
+          "hint": "the bend of the loop of Henle deep in the medulla, where the surrounding tissue fluid is most concentrated and the filtrate reaches its highest solute concentration"
+        },
+        {
+          "id": "ascending_limb",
+          "x": 255,
+          "y": 320,
+          "side": "right",
+          "hint": "the ascending limb of the loop of Henle; its wall is impermeable to water but actively pumps sodium and chloride out into the surrounding tissue, diluting the filtrate and building the salt gradient that lets the collecting duct reabsorb water later"
+        },
+        {
+          "id": "distal_convoluted_tubule",
+          "x": 170,
+          "y": 132,
+          "side": "left",
+          "hint": "the second coiled section of the tubule, where further, hormonally-regulated reabsorption and secretion fine-tune the composition of the filtrate"
+        },
+        {
+          "id": "collecting_duct",
+          "x": 95,
+          "y": 400,
+          "side": "left",
+          "hint": "the duct filtrate flows through on its way out of the kidney; antidiuretic hormone (ADH) makes its wall more permeable to water when the body needs to conserve water, so more water is reabsorbed here and less, more concentrated urine is produced"
+        },
+        {
+          "id": "peritubular_capillaries",
+          "x": 380,
+          "y": 280,
+          "side": "right",
+          "hint": "the network of capillaries wrapped around the tubule that picks up everything reabsorbed along the way and carries it back into the general blood circulation"
+        }
+      ],
+      "keywords": [
+        "nephron",
+        "kidney",
+        "glomerulus",
+        "bowman",
+        "bowman's capsule",
+        "renal",
+        "ultrafiltration",
+        "reabsorption",
+        "loop of henle",
+        "collecting duct",
+        "antidiuretic hormone",
+        "adh",
+        "urine",
+        "proximal convoluted tubule",
+        "distal convoluted tubule",
+        "afferent arteriole",
+        "efferent arteriole",
+        "нефрон",
+        "бүйрек",
+        "гломерула",
+        "реабсорбция",
+        "фильтрация",
+        "несеп",
+        "зәр",
+        "вазопрессин",
+        "нефрон түтігі"
+      ]
     }
   ]
 }

@@ -3765,7 +3765,7 @@
       function layoutSide(items) {
         const n = items.length;
         if (n === 0) return { slots: [], height: vh };
-        const topPad = 24;
+        const topPad = 50; // room for a first/last label box taller than one line (was 24 — clipped long labels off-canvas)
         const naturalSpan = vh - topPad * 2;
         const gap = Math.max(minSlotGap, n > 1 ? naturalSpan / (n - 1) : 0);
         const totalHeight = topPad * 2 + gap * Math.max(n - 1, 0);

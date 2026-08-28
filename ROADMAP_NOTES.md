@@ -2,6 +2,17 @@
 
 _Last updated: Aug 28, 2026_
 
+## Second illustrated-diagram template: nephron (Aug 28, 2026)
+
+Built after reviewing the full grade 7-12 NIS biology curriculum (calendar-thematic plans, all six grades) to decide what to build next beyond `synapse` — nephron/kidney came out as the top pick: it's explicitly on the syllabus in three separate grades (9, 10, 11 all cover nephron structure/ultrafiltration/ADH), and it's the direct extension of the ADH content that exposed the topic-relevance gate bug earlier today.
+
+- New template added to `public/diagram-templates.json`: `nephron` — renal corpuscle (afferent/efferent arteriolе, glomerulus, Bowman's capsule), proximal convoluted tubule, descending/ascending limbs of the loop of Henle (color-coded by water permeability), distal convoluted tubule, collecting duct, and peritubular capillaries. 11 anchors, same hand-illustrated + fixed-anchor pattern as `synapse` — Gemini only maps facts onto existing anchor ids, never draws anything itself. The `collecting_duct` anchor's hint explains the ADH mechanism directly.
+- `keywords` list added (English + Kazakh + Russian) so the topic-relevance gate (`templateMatchesText`, see the entry below) works for nephron the same way it does for synapse. Verified live: `templateMatchesText('nephron', <ADH/nephron Kazakh sample text>)` → `true`, `templateMatchesText('synapse', <same text>)` → `false`.
+- Built and visually verified in an isolated test harness first (SVG build script + Playwright screenshot) before touching the real registry, same as the original synapse build.
+- **Found and fixed a real layout bug while building this**, in the shared `buildIllustratedDiagramSvg` render function (`public/index.html`): `topPad` was `24`, too small for a label box with more than ~2 lines of text near the first/last slot on either side — the box could extend past the computed canvas height and get clipped/cut off in the actual rendered image. This wasn't nephron-specific (synapse's default test labels just happened to be short enough to never trigger it) — bumped to `50`, verified no more clipping with a deliberately long 4-line label.
+- **Verified**: registry is valid JSON, `describeTemplatesForPrompt()` includes nephron correctly, anchor validation (`isValidAnchor`) works, topic gate confirmed via live test above, inline `<script>` in `public/index.html` still parses cleanly after the `topPad` fix.
+- **Not yet verified**: a real end-to-end generation against actual nephron/ADH content through the full `/api/upload` flow (this was all validated at the function level, not through a live Gemini call).
+
 ## Surface the Gemini rate-limit queue in the UI (Aug 28, 2026)
 
 Prompted by hitting a real 429 during today's testing and asking "will this crash at launch." Root cause: the free-tier Gemini limit is 5 requests/minute (`services/rateLimiter.js`'s `RPM_LIMIT`) — already queued server-side rather than just erroring, but the frontend gave no indication a request was waiting, so a burst (e.g. a class uploading distinct files around the same time) would look like a dead/broken spinner for however long it sat in queue, even though the server itself never goes down (server.js already isolates errors per-request).
