@@ -188,8 +188,25 @@ async function restructureWithClaude(text, focusInstructions = '', grade = null,
   // this can't quietly drift out of sync with the tripwire.
   const MAX_ATTEMPTS = 2;
   let lastIssues = [];
+  let lastError = null;
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const result = await callGeminiJSON(prompt, genOpts);
+    let result;
+    try {
+      result = await callGeminiJSON(prompt, genOpts);
+    } catch (err) {
+      // Live bug (Aug 29, 2026): callGeminiJSON can throw — a malformed-JSON
+      // response (a missing comma between array elements, seen live), a
+      // MAX_TOKENS cutoff, a safety-filter block — and that throw used to
+      // escape this loop immediately, skipping retry entirely even though
+      // the exact same "just try again" advice is in the error message
+      // shown to the student. Regenerating is non-deterministic, so a
+      // second attempt often just succeeds; only give up and surface the
+      // real error after the last attempt.
+      lastError = err;
+      console.warn(`restructureWithClaude: attempt ${attempt}/${MAX_ATTEMPTS} threw (${err.message})${attempt < MAX_ATTEMPTS ? ' — retrying' : ' — giving up'}.`);
+      if (attempt === MAX_ATTEMPTS) throw err;
+      continue;
+    }
     const missing = REQUIRED_KEYS.filter((k) => !(k in result));
     // Present-but-empty self_test passes the `in` check above but still
     // leaves nothing for seedFromSelfTest to seed — just as broken as a
