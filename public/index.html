@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ShabytBio — AI Study Companion</title>
+  <title>ShabytBio — Your Lessons, Your Inspiration</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
@@ -687,14 +687,17 @@
       gap: 0.65rem;
       color: #2d3748;
     }
-    .checklist-list li::before {
-      content: '';
+    .checklist-checkbox {
       flex-shrink: 0;
-      width: 15px;
-      height: 15px;
-      margin-top: 0.18rem;
-      border: 2px solid #319795;
-      border-radius: 3px;
+      width: 16px;
+      height: 16px;
+      margin-top: 0.2rem;
+      accent-color: #319795;
+      cursor: pointer;
+    }
+    .checklist-list li.is-checked .checklist-text {
+      text-decoration: line-through;
+      color: #a0aec0;
     }
     /* The li's own text (incl. inline <strong> tags from bolded terms) must
        live inside this single flex item, not as direct children of the flex
@@ -1604,7 +1607,7 @@
 </head>
 <body>
   <h1>ShabytBio</h1>
-  <p class="subtitle" data-i18n="appSubtitle">AI study companion for biology students</p>
+  <p class="subtitle" data-i18n="appSubtitle">Your lessons, your inspiration</p>
 
   <div class="auth-bar" id="authBar"></div>
 
@@ -1971,7 +1974,7 @@
        language setting — this dictionary only covers the app's own UI text. */
     const TRANSLATIONS = {
       en: {
-        appSubtitle: 'AI study companion for biology students',
+        appSubtitle: 'Your lessons, your inspiration',
         welcomeSignedOutDesc: "Sign in with Google to upload your slides and get exam-ready study notes, hidden exam traps, and self-tests tailored to you.",
         welcomeGreeting: "Let's set up your profile.",
         welcomeBackGreeting: "Welcome, {name}! Let's set up your profile.",
@@ -2108,7 +2111,7 @@
         pauseTopic: 'Pause this topic',
       },
       kk: {
-        appSubtitle: 'Биология пәні бойынша ЖИ-көмекші',
+        appSubtitle: 'Сабақтарың — шабытың',
         welcomeSignedOutDesc: 'Слайдтарыңызды жүктеп, емтиханға дайын конспектілер, жасырын емтихан қателерін және өзіңізге бейімделген тесттерді алу үшін Google арқылы кіріңіз.',
         welcomeGreeting: 'Профиліңізді баптайық.',
         welcomeBackGreeting: 'Қош келдіңіз, {name}! Профиліңізді баптайық.',
@@ -2245,7 +2248,7 @@
         charsExtracted: 'Дайын — «{filename}» файлынан {count} таңба алынды.',
       },
       ru: {
-        appSubtitle: 'ИИ-помощник по изучению биологии',
+        appSubtitle: 'Твои уроки — твоё вдохновение',
         welcomeSignedOutDesc: 'Войдите через Google, чтобы загрузить свои слайды и получить готовые к экзамену конспекты, скрытые ловушки экзамена и тесты, адаптированные под вас.',
         welcomeGreeting: 'Давайте настроим ваш профиль.',
         welcomeBackGreeting: 'Добро пожаловать, {name}! Давайте настроим ваш профиль.',
@@ -2384,6 +2387,7 @@
     };
 
     let currentLanguage = localStorage.getItem('shabytbio_lang') || 'en';
+    let currentResultId = null; // set right before each renderResults() call, used to key checklist-checked state
 
     function t(key) {
       return (TRANSLATIONS[currentLanguage] && TRANSLATIONS[currentLanguage][key]) || TRANSLATIONS.en[key] || key;
@@ -3293,6 +3297,7 @@
           statusEl.textContent = data.fromCache
             ? t('cachedResult')
             : tf('charsExtracted', { count: data.charCount, filename: data.filename });
+          currentResultId = data.id;
           renderResults(data.result);
           resultsEl.hidden = false;
           resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3718,21 +3723,67 @@
     // Wraps a string onto multiple lines by character count — a plain heuristic
     // (not real font metrics) but the prompt keeps illustrated_diagram label text
     // as short mind-map-leaf-style facts, so this stays accurate enough in practice.
+    // Tokenizes label text into words carrying a bold flag (from **term**
+    // markdown) and a spaceBefore flag (whether whitespace preceded this
+    // word in the source), so bold survives into SVG as real <tspan> runs
+    // (SVG has no <strong>) and punctuation stays glued to its word
+    // (no stray space before a period that followed a **bold** run).
+    function parseBoldWords(text) {
+      const tokens = String(text || '').match(/\*\*[^*]+\*\*|\S+|\s+/g) || [];
+      const words = [];
+      let pendingSpace = false;
+      tokens.forEach(tok => {
+        if (/^\s+$/.test(tok)) { pendingSpace = words.length > 0; return; }
+        const isBold = /^\*\*[^*]+\*\*$/.test(tok);
+        const raw = isBold ? tok.slice(2, -2) : tok;
+        raw.split(/\s+/).filter(Boolean).forEach((w, idx) => {
+          words.push({ text: w, bold: isBold, spaceBefore: idx === 0 ? pendingSpace : true });
+          pendingSpace = false;
+        });
+      });
+      return words;
+    }
+
+    // Wraps the bold-aware word list into lines of at most maxCharsPerLine
+    // chars — same greedy algorithm as before, just measuring the real
+    // separator (a word glued to punctuation costs 0, not 1).
     function wrapLabelText(text, maxCharsPerLine) {
-      const words = (text || '').split(/\s+/).filter(Boolean);
+      const words = parseBoldWords(text);
       const lines = [];
-      let current = '';
-      for (const word of words) {
-        const candidate = current ? `${current} ${word}` : word;
-        if (candidate.length > maxCharsPerLine && current) {
+      let current = [];
+      let currentLen = 0;
+      for (const w of words) {
+        const sep = current.length && w.spaceBefore ? 1 : 0;
+        const nextLen = currentLen + sep + w.text.length;
+        if (nextLen > maxCharsPerLine && current.length) {
           lines.push(current);
-          current = word;
+          current = [w];
+          currentLen = w.text.length;
         } else {
-          current = candidate;
+          current.push(w);
+          currentLen = nextLen;
         }
       }
-      if (current) lines.push(current);
+      if (current.length) lines.push(current);
       return lines;
+    }
+
+    // Groups a line's bold-aware words into contiguous bold/plain runs and
+    // renders each as its own <tspan>, so one line can mix normal and bold
+    // text while still respecting each word's real spaceBefore (the first
+    // word of the line never gets a leading space, wrap or not).
+    function lineToTspans(lineWords) {
+      const words = lineWords.map((w, i) => (i === 0 ? { ...w, spaceBefore: false } : w));
+      const runs = [];
+      words.forEach(w => {
+        const last = runs[runs.length - 1];
+        if (last && last.bold === w.bold) last.words.push(w);
+        else runs.push({ bold: w.bold, words: [w] });
+      });
+      return runs.map(run => {
+        const text = run.words.map(w => (w.spaceBefore ? ' ' : '') + w.text).join('');
+        return `<tspan${run.bold ? ' font-weight="700"' : ''}>${escapeXml(text)}</tspan>`;
+      }).join('');
     }
 
     function escapeXml(str) {
@@ -3798,8 +3849,8 @@
           // textbook label line and keeps the box from visually colliding
           // with the illustration when the anchor sits far above/below it.
           const elbowX = side === 'left' ? leaderStartX + 16 : leaderStartX - 16;
-          const textLines = lines.map((line, i) =>
-            `<text x="${boxX + boxPadding}" y="${boxTop + boxPadding + (i + 0.85) * boxLineHeight}" font-size="12.5" font-family="inherit" fill="${colors.text}">${escapeXml(line)}</text>`
+          const textLines = lines.map((lineWords, i) =>
+            `<text x="${boxX + boxPadding}" y="${boxTop + boxPadding + (i + 0.85) * boxLineHeight}" font-size="12.5" font-family="inherit" fill="${colors.text}">${lineToTspans(lineWords)}</text>`
           ).join('');
           return `
             <path d="M${leaderStartX},${leaderStartY} L${elbowX},${leaderStartY} L${anchorX},${anchorY}" fill="none" stroke="${colors.stroke}" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.85"/>
@@ -4715,6 +4766,7 @@
         const res = await fetch(`/api/history/${id}`);
         if (!res.ok) throw new Error((await res.json()).error || 'Not found');
         const data = await res.json();
+        currentResultId = id;
         renderResults(data.result);
         resultsEl.hidden = false;
         statusEl.className = 'success';
@@ -4791,6 +4843,7 @@
           btn.remove();
           return;
         }
+        currentResultId = uploadId;
         renderResults(data.result);
         hideLanguageMismatchBanner();
         loadHistory();
@@ -4813,13 +4866,28 @@
       const el = document.getElementById('checklistOutput');
       el.innerHTML = '';
       if (!Array.isArray(items) || items.length === 0) { el.textContent = '—'; return; }
+      const storageKey = `shabytbio_checklist_${currentResultId || 'unsaved'}`;
+      let checkedSet;
+      try { checkedSet = new Set(JSON.parse(localStorage.getItem(storageKey) || '[]')); }
+      catch { checkedSet = new Set(); }
       const list = document.createElement('ul');
       list.className = 'checklist-list';
-      items.forEach(item => {
+      items.forEach((item, i) => {
         const li = document.createElement('li');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'checklist-checkbox';
+        checkbox.checked = checkedSet.has(i);
+        if (checkbox.checked) li.classList.add('is-checked');
+        checkbox.addEventListener('change', () => {
+          if (checkbox.checked) checkedSet.add(i); else checkedSet.delete(i);
+          li.classList.toggle('is-checked', checkbox.checked);
+          try { localStorage.setItem(storageKey, JSON.stringify([...checkedSet])); } catch {}
+        });
         const text = document.createElement('span');
         text.className = 'checklist-text';
         text.innerHTML = mdToHtml(typeof item === 'string' ? item : JSON.stringify(item));
+        li.appendChild(checkbox);
         li.appendChild(text);
         list.appendChild(li);
       });
