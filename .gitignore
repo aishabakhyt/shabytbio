@@ -5,3 +5,6 @@ data/
 .claude/
 _test_auth.js
 _test_auth2.js
+
+private-docs/
+BETA_FEEDBACK_SUMMARY.md
