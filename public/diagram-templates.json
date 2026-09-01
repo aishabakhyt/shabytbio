@@ -361,6 +361,133 @@
         "аралық нейрон",
         "жұлын"
       ]
+    },
+    {
+      "id": "plant_animal_cell",
+      "name": "Plant vs Animal Cell (Organelles)",
+      "description": "A side-by-side comparison of an animal cell and a plant cell with organelles labeled across both: nucleus, mitochondria, endoplasmic reticulum, ribosomes, and centrioles on the animal side; cell wall, chloroplasts, the large central vacuole, Golgi apparatus, and cytoplasm on the plant side. Several organelles (nucleus, mitochondria, ribosomes, ER, Golgi) exist in both cell types even though only labeled on one side here — the hint for each anchor says so. Use for content describing general cell structure, organelle function, or comparing plant and animal cells — not for a detailed single-organelle deep-dive (e.g. mitochondrion internal structure, chloroplast light/dark reactions), which would need its own template.",
+      "viewBox": "0 0 460 480",
+      "svgBody": "<text x='115' y='75' font-size='15' font-weight='700' fill='#4a5568' text-anchor='middle'>Animal cell</text><text x='345' y='75' font-size='15' font-weight='700' fill='#4a5568' text-anchor='middle'>Plant cell</text><line x1='230' y1='60' x2='230' y2='420' stroke='#cbd5e0' stroke-width='1.5' stroke-dasharray='4,3'/><path d='M115,145 Q170,150 185,200 Q200,250 180,300 Q165,340 115,335 Q60,340 40,295 Q25,250 45,195 Q60,150 115,145 Z' fill='#f7fafc' stroke='#4a5568' stroke-width='2.5'/><circle cx='100' cy='230' r='38' fill='#e9d8fd' stroke='#805ad5' stroke-width='2'/><circle cx='100' cy='230' r='12' fill='#553c9a'/><path d='M150,260 Q175,255 180,275 Q182,295 160,298 Q140,296 138,278 Q140,262 150,260 Z' fill='#feb2b2' stroke='#c53030' stroke-width='1.5'/><path d='M148,270 Q160,268 168,275 M148,282 Q160,280 170,286' stroke='#c53030' stroke-width='1' fill='none'/><path d='M55,200 Q65,190 55,180 Q45,170 55,160 Q65,150 58,140' stroke='#3182ce' stroke-width='2' fill='none'/><path d='M60,210 Q70,200 60,190 Q50,180 60,170' stroke='#3182ce' stroke-width='2' fill='none'/><rect x='95' y='300' width='18' height='5' rx='2' fill='#4a5568'/><rect x='108' y='293' width='5' height='18' rx='2' fill='#4a5568'/><circle cx='75' cy='255' r='2.5' fill='#2d3748'/><circle cx='85' cy='265' r='2.5' fill='#2d3748'/><circle cx='70' cy='245' r='2.5' fill='#2d3748'/><circle cx='90' cy='250' r='2.5' fill='#2d3748'/><rect x='250' y='110' width='190' height='270' rx='20' fill='none' stroke='#8b6f3e' stroke-width='7'/><rect x='262' y='122' width='166' height='246' rx='14' fill='#f0fff4' stroke='#38a169' stroke-width='2'/><ellipse cx='345' cy='255' rx='68' ry='95' fill='#ebf8ff' stroke='#3182ce' stroke-width='2' opacity='0.7'/><circle cx='288' cy='155' r='26' fill='#e9d8fd' stroke='#805ad5' stroke-width='2'/><circle cx='288' cy='155' r='8' fill='#553c9a'/><ellipse cx='278' cy='330' rx='22' ry='13' fill='#9ae6b4' stroke='#276749' stroke-width='1.5'/><path d='M262,330 L294,330 M262,326 L294,326 M262,334 L294,334' stroke='#276749' stroke-width='1'/><ellipse cx='405' cy='300' rx='18' ry='11' fill='#9ae6b4' stroke='#276749' stroke-width='1.5'/><path d='M391,300 L419,300 M391,297 L419,297 M391,303 L419,303' stroke='#276749' stroke-width='1'/><path d='M310,195 Q328,190 343,195 M308,202 Q328,197 345,202 M310,209 Q328,204 343,209' stroke='#d69e2e' stroke-width='2.5' fill='none' stroke-linecap='round'/>",
+      "anchors": [
+        {
+          "id": "cell_membrane",
+          "x": 180,
+          "y": 200,
+          "side": "left",
+          "hint": "the selectively permeable membrane controlling what enters and leaves the cell — present in both animal and plant cells, though in a plant cell it sits just inside the rigid cell wall"
+        },
+        {
+          "id": "nucleus",
+          "x": 100,
+          "y": 230,
+          "side": "left",
+          "hint": "contains the cell's genetic material (DNA) and controls cell activity — present in both animal and plant cells; in a mature plant cell it's often pushed to one side by the large central vacuole"
+        },
+        {
+          "id": "mitochondrion",
+          "x": 160,
+          "y": 278,
+          "side": "left",
+          "hint": "the site of aerobic respiration, producing most of the cell's ATP — present in both animal and plant cells"
+        },
+        {
+          "id": "endoplasmic_reticulum",
+          "x": 58,
+          "y": 175,
+          "side": "left",
+          "hint": "a folded network of membranes that transports proteins and lipids around the cell — present in both animal and plant cells"
+        },
+        {
+          "id": "centriole",
+          "x": 103,
+          "y": 302,
+          "side": "left",
+          "hint": "a pair of structures that organize spindle fibres during cell division — found in animal cells, typically absent from plant cells"
+        },
+        {
+          "id": "ribosome",
+          "x": 80,
+          "y": 255,
+          "side": "left",
+          "hint": "the site of protein synthesis, found free in the cytoplasm or attached to the endoplasmic reticulum — present in both animal and plant cells"
+        },
+        {
+          "id": "cell_wall",
+          "x": 256,
+          "y": 200,
+          "side": "right",
+          "hint": "the rigid outer layer made of cellulose, found in plant cells but not animal cells — gives the cell a fixed shape and structural support"
+        },
+        {
+          "id": "vacuole",
+          "x": 345,
+          "y": 255,
+          "side": "right",
+          "hint": "a large, permanent, fluid-filled sac that takes up most of a mature plant cell's volume (unlike the small, temporary vacuoles sometimes seen in animal cells) — maintains the turgor pressure that keeps the plant cell rigid"
+        },
+        {
+          "id": "chloroplast",
+          "x": 278,
+          "y": 330,
+          "side": "right",
+          "hint": "contains chlorophyll and is the site of photosynthesis — found in plant cells (and algae), never in animal cells"
+        },
+        {
+          "id": "golgi_apparatus",
+          "x": 327,
+          "y": 202,
+          "side": "right",
+          "hint": "a stack of flattened membranes that modifies, packages, and ships proteins and lipids to their destination — present in both animal and plant cells"
+        },
+        {
+          "id": "cytoplasm",
+          "x": 410,
+          "y": 180,
+          "side": "right",
+          "hint": "the jelly-like fluid filling the cell outside the nucleus and vacuole, where many organelles sit and metabolic reactions take place"
+        }
+      ],
+      "keywords": [
+        "plant cell",
+        "animal cell",
+        "cell structure",
+        "organelle",
+        "organelles",
+        "cell wall",
+        "chloroplast",
+        "mitochondria",
+        "mitochondrion",
+        "cytoplasm",
+        "vacuole",
+        "central vacuole",
+        "golgi apparatus",
+        "endoplasmic reticulum",
+        "ribosome",
+        "ribosomes",
+        "centriole",
+        "turgor pressure",
+        "cellulose",
+        "растительная клетка",
+        "животная клетка",
+        "клеточная стенка",
+        "хлоропласт",
+        "митохондрия",
+        "цитоплазма",
+        "вакуоль",
+        "аппарат гольджи",
+        "эндоплазматический ретикулум",
+        "рибосома",
+        "өсімдік жасушасы",
+        "жануар жасушасы",
+        "жасуша қабығы",
+        "хлоропласт",
+        "митохондрия",
+        "цитоплазма",
+        "вакуоль",
+        "гольджи аппараты",
+        "эндоплазмалық тор",
+        "рибосома"
+      ]
     }
   ]
 }
