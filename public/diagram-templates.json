@@ -231,6 +231,136 @@
         "вазопрессин",
         "нефрон түтігі"
       ]
+    },
+    {
+      "id": "neuron_reflex_arc",
+      "name": "Neuron Structure & Reflex Arc",
+      "description": "A two-part labeled diagram: the top half shows a full spinal reflex arc (receptor, sensory neuron, interneuron in the spinal cord, motor neuron, effector muscle); the bottom half is a zoomed-in single neuron showing dendrites, cell body, axon hillock, a myelinated axon with nodes of Ranvier, and the axon terminal. Use for content describing neuron structure, nerve impulse propagation, myelination/saltatory conduction, or reflex arcs/reflex actions — not for a single synapse/neurotransmitter-release mechanism, which belongs on the `synapse` template instead.",
+      "viewBox": "0 0 460 700",
+      "svgBody": "<defs><marker id='nra-sensory-arrow' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='8' markerHeight='8' markerUnits='userSpaceOnUse' orient='auto-start-reverse'><path d='M0,0 L10,5 L0,10 z' fill='#3182ce'/></marker><marker id='nra-motor-arrow' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='8' markerHeight='8' markerUnits='userSpaceOnUse' orient='auto-start-reverse'><path d='M0,0 L10,5 L0,10 z' fill='#ed8936'/></marker></defs><rect x='0' y='0' width='460' height='300' fill='#fff5f0'/><rect x='0' y='300' width='460' height='400' fill='#ebf8ff'/><line x1='0' y1='300' x2='460' y2='300' stroke='#cbd5e0' stroke-width='1.5' stroke-dasharray='4,3'/><text x='450' y='16' font-size='11' fill='#c17a4d' text-anchor='end'>reflex arc pathway</text><text x='450' y='316' font-size='11' fill='#4a86b8' text-anchor='end'>neuron structure (zoomed)</text><path d='M10,182 Q14,120 44,96 Q64,81 84,69 Q95,63 101,57 L113,49 Q120,59 109,68 Q98,78 81,90 Q59,106 41,131 Q27,151 24,182 Z' fill='#f7dcc6' stroke='#e2b696' stroke-width='1.5'/><path d='M112,21 Q121,31 119,43 Q116,53 106,50 Q97,47 99,37 Q101,27 112,21 Z' fill='#ed8936' stroke='#c05621' stroke-width='1'/><path d='M96,68 Q140,108 176,138 Q198,155 216,159' stroke='#3182ce' stroke-width='2.5' fill='none' marker-end='url(#nra-sensory-arrow)'/><ellipse cx='250' cy='160' rx='48' ry='55' fill='#f7fafc' stroke='#a0aec0' stroke-width='2'/><path d='M236,118 Q247,140 247,160 Q247,180 233,206 L267,206 Q253,180 253,160 Q253,140 264,118 Q259,128 250,130 Q241,128 236,118 Z' fill='#a0aec0'/><path d='M272,182 Q312,206 342,216 Q366,223 384,226' stroke='#ed8936' stroke-width='2.5' fill='none' marker-end='url(#nra-motor-arrow)'/><path d='M390,190 Q421,184 436,201 Q447,217 436,238 Q425,253 399,251 Q378,248 374,229 Q371,208 390,190 Z' fill='#feb2b2' stroke='#c53030' stroke-width='1.5'/><path d='M386,206 Q405,200 422,212 M383,224 Q403,220 420,230' stroke='#c53030' stroke-width='1.2' fill='none' opacity='0.6'/><path d='M70,520 L40,470 M70,520 L28,500 M70,520 L33,543 M70,520 L46,567' stroke='#805ad5' stroke-width='2.5' stroke-linecap='round' fill='none'/><circle cx='110' cy='520' r='42' fill='#e9d8fd' stroke='#805ad5' stroke-width='2'/><circle cx='110' cy='520' r='14' fill='#553c9a'/><path d='M152,504 L179,519 L152,536 Z' fill='#e9d8fd' stroke='#805ad5' stroke-width='1.5'/><line x1='178' y1='520' x2='431' y2='520' stroke='#4a5568' stroke-width='3'/><ellipse cx='210' cy='520' rx='22' ry='11' fill='#fefcbf' stroke='#d69e2e' stroke-width='1.5'/><ellipse cx='270' cy='520' rx='22' ry='11' fill='#fefcbf' stroke='#d69e2e' stroke-width='1.5'/><ellipse cx='330' cy='520' rx='22' ry='11' fill='#fefcbf' stroke='#d69e2e' stroke-width='1.5'/><ellipse cx='390' cy='520' rx='22' ry='11' fill='#fefcbf' stroke='#d69e2e' stroke-width='1.5'/><circle cx='240' cy='520' r='3' fill='#e53e3e'/><circle cx='300' cy='520' r='3' fill='#e53e3e'/><circle cx='360' cy='520' r='3' fill='#e53e3e'/><path d='M430,520 L448,505 M430,520 L452,520 M430,520 L448,535' stroke='#4a5568' stroke-width='2.5' fill='none' stroke-linecap='round'/><circle cx='448' cy='505' r='5' fill='#63b3ed'/><circle cx='452' cy='520' r='5' fill='#63b3ed'/><circle cx='448' cy='535' r='5' fill='#63b3ed'/>",
+      "anchors": [
+        {
+          "id": "receptor",
+          "x": 108,
+          "y": 50,
+          "side": "left",
+          "hint": "the sensory receptor in the skin that detects the stimulus (e.g. heat, pain, pressure) and generates a nerve impulse"
+        },
+        {
+          "id": "sensory_neuron",
+          "x": 150,
+          "y": 115,
+          "side": "left",
+          "hint": "the sensory (afferent) neuron carrying the impulse from the receptor toward the spinal cord"
+        },
+        {
+          "id": "interneuron",
+          "x": 250,
+          "y": 160,
+          "side": "right",
+          "hint": "the relay neuron inside the spinal cord connecting the sensory neuron directly to a motor neuron — this direct spinal connection, bypassing the brain, is what makes a reflex fast and involuntary"
+        },
+        {
+          "id": "motor_neuron",
+          "x": 330,
+          "y": 210,
+          "side": "right",
+          "hint": "the motor (efferent) neuron carrying the impulse from the spinal cord out to the effector"
+        },
+        {
+          "id": "effector",
+          "x": 410,
+          "y": 215,
+          "side": "right",
+          "hint": "the muscle (or gland) that receives the motor neuron's signal and responds — here, contracting to pull away from the stimulus"
+        },
+        {
+          "id": "dendrite",
+          "x": 45,
+          "y": 500,
+          "side": "left",
+          "hint": "branching extensions that receive incoming signals from other neurons and carry them toward the cell body"
+        },
+        {
+          "id": "cell_body",
+          "x": 110,
+          "y": 520,
+          "side": "left",
+          "hint": "the cell body (soma), containing the nucleus, where incoming signals are integrated"
+        },
+        {
+          "id": "axon_hillock",
+          "x": 163,
+          "y": 520,
+          "side": "left",
+          "hint": "the trigger zone where an action potential is initiated once incoming signals reach threshold"
+        },
+        {
+          "id": "myelin_sheath",
+          "x": 270,
+          "y": 508,
+          "side": "right",
+          "hint": "the fatty insulating layer (formed by Schwann cells) wrapped around sections of the axon; it speeds up conduction by preventing ion leakage along the covered stretches"
+        },
+        {
+          "id": "node_of_ranvier",
+          "x": 300,
+          "y": 520,
+          "side": "right",
+          "hint": "a gap in the myelin sheath where the axon membrane is exposed; the impulse 'jumps' from node to node (saltatory conduction), which is why myelinated axons conduct impulses much faster than unmyelinated ones"
+        },
+        {
+          "id": "axon_terminal",
+          "x": 448,
+          "y": 520,
+          "side": "right",
+          "hint": "the branched end of the axon where the impulse arrives and triggers neurotransmitter release to the next cell (as in the synapse template)"
+        }
+      ],
+      "keywords": [
+        "reflex arc",
+        "reflex",
+        "spinal reflex",
+        "withdrawal reflex",
+        "stimulus-response",
+        "neuron structure",
+        "dendrite",
+        "axon hillock",
+        "myelin",
+        "myelin sheath",
+        "schwann cell",
+        "node of ranvier",
+        "saltatory conduction",
+        "sensory neuron",
+        "motor neuron",
+        "interneuron",
+        "effector",
+        "receptor",
+        "spinal cord",
+        "nerve impulse",
+        "impulse propagation",
+        "рефлекс",
+        "рефлекторная дуга",
+        "миелин",
+        "шванновские клетки",
+        "узел ранвье",
+        "сальтаторное проведение",
+        "чувствительный нейрон",
+        "двигательный нейрон",
+        "вставочный нейрон",
+        "рецептор",
+        "эффектор",
+        "спинной мозг",
+        "нервный импульс",
+        "рефлекс доғасы",
+        "рефлекторлық доға",
+        "миелин қабығы",
+        "ранвье түйіні",
+        "сезімтал нейрон",
+        "қозғалтқыш нейрон",
+        "аралық нейрон",
+        "жұлын"
+      ]
     }
   ]
 }
