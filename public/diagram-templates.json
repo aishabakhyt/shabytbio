@@ -1075,6 +1075,136 @@
         "тропонин",
         "тропомиозин"
       ]
+    },
+    {
+      "id": "heart_cross_section",
+      "name": "Heart Cross-Section & Blood Flow",
+      "description": "A labeled anterior cross-section of the heart showing all four chambers (right/left atrium, right/left ventricle), the tricuspid and mitral (bicuspid) valves, the pulmonary valve, the septum, and the major vessels (vena cava, pulmonary artery, aorta). The right (deoxygenated) side is shown in blue and the left (oxygenated) side in red, with the left ventricle drawn with a visibly thicker wall. Use for content describing heart structure, the cardiac chambers and valves, or the path of blood through the heart (double circulation) — not for the electrical conduction system (SA node, AV node, Purkinje fibers), which has its own cardiac_conduction template.",
+      "viewBox": "0 0 460 560",
+      "svgBody": "<rect x='0' y='0' width='460' height='560' fill='#fdfcfb'/><rect x='86' y='18' width='26' height='95' rx='7' fill='#90cdf4' stroke='#2b6cb0' stroke-width='1.5'/><path d='M112,262 C98,210 92,155 104,108' stroke='#3182ce' stroke-width='16' fill='none' stroke-linecap='round'/><path d='M104,108 L88,88 M104,108 L96,80' stroke='#3182ce' stroke-width='7' fill='none' stroke-linecap='round'/><path d='M345,140 C355,115 362,95 356,75' stroke='#c53030' stroke-width='9' fill='none' stroke-linecap='round' opacity='0.85'/><path d='M312,262 C324,180 302,58 232,40 C196,31 164,34 142,46' stroke='#e53e3e' stroke-width='17' fill='none' stroke-linecap='round'/><rect x='80' y='140' width='140' height='110' rx='20' fill='#bee3f8' stroke='#3182ce' stroke-width='2'/><rect x='240' y='140' width='140' height='110' rx='20' fill='#fed7d7' stroke='#e53e3e' stroke-width='2'/><path d='M222,140 L238,140 L238,255 L246,255 L246,506 L214,506 L214,255 L222,255 Z' fill='#a0aec0' stroke='#718096' stroke-width='1'/><rect x='80' y='262' width='140' height='244' rx='20' fill='#90cdf4' stroke='#2b6cb0' stroke-width='3'/><rect x='240' y='262' width='140' height='244' rx='20' fill='#fc8181' stroke='#9b2c2c' stroke-width='7'/><path d='M140,251 L155,266 L170,251' stroke='#2c5282' stroke-width='3' fill='none' stroke-linecap='round'/><path d='M290,251 L305,266 L320,251' stroke='#822727' stroke-width='3' fill='none' stroke-linecap='round'/><path d='M98,251 L112,264 L126,251' stroke='#2b6cb0' stroke-width='3' fill='none' stroke-linecap='round'/><text x='450' y='16' font-size='11' fill='#a08a5c' text-anchor='end'>anterior view</text><text x='150' y='195' font-size='10.5' fill='#2c5282' text-anchor='middle' opacity='0.75'>RA</text><text x='310' y='195' font-size='10.5' fill='#822727' text-anchor='middle' opacity='0.75'>LA</text><text x='150' y='390' font-size='10.5' fill='#2c5282' text-anchor='middle' opacity='0.75'>RV</text><text x='310' y='390' font-size='10.5' fill='#822727' text-anchor='middle' opacity='0.75'>LV</text>",
+      "anchors": [
+        {
+          "id": "vena_cava",
+          "x": 100,
+          "y": 50,
+          "side": "left",
+          "hint": "the body's largest vein, returning deoxygenated blood from the systemic circulation into the right atrium"
+        },
+        {
+          "id": "right_atrium",
+          "x": 150,
+          "y": 195,
+          "side": "left",
+          "hint": "receives deoxygenated blood from the vena cava and contracts to push it through the tricuspid valve into the right ventricle"
+        },
+        {
+          "id": "tricuspid_valve",
+          "x": 160,
+          "y": 253,
+          "side": "left",
+          "hint": "the three-flapped (cuspid) valve between the right atrium and right ventricle; closes to stop blood flowing back into the atrium when the ventricle contracts"
+        },
+        {
+          "id": "right_ventricle",
+          "x": 150,
+          "y": 400,
+          "side": "left",
+          "hint": "pumps deoxygenated blood into the pulmonary artery toward the lungs; its wall is thinner than the left ventricle's, since it only needs to generate enough pressure to reach the nearby lungs"
+        },
+        {
+          "id": "pulmonary_valve",
+          "x": 110,
+          "y": 253,
+          "side": "left",
+          "hint": "the valve between the right ventricle and the pulmonary artery; closes to stop blood flowing back into the ventricle after each contraction"
+        },
+        {
+          "id": "pulmonary_artery",
+          "x": 100,
+          "y": 80,
+          "side": "left",
+          "hint": "carries deoxygenated blood from the right ventricle to the lungs — the only artery in the body that normally carries deoxygenated blood"
+        },
+        {
+          "id": "left_atrium",
+          "x": 310,
+          "y": 195,
+          "side": "right",
+          "hint": "receives freshly oxygenated blood from the lungs via the pulmonary veins and contracts to push it through the mitral valve into the left ventricle"
+        },
+        {
+          "id": "mitral_valve",
+          "x": 300,
+          "y": 253,
+          "side": "right",
+          "hint": "the two-flapped (bicuspid) valve between the left atrium and left ventricle; closes to stop blood flowing back into the atrium when the ventricle contracts"
+        },
+        {
+          "id": "left_ventricle",
+          "x": 310,
+          "y": 400,
+          "side": "right",
+          "hint": "pumps oxygenated blood out through the aorta to the entire body; its wall is the thickest of the four chambers, since it must generate enough pressure to reach every tissue in the body"
+        },
+        {
+          "id": "aorta",
+          "x": 200,
+          "y": 40,
+          "side": "right",
+          "hint": "the body's largest artery, carrying oxygenated blood from the left ventricle out into the systemic circulation"
+        },
+        {
+          "id": "septum",
+          "x": 230,
+          "y": 380,
+          "side": "right",
+          "hint": "the muscular wall separating the right (deoxygenated) and left (oxygenated) sides of the heart, keeping the two blood supplies from mixing"
+        }
+      ],
+      "keywords": [
+        "heart",
+        "cardiac",
+        "atrium",
+        "atria",
+        "ventricle",
+        "tricuspid valve",
+        "mitral valve",
+        "bicuspid valve",
+        "pulmonary valve",
+        "aorta",
+        "vena cava",
+        "pulmonary artery",
+        "pulmonary vein",
+        "septum",
+        "systemic circulation",
+        "pulmonary circulation",
+        "deoxygenated blood",
+        "oxygenated blood",
+        "heart chambers",
+        "double circulation",
+        "blood flow through the heart",
+        "сердце",
+        "предсердие",
+        "желудочек",
+        "трёхстворчатый клапан",
+        "двустворчатый клапан",
+        "митральный клапан",
+        "лёгочная артерия",
+        "аорта",
+        "полая вена",
+        "перегородка сердца",
+        "малый круг кровообращения",
+        "большой круг кровообращения",
+        "жүрек",
+        "жүрекше",
+        "қарынша",
+        "аорта",
+        "өкпе артериясы",
+        "қуыс көктамыр",
+        "жүрек қалқасы",
+        "кіші қан айналым шеңбері",
+        "үлкен қан айналым шеңбері"
+      ]
     }
   ]
 }
