@@ -488,6 +488,133 @@
         "эндоплазмалық тор",
         "рибосома"
       ]
+    },
+    {
+      "id": "alveolus_gas_exchange",
+      "name": "Alveolus & Gas Exchange",
+      "description": "A two-part labeled diagram of gas exchange in the lungs: the top half shows an alveolar cluster fed by a bronchiole and wrapped in a capillary network, with the pulmonary artery bringing deoxygenated blood in and the pulmonary vein carrying oxygenated blood away; the bottom half is a zoomed cross-section of the alveolus-capillary interface showing the two thin cell layers, a red blood cell, and oxygen and carbon dioxide diffusing in opposite directions across the membrane. Use for content describing gas exchange, alveoli/lung structure, or the structural adaptations for efficient diffusion — not for the mechanics of breathing/ventilation itself (chest cavity, diaphragm, intercostal muscles), which would need its own template.",
+      "viewBox": "0 0 460 640",
+      "svgBody": "<defs><marker id='alv-artery-arrow' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='8' markerHeight='8' markerUnits='userSpaceOnUse' orient='auto-start-reverse'><path d='M0,0 L10,5 L0,10 z' fill='#3182ce'/></marker><marker id='alv-vein-arrow' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='8' markerHeight='8' markerUnits='userSpaceOnUse' orient='auto-start-reverse'><path d='M0,0 L10,5 L0,10 z' fill='#e53e3e'/></marker><marker id='alv-o2-arrow' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='8' markerHeight='8' markerUnits='userSpaceOnUse' orient='auto-start-reverse'><path d='M0,0 L10,5 L0,10 z' fill='#3182ce'/></marker><marker id='alv-co2-arrow' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='8' markerHeight='8' markerUnits='userSpaceOnUse' orient='auto-start-reverse'><path d='M0,0 L10,5 L0,10 z' fill='#718096'/></marker></defs><rect x='0' y='0' width='460' height='280' fill='#fdfcfb'/><rect x='0' y='280' width='460' height='360' fill='#f7fafc'/><line x1='0' y1='280' x2='460' y2='280' stroke='#cbd5e0' stroke-width='1.5' stroke-dasharray='4,3'/><text x='450' y='16' font-size='11' fill='#a08a5c' text-anchor='end'>airway + alveoli cluster</text><text x='450' y='296' font-size='11' fill='#718096' text-anchor='end'>gas exchange (zoomed)</text><path d='M0,140 L70,140 Q95,140 108,148' stroke='#a0aec0' stroke-width='18' fill='none' stroke-linecap='round'/><path d='M140,80 Q170,60 210,75 Q250,60 280,90 Q290,120 270,150 Q285,175 260,200 Q220,215 190,200 Q150,210 130,180 Q110,150 130,120 Q120,95 140,80' stroke='#e53e3e' stroke-width='2' fill='none' opacity='0.65'/><circle cx='175' cy='110' r='42' fill='#fff5f0' stroke='#c17a4d' stroke-width='2'/><circle cx='230' cy='145' r='38' fill='#fff5f0' stroke='#c17a4d' stroke-width='2'/><circle cx='180' cy='185' r='36' fill='#fff5f0' stroke='#c17a4d' stroke-width='2'/><circle cx='245' cy='85' r='30' fill='#fff5f0' stroke='#c17a4d' stroke-width='2'/><path d='M60,260 Q90,240 120,215' stroke='#3182ce' stroke-width='7' fill='none' stroke-linecap='round' marker-end='url(#alv-artery-arrow)'/><path d='M300,215 Q330,240 360,260' stroke='#e53e3e' stroke-width='7' fill='none' stroke-linecap='round' marker-end='url(#alv-vein-arrow)'/><rect x='40' y='300' width='380' height='75' fill='#ebf8ff'/><circle cx='90' cy='320' r='5' fill='#3182ce'/><circle cx='110' cy='340' r='5' fill='#3182ce'/><circle cx='380' cy='325' r='5' fill='#718096'/><circle cx='360' cy='345' r='5' fill='#718096'/><rect x='40' y='375' width='380' height='20' fill='#fff5f0' stroke='#c17a4d' stroke-width='1'/><path d='M330,375 Q345,368 360,375 L360,395 L330,395 Z' fill='#fbd38d' stroke='#c05621' stroke-width='1.3'/><circle cx='335' cy='368' r='3' fill='#f6ad55'/><circle cx='345' cy='365' r='3' fill='#f6ad55'/><circle cx='355' cy='369' r='3' fill='#f6ad55'/><rect x='40' y='395' width='380' height='6' fill='#e2e8f0'/><rect x='40' y='401' width='380' height='16' fill='#fed7d7' stroke='#c53030' stroke-width='1'/><rect x='40' y='417' width='380' height='60' fill='#fff5f5' stroke='#c53030' stroke-width='1.5'/><ellipse cx='130' cy='447' rx='22' ry='14' fill='#e53e3e'/><ellipse cx='130' cy='447' rx='10' ry='7' fill='#c53030' opacity='0.5'/><ellipse cx='250' cy='447' rx='22' ry='14' fill='#e53e3e'/><ellipse cx='250' cy='447' rx='10' ry='7' fill='#c53030' opacity='0.5'/><ellipse cx='350' cy='447' rx='22' ry='14' fill='#e53e3e'/><ellipse cx='350' cy='447' rx='10' ry='7' fill='#c53030' opacity='0.5'/><path d='M190,330 L190,440' stroke='#3182ce' stroke-width='3' fill='none' marker-end='url(#alv-o2-arrow)'/><path d='M290,440 L290,330' stroke='#718096' stroke-width='3' fill='none' marker-end='url(#alv-co2-arrow)'/>",
+      "anchors": [
+        {
+          "id": "alveolar_duct",
+          "x": 50,
+          "y": 140,
+          "side": "left",
+          "hint": "the small airway that carries fresh, oxygen-rich air from the bronchioles into the alveoli"
+        },
+        {
+          "id": "capillary_network",
+          "x": 250,
+          "y": 130,
+          "side": "right",
+          "hint": "the dense network of capillaries wrapping each alveolus — a key structural adaptation that gives a huge surface area for gas exchange"
+        },
+        {
+          "id": "pulmonary_artery",
+          "x": 90,
+          "y": 238,
+          "side": "left",
+          "hint": "brings deoxygenated blood (low O2, high CO2) from the heart to the lungs to be reoxygenated"
+        },
+        {
+          "id": "pulmonary_vein",
+          "x": 330,
+          "y": 238,
+          "side": "right",
+          "hint": "carries newly oxygenated blood from the lungs back to the heart, to be pumped around the body"
+        },
+        {
+          "id": "alveolus_wall",
+          "x": 100,
+          "y": 385,
+          "side": "left",
+          "hint": "the alveolus wall is only one cell thick (a flattened Type I pneumocyte) — a structural adaptation that keeps the diffusion path as short as possible"
+        },
+        {
+          "id": "surfactant",
+          "x": 345,
+          "y": 372,
+          "side": "right",
+          "hint": "a fluid secreted by Type II pneumocytes that reduces surface tension inside the alveolus, stopping it from collapsing as air moves in and out"
+        },
+        {
+          "id": "capillary_wall",
+          "x": 100,
+          "y": 409,
+          "side": "left",
+          "hint": "the capillary wall is also just one cell thick (endothelium), so together with the alveolus wall the total diffusion path between air and blood is only two cells wide"
+        },
+        {
+          "id": "red_blood_cell",
+          "x": 250,
+          "y": 447,
+          "side": "right",
+          "hint": "carries oxygen bound to haemoglobin; red blood cells pass through the capillary in single file, which maximises the time each one spends next to the alveolus wall for gas exchange"
+        },
+        {
+          "id": "oxygen_diffusion",
+          "x": 190,
+          "y": 385,
+          "side": "left",
+          "hint": "oxygen diffuses from the alveolus air space, where its concentration is high, into the blood, where it's lower — down its concentration gradient"
+        },
+        {
+          "id": "carbon_dioxide_diffusion",
+          "x": 290,
+          "y": 385,
+          "side": "right",
+          "hint": "carbon dioxide diffuses the opposite way: from the blood, where its concentration is high, into the alveolus air space, to be breathed out — down its own concentration gradient"
+        }
+      ],
+      "keywords": [
+        "alveolus",
+        "alveoli",
+        "gas exchange",
+        "lung",
+        "lungs",
+        "pulmonary",
+        "bronchiole",
+        "oxygen diffusion",
+        "carbon dioxide diffusion",
+        "diffusion gradient",
+        "surfactant",
+        "pneumocyte",
+        "capillary network",
+        "red blood cell",
+        "haemoglobin",
+        "hemoglobin",
+        "pulmonary artery",
+        "pulmonary vein",
+        "respiratory surface",
+        "surface area to volume",
+        "альвеола",
+        "альвеолы",
+        "газообмен",
+        "лёгкие",
+        "легкие",
+        "бронхиола",
+        "диффузия кислорода",
+        "диффузия углекислого газа",
+        "сурфактант",
+        "капилляр",
+        "эритроцит",
+        "гемоглобин",
+        "лёгочная артерия",
+        "лёгочная вена",
+        "альвеола",
+        "газ алмасу",
+        "өкпе",
+        "бронхиола",
+        "оттегінің диффузиясы",
+        "көмірқышқыл газының диффузиясы",
+        "сурфактант",
+        "капилляр",
+        "эритроцит",
+        "гемоглобин",
+        "өкпе артериясы",
+        "өкпе венасы"
+      ]
     }
   ]
 }
