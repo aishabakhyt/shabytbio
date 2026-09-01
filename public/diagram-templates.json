@@ -844,6 +844,122 @@
         "атф-синтетаза",
         "аэробты тыныс алу"
       ]
+    },
+    {
+      "id": "chloroplast_photosynthesis",
+      "name": "Chloroplast & Photosynthesis",
+      "description": "A two-part labeled diagram of the chloroplast: the top half shows the overall structure (outer membrane, inner membrane, stroma, thylakoids, grana); the bottom half is a zoomed cross-section of a thylakoid membrane showing Photosystem II, the electron transport chain, Photosystem I, ATP synthase, and the Calvin cycle taking place in the adjacent stroma. Use for content describing photosynthesis, chloroplast structure, the light-dependent or light-independent reactions, or the Z-scheme — not for whole-leaf anatomy or C3/C4 comparisons, which would need their own template.",
+      "viewBox": "0 0 460 460",
+      "svgBody": "<rect x='0' y='0' width='460' height='240' fill='#fdfcfb'/><rect x='0' y='240' width='460' height='220' fill='#f7fafc'/><line x1='0' y1='240' x2='460' y2='240' stroke='#cbd5e0' stroke-width='1.5' stroke-dasharray='4,3'/><text x='450' y='16' font-size='11' fill='#a08a5c' text-anchor='end'>chloroplast structure</text><text x='450' y='256' font-size='11' fill='#718096' text-anchor='end'>thylakoid membrane (zoomed)</text><ellipse cx='230' cy='120' rx='195' ry='90' fill='#f0fff4' stroke='#2f855a' stroke-width='2.5'/><ellipse cx='230' cy='120' rx='178' ry='78' fill='none' stroke='#38a169' stroke-width='2'/><ellipse cx='150' cy='95' rx='28' ry='7' fill='#38a169' stroke='#22543d' stroke-width='1'/><ellipse cx='150' cy='105' rx='28' ry='7' fill='#38a169' stroke='#22543d' stroke-width='1'/><ellipse cx='150' cy='115' rx='28' ry='7' fill='#38a169' stroke='#22543d' stroke-width='1'/><ellipse cx='150' cy='125' rx='28' ry='7' fill='#38a169' stroke='#22543d' stroke-width='1'/><ellipse cx='300' cy='145' rx='26' ry='6' fill='#38a169' stroke='#22543d' stroke-width='1'/><ellipse cx='300' cy='154' rx='26' ry='6' fill='#38a169' stroke='#22543d' stroke-width='1'/><ellipse cx='300' cy='163' rx='26' ry='6' fill='#38a169' stroke='#22543d' stroke-width='1'/><path d='M178,110 Q240,105 274,148' stroke='#38a169' stroke-width='2' fill='none'/><rect x='40' y='260' width='380' height='40' fill='#c6f6d5'/><rect x='40' y='300' width='380' height='30' fill='#e6ffed' stroke='#38a169' stroke-width='1.5'/><rect x='40' y='330' width='380' height='60' fill='#f0fff4'/><rect x='90' y='302' width='22' height='26' rx='3' fill='#2f855a'/><circle cx='101' cy='275' r='6' fill='#63b3ed' opacity='0.8'/><circle cx='115' cy='268' r='4' fill='#63b3ed' opacity='0.8'/><circle cx='150' cy='315' r='5' fill='#68d391'/><rect x='190' y='302' width='22' height='26' rx='3' fill='#276749'/><circle cx='201' cy='345' r='5' fill='#ecc94b'/><rect x='253' y='308' width='14' height='18' rx='3' fill='#805ad5'/><line x1='260' y1='308' x2='260' y2='290' stroke='#805ad5' stroke-width='3'/><circle cx='260' cy='286' r='7' fill='#805ad5'/><path d='M260,280 L260,345' stroke='#e53e3e' stroke-width='2' stroke-dasharray='2,2' fill='none'/><circle cx='340' cy='360' r='22' fill='none' stroke='#dd6b20' stroke-width='2' stroke-dasharray='4,3'/><path d='M360,345 L366,351 L355,355 Z' fill='#dd6b20'/>",
+      "anchors": [
+        {
+          "id": "outer_membrane",
+          "x": 415,
+          "y": 120,
+          "side": "right",
+          "hint": "the smooth outer membrane of the chloroplast, permeable to small molecules"
+        },
+        {
+          "id": "inner_membrane",
+          "x": 52,
+          "y": 120,
+          "side": "left",
+          "hint": "the inner membrane, selectively permeable, encloses the stroma"
+        },
+        {
+          "id": "stroma",
+          "x": 230,
+          "y": 170,
+          "side": "left",
+          "hint": "the fluid interior of the chloroplast, where the Calvin cycle (light-independent reactions) takes place; also contains chloroplast DNA"
+        },
+        {
+          "id": "thylakoid",
+          "x": 150,
+          "y": 95,
+          "side": "left",
+          "hint": "a flattened, membrane-bound sac where the light-dependent reactions take place — the site of Photosystems I and II"
+        },
+        {
+          "id": "granum",
+          "x": 150,
+          "y": 125,
+          "side": "right",
+          "hint": "a stack of thylakoids; stacking increases the membrane surface area available for the light-dependent reactions — the same principle behind mitochondrial cristae"
+        },
+        {
+          "id": "electron_transport_chain",
+          "x": 150,
+          "y": 315,
+          "side": "left",
+          "hint": "carriers in the thylakoid membrane pass the energised electrons along, pumping H+ ions from the stroma into the thylakoid lumen as they go"
+        },
+        {
+          "id": "atp_synthase",
+          "x": 260,
+          "y": 286,
+          "side": "left",
+          "hint": "H+ ions flow back through it, down their gradient, from the thylakoid lumen into the stroma — this flow (chemiosmosis) drives ATP synthesis, just as in a mitochondrion"
+        },
+        {
+          "id": "photosystem_ii",
+          "x": 101,
+          "y": 315,
+          "side": "right",
+          "hint": "splits water (photolysis), releasing oxygen as a byproduct and feeding energised electrons into the electron transport chain"
+        },
+        {
+          "id": "photosystem_i",
+          "x": 201,
+          "y": 315,
+          "side": "right",
+          "hint": "re-energises the electrons using more light energy, then passes them on to reduce NADP+ to NADPH"
+        },
+        {
+          "id": "calvin_cycle",
+          "x": 340,
+          "y": 360,
+          "side": "right",
+          "hint": "in the stroma, the ATP and NADPH made by the light-dependent reactions are used to fix CO2 into organic molecules (G3P), the first step toward making glucose"
+        }
+      ],
+      "keywords": [
+        "chloroplast",
+        "photosynthesis",
+        "thylakoid",
+        "granum",
+        "grana",
+        "stroma",
+        "photosystem",
+        "photosystem i",
+        "photosystem ii",
+        "calvin cycle",
+        "light-dependent reactions",
+        "light-independent reactions",
+        "light reactions",
+        "dark reactions",
+        "z-scheme",
+        "photolysis",
+        "nadph",
+        "хлоропласт",
+        "фотосинтез",
+        "тилакоид",
+        "грана",
+        "строма",
+        "фотосистема",
+        "цикл кальвина",
+        "световая фаза",
+        "темновая фаза",
+        "хлоропласт",
+        "фотосинтез",
+        "тилакоид",
+        "грана",
+        "строма",
+        "фотожүйе",
+        "кальвин циклі",
+        "жарық фазасы",
+        "қараңғы фаза"
+      ]
     }
   ]
 }
