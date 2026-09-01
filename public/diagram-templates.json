@@ -732,6 +732,118 @@
         "жүрек циклі",
         "экг"
       ]
+    },
+    {
+      "id": "mitochondrion_respiration",
+      "name": "Mitochondrion & Aerobic Respiration",
+      "description": "A two-part labeled diagram of the mitochondrion: the top half shows the overall structure (outer membrane, intermembrane space, inner membrane, cristae, matrix) with the matrix-based reactions — pyruvate oxidation and the Krebs cycle; the bottom half is a zoomed cross-section of the inner membrane showing the electron transport chain, ATP synthase, the H+ gradient, and oxygen as the final electron acceptor. Use for content describing aerobic respiration, mitochondrial structure, oxidative phosphorylation, or chemiosmosis — not for anaerobic respiration/fermentation, which happens outside the mitochondrion and isn't shown here.",
+      "viewBox": "0 0 460 560",
+      "svgBody": "<defs><marker id='mito-arrow-red' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='7' markerHeight='7' markerUnits='userSpaceOnUse' orient='auto-start-reverse'><path d='M0,0 L10,5 L0,10 z' fill='#9b2c2c'/></marker><marker id='mito-arrow-blue' viewBox='0 0 10 10' refX='8' refY='5' markerWidth='7' markerHeight='7' markerUnits='userSpaceOnUse' orient='auto-start-reverse'><path d='M0,0 L10,5 L0,10 z' fill='#3182ce'/></marker></defs><rect x='0' y='0' width='460' height='280' fill='#fdfcfb'/><rect x='0' y='280' width='460' height='280' fill='#f7fafc'/><line x1='0' y1='280' x2='460' y2='280' stroke='#cbd5e0' stroke-width='1.5' stroke-dasharray='4,3'/><text x='450' y='16' font-size='11' fill='#a08a5c' text-anchor='end'>mitochondrion structure</text><text x='450' y='296' font-size='11' fill='#718096' text-anchor='end'>inner membrane (zoomed)</text><ellipse cx='230' cy='140' rx='195' ry='100' fill='#e6fffa' stroke='#4a5568' stroke-width='2.5'/><path d='M400,140 Q395,90 350,70 Q330,100 310,75 Q290,55 230,50 Q210,80 190,55 Q140,58 110,80 Q95,105 60,110 Q65,150 60,170 Q95,175 110,200 Q140,222 190,225 Q210,200 230,228 Q290,225 310,205 Q330,180 350,210 Q395,190 400,140 Z' fill='#fff5e6' stroke='#ed8936' stroke-width='2.5'/><circle cx='230' cy='140' r='30' fill='none' stroke='#38a169' stroke-width='2' stroke-dasharray='4,3'/><path d='M256,118 L264,126 L251,131 Z' fill='#38a169'/><path d='M50,140 L90,140' stroke='#9b2c2c' stroke-width='2.5' fill='none' marker-end='url(#mito-arrow-red)'/><rect x='40' y='310' width='380' height='100' fill='#fff5e6'/><rect x='40' y='410' width='380' height='30' fill='#fff0d6' stroke='#ed8936' stroke-width='1.5'/><rect x='40' y='440' width='380' height='40' fill='#e6fffa'/><rect x='150' y='412' width='14' height='26' rx='3' fill='#3182ce'/><rect x='190' y='412' width='14' height='26' rx='3' fill='#2b6cb0'/><rect x='230' y='412' width='14' height='26' rx='3' fill='#2c5282'/><rect x='270' y='412' width='14' height='26' rx='3' fill='#1a365d'/><rect x='293' y='420' width='14' height='18' rx='3' fill='#805ad5'/><line x1='300' y1='420' x2='300' y2='400' stroke='#805ad5' stroke-width='3'/><circle cx='300' cy='396' r='8' fill='#805ad5'/><path d='M277,395 L277,410' stroke='#3182ce' stroke-width='2' fill='none' marker-end='url(#mito-arrow-blue)'/><path d='M277,448 Q282,458 277,463 Q272,458 277,448 Z' fill='#63b3ed'/><circle cx='160' cy='460' r='3' fill='#e53e3e'/><circle cx='200' cy='465' r='3' fill='#e53e3e'/><circle cx='240' cy='458' r='3' fill='#e53e3e'/><path d='M300,455 L300,405' stroke='#e53e3e' stroke-width='2' stroke-dasharray='2,2' fill='none'/>",
+      "anchors": [
+        {
+          "id": "outer_membrane",
+          "x": 415,
+          "y": 140,
+          "side": "right",
+          "hint": "the smooth outer membrane, permeable to small molecules like pyruvate — marks the boundary of the mitochondrion"
+        },
+        {
+          "id": "intermembrane_space",
+          "x": 45,
+          "y": 140,
+          "side": "left",
+          "hint": "the space between the outer and inner membranes; H+ ions pumped here by the electron transport chain build up, creating the concentration gradient that drives ATP synthase"
+        },
+        {
+          "id": "inner_membrane",
+          "x": 350,
+          "y": 72,
+          "side": "right",
+          "hint": "the inner membrane is impermeable to H+ ions, forcing them to flow back into the matrix only through ATP synthase — this is what makes the H+ gradient useful rather than just leaking away"
+        },
+        {
+          "id": "cristae",
+          "x": 110,
+          "y": 60,
+          "side": "left",
+          "hint": "the many folds of the inner membrane; folding dramatically increases its surface area, fitting far more electron transport chain complexes and ATP synthase into the same space"
+        },
+        {
+          "id": "matrix",
+          "x": 230,
+          "y": 200,
+          "side": "left",
+          "hint": "the fluid interior of the mitochondrion, where pyruvate oxidation (the link reaction) and the Krebs cycle take place"
+        },
+        {
+          "id": "pyruvate_oxidation",
+          "x": 75,
+          "y": 140,
+          "side": "left",
+          "hint": "pyruvate (made by glycolysis in the cytoplasm) enters the matrix and is converted to acetyl-CoA, releasing CO2 and reducing NAD+ to NADH before the Krebs cycle even begins"
+        },
+        {
+          "id": "krebs_cycle",
+          "x": 230,
+          "y": 140,
+          "side": "right",
+          "hint": "a cyclic series of reactions in the matrix that breaks down acetyl-CoA, releasing CO2 and generating reduced carriers (NADH, FADH2) plus a small amount of ATP directly — most of the energy payoff comes later, at the electron transport chain"
+        },
+        {
+          "id": "electron_transport_chain",
+          "x": 190,
+          "y": 425,
+          "side": "left",
+          "hint": "protein complexes embedded in the inner membrane; NADH and FADH2 donate their electrons here, and the energy released is used to pump H+ ions from the matrix into the intermembrane space"
+        },
+        {
+          "id": "atp_synthase",
+          "x": 300,
+          "y": 396,
+          "side": "right",
+          "hint": "an enzyme in the inner membrane that H+ ions flow back through, down their concentration gradient, from the intermembrane space into the matrix — this flow (chemiosmosis) drives the synthesis of ATP"
+        },
+        {
+          "id": "oxygen_final_acceptor",
+          "x": 277,
+          "y": 405,
+          "side": "right",
+          "hint": "oxygen is the final electron acceptor at the end of the electron transport chain, combining with electrons and H+ to form water — without oxygen, the whole chain backs up and stops, which is why aerobic respiration needs it"
+        }
+      ],
+      "keywords": [
+        "mitochondrion",
+        "mitochondria",
+        "cristae",
+        "matrix",
+        "krebs cycle",
+        "citric acid cycle",
+        "pyruvate oxidation",
+        "link reaction",
+        "electron transport chain",
+        "oxidative phosphorylation",
+        "chemiosmosis",
+        "atp synthase",
+        "aerobic respiration",
+        "intermembrane space",
+        "proton gradient",
+        "митохондрия",
+        "кристы",
+        "матрикс",
+        "цикл кребса",
+        "электрон-транспортная цепь",
+        "окислительное фосфорилирование",
+        "атф-синтаза",
+        "аэробное дыхание",
+        "митохондрия",
+        "кристалар",
+        "матрикс",
+        "кребс циклі",
+        "электрон тасымалдау тізбегі",
+        "тотыға фосфорлану",
+        "атф-синтетаза",
+        "аэробты тыныс алу"
+      ]
     }
   ]
 }
