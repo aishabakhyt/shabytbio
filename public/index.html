@@ -994,6 +994,15 @@
       flex: 1;
     }
     .diagram-lightbox-canvas svg { max-width: none; max-height: none; }
+    /* Bug fix: the .diagram-lightbox-overlay rule below sets display:flex
+       unconditionally. An author CSS rule with normal importance always beats
+       the user-agent stylesheet's [hidden]{display:none} regardless of selector
+       specificity, so in some browser engines this made the lightbox render as a
+       full-page dark overlay (intercepting every click on the page) even while
+       hidden="" was still set, before it was ever opened. Verified with Playwright:
+       without this rule the overlay was visibly present and blocking clicks on page
+       load; with it, it only appears once .hidden is cleared by openDiagramLightbox(). */
+    .diagram-lightbox-overlay[hidden] { display: none; }
 
     /* ── Dedicated dashboard page ── */
     .dashboard-page-back {
