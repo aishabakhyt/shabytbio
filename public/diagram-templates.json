@@ -1199,6 +1199,147 @@
         "кіші қан айналым шеңбері",
         "үлкен қан айналым шеңбері"
       ]
+    },
+    {
+      "id": "digestive_tract",
+      "name": "Digestive System — Structure & Function",
+      "description": "A labeled schematic of the human digestive system: the continuous alimentary canal (mouth, esophagus, stomach, duodenum, small intestine, large intestine, rectum/anus) drawn as one tube, plus the three accessory organs that secrete into it but food never passes through (liver, gallbladder, pancreas), drawn in a visually distinct color to show they aren't part of the path. Use for content describing the digestive system's organs, the path food takes, or where specific digestive secretions (bile, pancreatic enzymes, stomach acid) are made and released — not for cellular-level digestion/absorption mechanisms, which would need their own template.",
+      "viewBox": "0 0 460 700",
+      "svgBody": "<rect x='0' y='0' width='460' height='700' fill='#fdfcfb'/><ellipse cx='230' cy='30' rx='35' ry='14' fill='#fed7ba' stroke='#c05621' stroke-width='2'/><rect x='215' y='44' width='30' height='100' rx='10' fill='#fed7ba' stroke='#c05621' stroke-width='2'/><path d='M200,144 C160,150 138,190 150,225 C158,255 202,268 237,257 C267,248 278,218 266,193 C258,177 240,160 230,144 Z' fill='#fed7ba' stroke='#c05621' stroke-width='2'/><path d='M270,108 C322,92 392,100 402,140 C408,167 380,188 340,192 C300,196 268,176 263,150 Z' fill='#e2725b' stroke='#9b2c2c' stroke-width='2'/><ellipse cx='335' cy='207' rx='12' ry='19' fill='#68d391' stroke='#2f855a' stroke-width='2'/><path d='M330,225 C315,245 300,255 288,258' stroke='#2f855a' stroke-width='3' fill='none' stroke-dasharray='2,2'/><path d='M210,270 C242,258 292,261 317,275 C332,283 326,299 300,302 C268,305 228,300 208,291 Z' fill='#f6e05e' stroke='#b7791f' stroke-width='2'/><path d='M252,256 C270,266 284,278 290,296' stroke='#c05621' stroke-width='15' fill='none' stroke-linecap='round'/><path d='M140,320 C180,300 200,340 240,320 C280,300 300,340 320,320' stroke='#feb2b2' stroke-width='13' fill='none' stroke-linecap='round'/><path d='M140,350 C180,370 200,330 240,350 C280,370 300,330 320,350' stroke='#feb2b2' stroke-width='13' fill='none' stroke-linecap='round'/><path d='M140,380 C180,360 200,400 240,380 C280,360 300,400 320,380' stroke='#feb2b2' stroke-width='13' fill='none' stroke-linecap='round'/><path d='M140,410 C180,430 200,390 240,410 C280,430 300,390 320,410' stroke='#feb2b2' stroke-width='13' fill='none' stroke-linecap='round'/><path d='M150,440 C185,422 205,458 240,440 C275,422 295,458 315,440' stroke='#feb2b2' stroke-width='13' fill='none' stroke-linecap='round'/><path d='M362,480 L362,296 L108,296 L108,542 C108,572 140,584 172,572 L214,553' stroke='#fbd38d' stroke-width='22' fill='none' stroke-linecap='round'/><path d='M212,568 C222,600 222,632 230,662' stroke='#fed7ba' stroke-width='20' fill='none' stroke-linecap='round'/><text x='450' y='16' font-size='11' fill='#a08a5c' text-anchor='end'>digestive system</text>",
+      "anchors": [
+        {
+          "id": "mouth",
+          "x": 230,
+          "y": 30,
+          "side": "right",
+          "hint": "where mechanical digestion (chewing) begins and salivary amylase starts breaking starch down into simpler sugars"
+        },
+        {
+          "id": "esophagus",
+          "x": 230,
+          "y": 90,
+          "side": "left",
+          "hint": "a muscular tube that uses peristalsis — rhythmic waves of muscle contraction — to push food down into the stomach"
+        },
+        {
+          "id": "stomach",
+          "x": 200,
+          "y": 200,
+          "side": "left",
+          "hint": "churns food and secretes hydrochloric acid and the enzyme pepsin, beginning the chemical digestion of proteins"
+        },
+        {
+          "id": "liver",
+          "x": 340,
+          "y": 145,
+          "side": "right",
+          "hint": "produces bile, which is stored in the gallbladder and later released into the duodenum to emulsify fats"
+        },
+        {
+          "id": "gallbladder",
+          "x": 335,
+          "y": 207,
+          "side": "right",
+          "hint": "stores and concentrates bile made by the liver, releasing it into the duodenum when fatty food arrives"
+        },
+        {
+          "id": "pancreas",
+          "x": 265,
+          "y": 282,
+          "side": "left",
+          "hint": "secretes digestive enzymes for carbohydrates, proteins, and fats, plus bicarbonate that neutralises stomach acid, into the duodenum"
+        },
+        {
+          "id": "duodenum",
+          "x": 275,
+          "y": 270,
+          "side": "right",
+          "hint": "the first section of the small intestine, where bile from the gallbladder and enzymes from the pancreas mix with food"
+        },
+        {
+          "id": "small_intestine",
+          "x": 230,
+          "y": 380,
+          "side": "left",
+          "hint": "the jejunum and ileum, where most chemical digestion finishes and nutrients are absorbed into the blood through finger-like villi"
+        },
+        {
+          "id": "large_intestine",
+          "x": 362,
+          "y": 390,
+          "side": "right",
+          "hint": "absorbs water and remaining minerals from undigested matter and hosts beneficial gut bacteria, compacting the rest into feces"
+        },
+        {
+          "id": "rectum_anus",
+          "x": 222,
+          "y": 615,
+          "side": "left",
+          "hint": "the rectum stores feces until the anus releases it from the body during defecation"
+        }
+      ],
+      "keywords": [
+        "digestive system",
+        "digestive tract",
+        "alimentary canal",
+        "mouth",
+        "esophagus",
+        "oesophagus",
+        "stomach",
+        "liver",
+        "gallbladder",
+        "bile",
+        "pancreas",
+        "pancreatic enzymes",
+        "duodenum",
+        "small intestine",
+        "jejunum",
+        "ileum",
+        "villi",
+        "large intestine",
+        "colon",
+        "peristalsis",
+        "hydrochloric acid",
+        "pepsin",
+        "amylase",
+        "rectum",
+        "anus",
+        "digestion",
+        "absorption of nutrients",
+        "пищеварительная система",
+        "пищеварительный тракт",
+        "пищевод",
+        "желудок",
+        "печень",
+        "желчный пузырь",
+        "желчь",
+        "поджелудочная железа",
+        "двенадцатиперстная кишка",
+        "тонкий кишечник",
+        "тощая кишка",
+        "подвздошная кишка",
+        "ворсинки",
+        "толстый кишечник",
+        "перистальтика",
+        "соляная кислота",
+        "пепсин",
+        "амилаза",
+        "прямая кишка",
+        "ас қорыту жүйесі",
+        "ас қорыту жолы",
+        "ауыз қуысы",
+        "өңеш",
+        "асқазан",
+        "бауыр",
+        "өт қабы",
+        "өт",
+        "ұйқы безі",
+        "он екі елі ішек",
+        "жіңішке ішек",
+        "тоқ ішек",
+        "түкшелер",
+        "тік ішек"
+      ]
     }
   ]
 }
