@@ -960,6 +960,121 @@
         "жарық фазасы",
         "қараңғы фаза"
       ]
+    },
+    {
+      "id": "sarcomere_contraction",
+      "name": "Sarcomere & Sliding Filament Theory",
+      "description": "A two-part labeled diagram of the sliding filament theory of muscle contraction: the top half shows a single sarcomere's band structure (Z-lines, I-band, A-band, H-zone, M-line); the bottom half is a zoomed view of the molecular cross-bridge cycle — actin and myosin filaments, the troponin-tropomyosin regulatory complex, calcium ions, and the myosin head's power stroke. Use for content describing muscle contraction, the sliding filament theory, sarcomere structure, or the actin-myosin cross-bridge cycle — not for whole-muscle or skeletal anatomy, which would need its own template.",
+      "viewBox": "0 0 460 560",
+      "svgBody": "<rect x='0' y='0' width='460' height='260' fill='#fdfcfb'/><rect x='0' y='260' width='460' height='300' fill='#f7fafc'/><line x1='0' y1='260' x2='460' y2='260' stroke='#cbd5e0' stroke-width='1.5' stroke-dasharray='4,3'/><text x='450' y='16' font-size='11' fill='#a08a5c' text-anchor='end'>sarcomere (relaxed)</text><text x='450' y='276' font-size='11' fill='#718096' text-anchor='end'>cross-bridge cycle (zoomed)</text><rect x='60' y='30' width='90' height='200' fill='#fed7e2'/><rect x='310' y='30' width='90' height='200' fill='#fed7e2'/><rect x='150' y='30' width='160' height='200' fill='#ebf8ff'/><line x1='190' y1='30' x2='190' y2='230' stroke='#a0aec0' stroke-width='1' stroke-dasharray='3,2'/><line x1='270' y1='30' x2='270' y2='230' stroke='#a0aec0' stroke-width='1' stroke-dasharray='3,2'/><line x1='230' y1='30' x2='230' y2='230' stroke='#4a5568' stroke-width='2'/><line x1='60' y1='25' x2='60' y2='235' stroke='#2d3748' stroke-width='5'/><line x1='400' y1='25' x2='400' y2='235' stroke='#2d3748' stroke-width='5'/><line x1='60' y1='90' x2='190' y2='90' stroke='#e53e3e' stroke-width='2'/><line x1='60' y1='130' x2='190' y2='130' stroke='#e53e3e' stroke-width='2'/><line x1='60' y1='170' x2='190' y2='170' stroke='#e53e3e' stroke-width='2'/><line x1='270' y1='90' x2='400' y2='90' stroke='#e53e3e' stroke-width='2'/><line x1='270' y1='130' x2='400' y2='130' stroke='#e53e3e' stroke-width='2'/><line x1='270' y1='170' x2='400' y2='170' stroke='#e53e3e' stroke-width='2'/><line x1='150' y1='130' x2='310' y2='130' stroke='#805ad5' stroke-width='6'/><path d='M160,130 l-6,-8 M180,130 l-6,-8 M280,130 l6,-8 M300,130 l6,-8' stroke='#553c9a' stroke-width='2' fill='none'/><circle cx='110' cy='300' r='14' fill='#feb2b2' stroke='#c53030' stroke-width='1.5'/><circle cx='138' cy='300' r='14' fill='#feb2b2' stroke='#c53030' stroke-width='1.5'/><circle cx='166' cy='300' r='14' fill='#feb2b2' stroke='#c53030' stroke-width='1.5'/><circle cx='194' cy='300' r='14' fill='#feb2b2' stroke='#c53030' stroke-width='1.5'/><circle cx='222' cy='300' r='14' fill='#feb2b2' stroke='#c53030' stroke-width='1.5'/><circle cx='250' cy='300' r='14' fill='#feb2b2' stroke='#c53030' stroke-width='1.5'/><circle cx='278' cy='300' r='14' fill='#feb2b2' stroke='#c53030' stroke-width='1.5'/><circle cx='306' cy='300' r='14' fill='#feb2b2' stroke='#c53030' stroke-width='1.5'/><circle cx='334' cy='300' r='14' fill='#feb2b2' stroke='#c53030' stroke-width='1.5'/><circle cx='362' cy='300' r='14' fill='#feb2b2' stroke='#c53030' stroke-width='1.5'/><path d='M100,288 Q160,278 220,288 Q280,298 340,288' stroke='#68d391' stroke-width='3' fill='none'/><path d='M190,282 L200,270 L210,282 Z' fill='#805ad5' stroke='#553c9a' stroke-width='1'/><circle cx='260' cy='340' r='5' fill='#38a169'/><circle cx='280' cy='350' r='5' fill='#38a169'/><rect x='150' y='420' width='160' height='16' rx='6' fill='#805ad5'/><path d='M230,420 L245,380 L260,395 Z' fill='#553c9a' stroke='#44337a' stroke-width='1.5'/><circle cx='200' cy='430' r='6' fill='#ecc94b'/>",
+      "anchors": [
+        {
+          "id": "z_line",
+          "x": 60,
+          "y": 60,
+          "side": "left",
+          "hint": "the boundary of one sarcomere, where actin (thin) filaments are anchored; during contraction, Z-lines are pulled closer together as the sarcomere shortens"
+        },
+        {
+          "id": "i_band",
+          "x": 100,
+          "y": 90,
+          "side": "right",
+          "hint": "contains only thin (actin) filaments, no myosin overlap; the I-band shortens — and can disappear — during contraction as the filaments slide past each other"
+        },
+        {
+          "id": "a_band",
+          "x": 230,
+          "y": 200,
+          "side": "left",
+          "hint": "spans the full length of the thick (myosin) filaments, including where they overlap with actin; the A-band stays a constant length during contraction — key evidence that the filaments themselves don't shorten, they slide"
+        },
+        {
+          "id": "h_zone",
+          "x": 230,
+          "y": 90,
+          "side": "right",
+          "hint": "the central part of the A-band containing only myosin, with no actin overlap; the H-zone narrows and can disappear during contraction as actin filaments slide further in"
+        },
+        {
+          "id": "m_line",
+          "x": 230,
+          "y": 140,
+          "side": "left",
+          "hint": "the very centre of the sarcomere, anchoring the myosin (thick) filaments in place"
+        },
+        {
+          "id": "actin_filament",
+          "x": 138,
+          "y": 300,
+          "side": "left",
+          "hint": "the thin filament, made of actin monomers with binding sites that myosin heads attach to during contraction"
+        },
+        {
+          "id": "troponin_tropomyosin",
+          "x": 194,
+          "y": 288,
+          "side": "right",
+          "hint": "regulatory proteins wound around actin; tropomyosin normally blocks the myosin-binding sites, and troponin changes shape when it binds calcium, moving tropomyosin aside to expose them"
+        },
+        {
+          "id": "calcium_ions",
+          "x": 260,
+          "y": 345,
+          "side": "left",
+          "hint": "released from the sarcoplasmic reticulum when a nerve impulse arrives at the muscle fibre; binds troponin, which triggers contraction by exposing the myosin-binding sites"
+        },
+        {
+          "id": "myosin_filament",
+          "x": 180,
+          "y": 428,
+          "side": "right",
+          "hint": "the thick filament, made of myosin molecules with projecting heads that can bind actin and pull it inward"
+        },
+        {
+          "id": "myosin_head_power_stroke",
+          "x": 245,
+          "y": 395,
+          "side": "left",
+          "hint": "the myosin head binds actin, pivots — the 'power stroke' — pulling the actin filament inward, then detaches (using energy from ATP hydrolysis) and re-cocks to repeat the cycle"
+        }
+      ],
+      "keywords": [
+        "sarcomere",
+        "sliding filament",
+        "muscle contraction",
+        "z-line",
+        "z line",
+        "i-band",
+        "a-band",
+        "h-zone",
+        "m-line",
+        "actin",
+        "myosin",
+        "troponin",
+        "tropomyosin",
+        "cross-bridge",
+        "cross bridge",
+        "power stroke",
+        "myosin head",
+        "thick filament",
+        "thin filament",
+        "саркомер",
+        "скользящие нити",
+        "сокращение мышц",
+        "актин",
+        "миозин",
+        "тропонин",
+        "тропомиозин",
+        "поперечный мостик",
+        "саркомер",
+        "жіңішке жіп теориясы",
+        "бұлшықет жиырылуы",
+        "актин",
+        "миозин",
+        "тропонин",
+        "тропомиозин"
+      ]
     }
   ]
 }
