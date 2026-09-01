@@ -615,6 +615,123 @@
         "өкпе артериясы",
         "өкпе венасы"
       ]
+    },
+    {
+      "id": "cardiac_conduction",
+      "name": "Cardiac Conduction System & ECG",
+      "description": "A labeled diagram of the heart's electrical conduction system (SA node -> atria -> AV node -> bundle of His -> left/right bundle branches -> Purkinje fibres) paired with the ECG trace it produces (P wave, QRS complex, T wave), so each electrical event lines up with its ECG signature. Use for content describing heart conduction, the cardiac cycle's electrical control, pacemaker cells, or reading/interpreting an ECG trace — not for the heart's mechanical/valve anatomy or blood-flow pathway, which would need its own template.",
+      "viewBox": "0 0 460 580",
+      "svgBody": "<rect x='0' y='0' width='460' height='320' fill='#fdfcfb'/><rect x='0' y='320' width='460' height='260' fill='#f7fafc'/><line x1='0' y1='320' x2='460' y2='320' stroke='#cbd5e0' stroke-width='1.5' stroke-dasharray='4,3'/><text x='450' y='16' font-size='11' fill='#a08a5c' text-anchor='end'>conduction pathway</text><text x='450' y='336' font-size='11' fill='#718096' text-anchor='end'>ECG trace (one heartbeat)</text><path d='M100,60 Q100,30 140,30 L320,30 Q360,30 360,70 L360,180 Q360,280 230,300 Q100,280 100,180 Z' fill='#fff5f5' stroke='#c53030' stroke-width='2.5'/><line x1='230' y1='40' x2='230' y2='290' stroke='#c53030' stroke-width='3'/><line x1='105' y1='170' x2='355' y2='170' stroke='#c53030' stroke-width='2' stroke-dasharray='3,2'/><text x='150' y='55' font-size='11' fill='#c53030' text-anchor='middle' opacity='0.6'>RA</text><text x='310' y='55' font-size='11' fill='#c53030' text-anchor='middle' opacity='0.6'>LA</text><text x='150' y='260' font-size='11' fill='#c53030' text-anchor='middle' opacity='0.6'>RV</text><text x='310' y='260' font-size='11' fill='#c53030' text-anchor='middle' opacity='0.6'>LV</text><circle cx='130' cy='75' r='9' fill='#ecc94b' stroke='#975a16' stroke-width='2'/><path d='M138,80 Q180,60 230,65 Q280,60 320,80' stroke='#ecc94b' stroke-width='2' fill='none' opacity='0.8'/><path d='M135,90 Q180,110 230,100 Q280,105 315,95' stroke='#ecc94b' stroke-width='2' fill='none' opacity='0.6'/><circle cx='230' cy='165' r='8' fill='#ed8936' stroke='#9c4221' stroke-width='2'/><line x1='230' y1='173' x2='230' y2='210' stroke='#ed8936' stroke-width='3'/><path d='M230,210 Q190,225 160,240' stroke='#ed8936' stroke-width='2.5' fill='none'/><path d='M230,210 Q270,225 300,240' stroke='#ed8936' stroke-width='2.5' fill='none'/><path d='M160,240 Q150,260 140,280 M160,240 Q165,265 155,285 M160,240 Q175,255 170,280' stroke='#f6ad55' stroke-width='1.5' fill='none'/><path d='M300,240 Q310,260 320,280 M300,240 Q295,265 305,285 M300,240 Q285,255 290,280' stroke='#f6ad55' stroke-width='1.5' fill='none'/><path d='M40,440 L85,440 Q100,440 105,428 Q110,440 125,440 L138,440 L145,455 L155,395 L165,450 L178,440 L210,440 Q225,440 235,422 Q245,440 260,440 L420,440' stroke='#2d3748' stroke-width='2' fill='none' stroke-linejoin='round'/>",
+      "anchors": [
+        {
+          "id": "sa_node",
+          "x": 130,
+          "y": 75,
+          "side": "left",
+          "hint": "the sinoatrial (SA) node in the wall of the right atrium — the heart's natural pacemaker; it spontaneously generates the electrical impulse that starts every normal heartbeat"
+        },
+        {
+          "id": "atrial_spread",
+          "x": 280,
+          "y": 90,
+          "side": "right",
+          "hint": "the impulse spreads across both atria, triggering them to contract together and push blood into the ventricles"
+        },
+        {
+          "id": "av_node",
+          "x": 230,
+          "y": 165,
+          "side": "left",
+          "hint": "the atrioventricular (AV) node, at the junction between atria and ventricles; it briefly delays the impulse, giving the atria time to finish emptying into the ventricles before ventricular contraction begins"
+        },
+        {
+          "id": "bundle_of_his",
+          "x": 230,
+          "y": 190,
+          "side": "right",
+          "hint": "carries the delayed impulse from the AV node down through the fibrous tissue separating atria and ventricles, into the septum between the two ventricles"
+        },
+        {
+          "id": "right_bundle_branch",
+          "x": 160,
+          "y": 240,
+          "side": "left",
+          "hint": "carries the impulse down the septum to the right ventricle"
+        },
+        {
+          "id": "left_bundle_branch",
+          "x": 300,
+          "y": 240,
+          "side": "right",
+          "hint": "carries the impulse down the septum to the left ventricle"
+        },
+        {
+          "id": "purkinje_fibers",
+          "x": 155,
+          "y": 270,
+          "side": "left",
+          "hint": "fine fibres spreading rapidly through the ventricle walls from the apex upward, so both ventricles contract together, forcefully and almost simultaneously"
+        },
+        {
+          "id": "qrs_complex",
+          "x": 155,
+          "y": 420,
+          "side": "left",
+          "hint": "on an ECG, the QRS complex corresponds to ventricular depolarisation — the rapid spread through the bundle of His and Purkinje fibres that triggers ventricular contraction; it's sharp and brief because ventricular spread is so fast"
+        },
+        {
+          "id": "p_wave",
+          "x": 105,
+          "y": 428,
+          "side": "right",
+          "hint": "on an ECG, the P wave corresponds to atrial depolarisation — the electrical spread across the atria that triggers atrial contraction"
+        },
+        {
+          "id": "t_wave",
+          "x": 235,
+          "y": 422,
+          "side": "right",
+          "hint": "on an ECG, the T wave corresponds to ventricular repolarisation — the ventricles' electrical 'reset' as they relax after contracting"
+        }
+      ],
+      "keywords": [
+        "sinoatrial node",
+        "sa node",
+        "pacemaker",
+        "atrioventricular node",
+        "av node",
+        "bundle of his",
+        "purkinje fibres",
+        "purkinje fibers",
+        "cardiac conduction",
+        "ecg",
+        "electrocardiogram",
+        "p wave",
+        "qrs complex",
+        "t wave",
+        "depolarisation",
+        "depolarization",
+        "repolarisation",
+        "repolarization",
+        "cardiac cycle",
+        "синоатриальный узел",
+        "синусовый узел",
+        "водитель ритма",
+        "атриовентрикулярный узел",
+        "пучок гиса",
+        "волокна пуркинье",
+        "сердечный цикл",
+        "экг",
+        "электрокардиограмма",
+        "синоатриальлық түйін",
+        "синустық түйін",
+        "жүрек ырғағының қозғаушысы",
+        "атриовентрикулярлық түйін",
+        "гис шоғыры",
+        "пуркинье талшықтары",
+        "жүрек циклі",
+        "экг"
+      ]
     }
   ]
 }
