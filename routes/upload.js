@@ -24,6 +24,21 @@ function requireAuth(req, res, next) {
 
 router.use(requireAuth);
 
+// The quality_warnings flag (services/validateStudyPack.js) is internal
+// QA — raw rule-violation text meant for debugging the prompt, not for a
+// student to stumble into on their own upload history. Gated to a single
+// email (overridable via DEV_EMAIL) rather than any real role/permission
+// system, since right now there's exactly one developer using this.
+const DEV_EMAIL = (process.env.DEV_EMAIL || 'aishabakhyt08@gmail.com').toLowerCase();
+function isDevUser(req) {
+  return !!(req.session.email && req.session.email.toLowerCase() === DEV_EMAIL);
+}
+function stripQualityWarnings(item) {
+  if (!item) return item;
+  const { quality_warnings, ...rest } = item;
+  return rest;
+}
+
 // Lets the frontend show a real "the server is busy, here's roughly how
 // long" message instead of a dead spinner during a burst (e.g. a whole
 // class uploading around the same time) — polled while a request is
@@ -171,7 +186,8 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 // ── History (each user only ever sees their own) ───────────
 router.get('/history', async (req, res) => {
   try {
-    res.json(await listUploads(req.session.userId));
+    const items = await listUploads(req.session.userId);
+    res.json(isDevUser(req) ? items : items.map(stripQualityWarnings));
   } catch (err) {
     res.status(500).json({ error: `Failed to load history: ${err.message}` });
   }
@@ -181,7 +197,7 @@ router.get('/history/:id', async (req, res) => {
   try {
     const record = await getUpload(Number(req.params.id), req.session.userId);
     if (!record) return res.status(404).json({ error: 'Upload not found.' });
-    res.json(record);
+    res.json(isDevUser(req) ? record : stripQualityWarnings(record));
   } catch (err) {
     res.status(500).json({ error: `Failed to load upload: ${err.message}` });
   }

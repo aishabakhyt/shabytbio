@@ -48,6 +48,11 @@ router.post('/google', async (req, res) => {
     return res.status(500).json({ error: `Failed to save account: ${err.message}` });
   }
   req.session.userId = user.id;
+  // Cached here (not just looked up by id later) so routes that need to
+  // gate something by "is this me, the developer" — e.g. the quality-
+  // warning flag on the history list — can check it for free on every
+  // request instead of adding a DB lookup just for that check.
+  req.session.email = user.email;
 
   res.json(serializeUser(user));
 });
