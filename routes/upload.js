@@ -2,10 +2,10 @@ const express = require('express');
 const multer = require('multer');
 const pdfParse = require('pdf-parse');
 const { parseOffice } = require('officeparser');
-const { restructureWithClaude } = require('../services/claude');
+const { restructureWithClaude, translateSelfTest } = require('../services/claude');
 const { saveUpload, listUploads, getUpload, deleteUpload, updateUploadResult } = require('../services/db');
 const { getUserById } = require('../services/users');
-const { seedFromSelfTest, deleteByUploadId } = require('../services/mastery');
+const { seedFromSelfTest, deleteByUploadId, reconcileTranslatedSelfTest } = require('../services/mastery');
 const { getCached, setCached } = require('../services/resultCache');
 const { searchVideos } = require('../services/youtube');
 const { validateStudyPack } = require('../services/validateStudyPack');
@@ -271,6 +271,36 @@ router.post('/history/:id/regenerate-language', async (req, res) => {
     return res.status(500).json({ error: `Claude call failed: ${err.message}` });
   }
 
+  // The old self_test questions were in a different language, so
+  // dedup-by-text (see services/mastery.js) can't match them to a freshly
+  // generated set -- without SOME reconciliation, a language switch would
+  // leave the old-language review items orphaned forever alongside a
+  // brand-new set, silently doubling the review queue for this upload.
+  //
+  // Preferred path: translate the OLD self_test 1:1 (same count/order --
+  // see translateSelfTest in services/claude.js) and update this upload's
+  // existing mastery records' text in place (reconcileTranslatedSelfTest in
+  // services/mastery.js), so a student's spaced-repetition progress
+  // (interval/easeFactor/repetitions/nextReviewAt) survives the switch
+  // instead of resetting. This used to always reset -- see the fallback
+  // below, kept for when translation/reconciliation can't be done safely.
+  const oldSelfTest = Array.isArray(record.result && record.result.self_test) ? record.result.self_test : [];
+  let reconciled = false;
+  if (oldSelfTest.length > 0) {
+    try {
+      const translated = await translateSelfTest(oldSelfTest, language);
+      reconciled = await reconcileTranslatedSelfTest(req.session.userId, uploadId, translated);
+      if (reconciled) {
+        // Use the translated OLD set (not the fresh restructuring call's own
+        // new self_test) so what's saved matches what the mastery records
+        // now say, and what the student sees matches what's being tracked.
+        result.self_test = translated;
+      }
+    } catch (err) {
+      console.warn(`Failed to translate self_test in place for upload ${uploadId} (falling back to reseed):`, err.message);
+    }
+  }
+
   let updated;
   try {
     updated = await updateUploadResult(uploadId, req.session.userId, { result, qualityWarnings, language, school, grade });
@@ -278,25 +308,25 @@ router.post('/history/:id/regenerate-language', async (req, res) => {
     return res.status(500).json({ error: `Failed to save regenerated result: ${err.message}` });
   }
 
-  // The old self_test questions were a different language — dedup-by-text
-  // (see services/mastery.js) won't match them to the new ones, so without
-  // this a language switch would leave the old-language review items
-  // orphaned forever alongside a brand-new set, silently doubling the
-  // review queue for this upload. Regenerating replaces them cleanly:
-  // delete this upload's old items, then reseed from the new self_test.
-  // (Trade-off, made deliberately rather than silently: any spaced-repetition
-  // progress on the old-language questions resets — there's no way to carry
-  // it over when the question text itself has changed language.)
-  try {
-    await deleteByUploadId(req.session.userId, uploadId);
-    await seedFromSelfTest({
-      userId: req.session.userId,
-      uploadId,
-      filename: record.filename,
-      selfTest: result.self_test,
-    });
-  } catch (err) {
-    console.error('Failed to reconcile mastery queue after regeneration:', err.message);
+  if (!reconciled) {
+    // Fallback: translation failed, or the mastery doc count for this
+    // upload didn't match the old self_test count 1:1 (e.g. some questions
+    // were deduped against another upload's identical text back when this
+    // one was first seeded) -- reconciling by position wouldn't be safe, so
+    // fall back to the original behavior: delete this upload's old items,
+    // then reseed from the new self_test. Any spaced-repetition progress on
+    // the old-language questions resets in this path, same as before.
+    try {
+      await deleteByUploadId(req.session.userId, uploadId);
+      await seedFromSelfTest({
+        userId: req.session.userId,
+        uploadId,
+        filename: record.filename,
+        selfTest: result.self_test,
+      });
+    } catch (err) {
+      console.error('Failed to reconcile mastery queue after regeneration:', err.message);
+    }
   }
 
   res.json({ id: uploadId, filename: record.filename, result, language, fromCache });

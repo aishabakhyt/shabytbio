@@ -353,6 +353,48 @@ async function deleteTopic(userId, sourceFilename) {
   return { deleted: result.deletedCount };
 }
 
+// Updates an upload's existing mastery items' question/answer text in
+// place, matched by position -- relies on translateSelfTest
+// (services/claude.js) having produced the SAME count and order as the
+// self_test currently on file for this upload. Used by
+// routes/upload.js's /history/:id/regenerate-language so a student's
+// spaced-repetition progress (interval/easeFactor/repetitions/nextReviewAt)
+// survives a language switch instead of resetting via the old
+// delete+reseed behavior (still kept as the fallback -- see below).
+//
+// Sorted by `id` because seedFromSelfTest assigns ids in the same order it
+// iterates the original self_test array, so ascending id order reconstructs
+// that original order reliably.
+//
+// Returns false (does nothing) rather than guessing whenever the counts
+// don't line up 1:1 -- this can legitimately happen if some of this
+// upload's questions were deduped against another upload's identical text
+// back when it was first seeded (see seedFromSelfTest's dedup-by-question
+// comment). Guessing a mapping in that case risks silently attaching the
+// wrong translated text to the wrong tracked item, which is worse than
+// falling back to a full reseed.
+async function reconcileTranslatedSelfTest(userId, uploadId, translatedSelfTest) {
+  if (!Array.isArray(translatedSelfTest) || translatedSelfTest.length === 0) return false;
+  const db = await connectMongo();
+  const col = db.collection('mastery');
+  const existing = await col.find({ userId, uploadId }).sort({ id: 1 }).toArray();
+  if (existing.length !== translatedSelfTest.length) return false;
+
+  const ops = existing.map((doc, i) => ({
+    updateOne: {
+      filter: { id: doc.id, userId },
+      update: {
+        $set: {
+          question: translatedSelfTest[i].question || '',
+          answer: translatedSelfTest[i].answer || '',
+        },
+      },
+    },
+  }));
+  await col.bulkWrite(ops);
+  return true;
+}
+
 // Called when a history entry is deleted — keeps the review queue from
 // accumulating "orphaned" topics with no corresponding upload, which was
 // confusing (a topic showing up in Manage Topics that no longer exists
@@ -422,5 +464,6 @@ async function gradeReview(id, userId, grade) {
 module.exports = {
   seedFromSelfTest, listDue, getStats, getDashboard, gradeReview, getById,
   listTopics, setTopicArchived, renameTopic, setTopicExamDate, deleteTopic, deleteByUploadId,
+  reconcileTranslatedSelfTest,
   VALID_GRADES,
 };

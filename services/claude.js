@@ -222,6 +222,62 @@ async function restructureWithClaude(text, focusInstructions = '', grade = null,
   throw new Error(`Gemini's response was missing required content (${lastIssues.join(', ')}) after ${MAX_ATTEMPTS} attempts — please try again.`);
 }
 
+// Translates an existing self_test array 1:1 into a new language, preserving
+// item count/order exactly -- used by routes/upload.js's
+// /history/:id/regenerate-language instead of letting the main
+// restructuring call above regenerate self_test from scratch, which used to
+// silently reset every student's spaced-repetition progress on that upload
+// (a freshly-generated self_test has no stable count/order to line old and
+// new questions up against -- see services/mastery.js's
+// reconcileTranslatedSelfTest, which depends on this guarantee). Only fires
+// on the relatively rare "switch language" action (the client only shows
+// that button when the record's saved language differs from the student's
+// profile language), so this is a small, deliberately separate extra call,
+// not a per-upload cost increase.
+//
+// The "type" field (recall/application) is NOT sent to Gemini for
+// translation -- it's an enum, not text, and trusting a translation call to
+// copy it through byte-for-byte unchanged is an unnecessary risk. The
+// caller re-attaches each item's original type by position after this
+// returns (see the .map() below).
+async function translateSelfTest(oldSelfTest, language = 'en') {
+  if (!Array.isArray(oldSelfTest) || oldSelfTest.length === 0) return [];
+  const languageName = LANGUAGE_NAMES[language] || 'English';
+
+  const numbered = oldSelfTest
+    .map((item, i) => `${i + 1}. Q: ${item.question || ''}\n   A: ${item.answer || ''}`)
+    .join('\n\n');
+
+  const prompt = `Translate the following ${oldSelfTest.length} biology self-test question/answer pairs into ${languageName}, using the real ${languageName} biology terminology as taught in ${languageName}-medium classrooms (not a literal word-for-word translation from English). Preserve the meaning and level of detail exactly -- this is a translation, not a rewrite, simplification, or regeneration.
+
+${numbered}
+
+Respond with ONLY a valid JSON object with exactly this shape, containing EXACTLY ${oldSelfTest.length} items in the SAME ORDER as listed above:
+{
+  "self_test": [
+    { "question": "translated question 1", "answer": "translated answer 1" }
+  ]
+}
+Output must be valid JSON parseable by JSON.parse(), no markdown, no preamble.`;
+
+  // Scales with input size (roughly 100-200 output tokens per Q&A pair once
+  // translated) rather than a flat cap, so this doesn't truncate on an
+  // upload with an unusually large self_test.
+  const maxOutputTokens = Math.min(32768, Math.max(4096, oldSelfTest.length * 300));
+  const result = await callGeminiJSON(prompt, { maxOutputTokens, temperature: 0.2 });
+
+  const translated = Array.isArray(result.self_test) ? result.self_test : null;
+  if (!translated || translated.length !== oldSelfTest.length) {
+    throw new Error(`Translation returned ${translated ? translated.length : 0} item(s), expected ${oldSelfTest.length} -- refusing to use a mismatched set.`);
+  }
+
+  return translated.map((item, i) => ({
+    question: item.question || '',
+    answer: item.answer || '',
+    type: oldSelfTest[i].type || 'recall',
+  }));
+}
+
 const VALID_SUGGESTED_GRADES = new Set(['again', 'hard', 'good', 'easy']);
 
 // Grades a student's own typed answer against the model answer for a single
@@ -557,4 +613,4 @@ ${text}
 ---`;
 }
 
-module.exports = { restructureWithClaude, gradeAnswer, PROMPT_VERSION };
+module.exports = { restructureWithClaude, gradeAnswer, translateSelfTest, PROMPT_VERSION };
