@@ -866,6 +866,40 @@
        compact node graph — needs materially more width/height headroom than
        the flowchart cap before "Enlarge" is the only way to read it. */
     .diagram-canvas-illustrated svg { max-height: 620px; }
+    .diagram-quiz-btn { background: #ebf8ff; color: #2b6cb0; }
+    .diagram-quiz-btn:hover { background: #d5eefc; }
+
+    /* "Identify the structure" quiz panel (renderAnchorQuizQuestion) --
+       toggled open below the diagram it belongs to via .diagram-quiz-btn,
+       reuses .diagram-canvas-illustrated for the highlighted SVG so sizing
+       stays consistent with the real diagram above it. */
+    .anchor-quiz-panel {
+      margin-top: 0.9rem;
+      padding-top: 0.9rem;
+      border-top: 1px dashed #cbd5e0;
+    }
+    .anchor-quiz-panel[hidden] { display: none; }
+    .anchor-quiz-canvas svg { max-height: 260px; }
+    .anchor-quiz-progress { text-align: center; color: #a0aec0; font-size: 0.75rem; margin: 0.4rem 0 0.2rem; }
+    .anchor-quiz-question { text-align: center; color: #2d3748; font-weight: 600; font-size: 0.88rem; margin-bottom: 0.7rem; }
+    .anchor-quiz-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+    .anchor-quiz-option {
+      border: 1px solid #cbd5e0;
+      background: #fff;
+      border-radius: 8px;
+      padding: 0.55rem 0.5rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #2d3748;
+      cursor: pointer;
+    }
+    .anchor-quiz-option:hover:not(:disabled) { background: #ebf8ff; border-color: #3182ce; }
+    .anchor-quiz-option:disabled { cursor: default; }
+    .anchor-quiz-option.correct { background: #f0fff4; border-color: #38a169; color: #22543d; }
+    .anchor-quiz-option.incorrect { background: #fff5f5; border-color: #e53e3e; color: #822727; }
+    .anchor-quiz-next-btn { display: block; margin: 0.8rem auto 0; }
+    .anchor-quiz-summary { text-align: center; color: #2d3748; font-size: 0.9rem; }
+    .anchor-quiz-summary p { margin-bottom: 0.7rem; font-weight: 600; }
     .diagram-caption {
       margin-top: 0.6rem;
       font-size: 0.83rem;
@@ -2077,6 +2111,7 @@
     const ICON_WARNING = svgIcon('<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/>', 12);
     const ICON_HELP = svgIcon('<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 1.9-2.4 3.4" stroke-linecap="round"/><path d="M12 17h.01" stroke-linecap="round"/>', 14);
     const ICON_FEEDBACK = svgIcon('<path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.4 8.5 8.5 0 0 1-4-1L3 20l1.1-5.5A8.4 8.4 0 0 1 3.5 11.5 8.38 8.38 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/><path d="M12 8v4M12 15h.01" stroke-linecap="round"/>', 14);
+    const ICON_QUIZ = svgIcon('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/>', 13);
 
     /* Streak visual: a growing plant instead of a flame — fits the biology
        theme and the "tending something over time" feeling a streak should
@@ -2224,6 +2259,11 @@
         fullOverview: 'Full Overview',
         processDiagrams: 'Process Diagrams',
         illustratedDiagram: 'Illustrated Diagram',
+        quizStructureBtn: 'Quiz: identify the structure',
+        quizQuestion: 'What structure is highlighted?',
+        quizNext: 'Next',
+        quizScore: '{correct} / {total} correct',
+        quizTryAgain: 'Try again',
         languageMismatchNotice: 'This content was analysed in {lang} — from before you switched your study language.',
         regenerateInLanguage: 'Regenerate in {lang}',
         regeneratingContent: 'Regenerating in your language…',
@@ -2420,6 +2460,11 @@
         fullOverview: 'Толық шолу',
         processDiagrams: 'Процесс диаграммалары',
         illustratedDiagram: 'Иллюстрацияланған диаграмма',
+        quizStructureBtn: 'Викторина: құрылымды анықта',
+        quizQuestion: 'Қай құрылым белгіленген?',
+        quizNext: 'Келесі',
+        quizScore: '{total} ішінен {correct} дұрыс',
+        quizTryAgain: 'Қайта көру',
         languageMismatchNotice: 'Бұл мазмұн {lang} тілінде талданған — сіз оқу тілін ауыстырмас бұрын.',
         regenerateInLanguage: '{lang} тілінде қайта жасау',
         regeneratingContent: 'Сіздің тіліңізде қайта жасалуда…',
@@ -2584,6 +2629,11 @@
         fullOverview: 'Полный обзор',
         processDiagrams: 'Диаграммы процессов',
         illustratedDiagram: 'Иллюстрированная диаграмма',
+        quizStructureBtn: 'Викторина: определи структуру',
+        quizQuestion: 'Какая структура выделена?',
+        quizNext: 'Далее',
+        quizScore: '{correct} из {total} правильно',
+        quizTryAgain: 'Попробовать снова',
         languageMismatchNotice: 'Этот материал был проанализирован на {lang} — до того как вы сменили язык обучения.',
         regenerateInLanguage: 'Пересоздать на {lang}',
         regeneratingContent: 'Пересоздание на вашем языке…',
@@ -4214,6 +4264,24 @@
       titleEl.className = 'diagram-title';
       titleEl.textContent = `${t('illustratedDiagram')} — ${template.name}`;
       header.appendChild(titleEl);
+
+      // "Identify the structure" only makes sense with a real pool of
+      // choices actually taught in THIS upload -- quizzing on a template
+      // anchor Gemini never used for this content would ask about
+      // something the student's material may not have covered at all,
+      // which breaks the app's grounded-in-the-source-text principle. See
+      // MIN_QUIZ_ANCHORS below.
+      const labeledAnchorIds = [...new Set((diagram.labels || [])
+        .filter(l => l.text && l.text.trim() && template.anchors.some(a => a.id === l.anchor))
+        .map(l => l.anchor))];
+      if (labeledAnchorIds.length >= MIN_QUIZ_ANCHORS) {
+        const quizBtn = document.createElement('button');
+        quizBtn.className = 'diagram-expand-btn diagram-quiz-btn';
+        quizBtn.innerHTML = `${ICON_QUIZ} ${t('quizStructureBtn')}`;
+        quizBtn.addEventListener('click', () => toggleAnchorQuiz(quizPanel, template, labeledAnchorIds));
+        header.appendChild(quizBtn);
+      }
+
       const expandBtn = document.createElement('button');
       expandBtn.className = 'diagram-expand-btn';
       expandBtn.innerHTML = `${ICON_SEARCH} ${t('enlarge')}`;
@@ -4227,7 +4295,135 @@
       wrapper.appendChild(canvas);
       expandBtn.addEventListener('click', () => openDiagramLightbox(titleEl.textContent, svg));
 
+      const quizPanel = document.createElement('div');
+      quizPanel.className = 'anchor-quiz-panel';
+      quizPanel.hidden = true;
+      wrapper.appendChild(quizPanel);
+
       container.appendChild(wrapper);
+    }
+
+    // Below this many labeled anchors, a 4-choice quiz either runs out of
+    // real distractors or only ever asks 1-2 questions -- not worth
+    // offering the button at all rather than a degenerate quiz.
+    const MIN_QUIZ_ANCHORS = 3;
+    const QUIZ_CHOICE_COUNT = 4;
+
+    // "presynaptic_terminal" -> "Presynaptic Terminal" -- every anchor id is
+    // already a real, hand-authored biology term (see
+    // public/diagram-templates.json), so this is a pure display transform,
+    // not new content.
+    function anchorDisplayName(anchorId) {
+      return anchorId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function shuffled(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    // Same base illustration as the real diagram (template.svgBody in the
+    // same viewBox, no side label boxes/margins needed here) with just one
+    // pulsing ring marking the anchor being asked about.
+    function buildAnchorQuizSvg(template, highlightAnchorId) {
+      const anchor = template.anchors.find(a => a.id === highlightAnchorId);
+      const marker = anchor ? `
+        <circle cx="${anchor.x}" cy="${anchor.y}" r="9" fill="none" stroke="#e53e3e" stroke-width="3">
+          <animate attributeName="r" values="8;14;8" dur="1.4s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="1;0.4;1" dur="1.4s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="${anchor.x}" cy="${anchor.y}" r="4" fill="#e53e3e"/>` : '';
+      return `<svg viewBox="${template.viewBox}" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, sans-serif">${template.svgBody}${marker}</svg>`;
+    }
+
+    let anchorQuizState = null; // { template, order: [anchorId,...], index, correctCount }
+
+    function toggleAnchorQuiz(panel, template, labeledAnchorIds) {
+      const isOpening = panel.hidden;
+      panel.hidden = !panel.hidden;
+      if (!isOpening) return;
+      anchorQuizState = { template, order: shuffled(labeledAnchorIds), index: 0, correctCount: 0 };
+      renderAnchorQuizQuestion(panel);
+    }
+
+    function renderAnchorQuizQuestion(panel) {
+      const state = anchorQuizState;
+      panel.innerHTML = '';
+
+      if (state.index >= state.order.length) {
+        const summary = document.createElement('div');
+        summary.className = 'anchor-quiz-summary';
+        summary.innerHTML = `<p>${tf('quizScore', { correct: state.correctCount, total: state.order.length })}</p>`;
+        const retryBtn = document.createElement('button');
+        retryBtn.className = 'review-btn';
+        retryBtn.textContent = t('quizTryAgain');
+        retryBtn.addEventListener('click', () => {
+          anchorQuizState = { template: state.template, order: shuffled(state.order), index: 0, correctCount: 0 };
+          renderAnchorQuizQuestion(panel);
+        });
+        summary.appendChild(retryBtn);
+        panel.appendChild(summary);
+        return;
+      }
+
+      const anchorId = state.order[state.index];
+      const canvas = document.createElement('div');
+      canvas.className = 'diagram-canvas diagram-canvas-illustrated anchor-quiz-canvas';
+      canvas.innerHTML = buildAnchorQuizSvg(state.template, anchorId);
+      panel.appendChild(canvas);
+
+      const progress = document.createElement('p');
+      progress.className = 'anchor-quiz-progress';
+      progress.textContent = `${state.index + 1} / ${state.order.length}`;
+      panel.appendChild(progress);
+
+      const question = document.createElement('p');
+      question.className = 'anchor-quiz-question';
+      question.textContent = t('quizQuestion');
+      panel.appendChild(question);
+
+      // Distractors: prefer other anchors actually taught in this upload
+      // (more relevant, harder, still fair), padding out with the
+      // template's remaining anchors if there aren't enough of those.
+      const others = state.template.anchors.map(a => a.id).filter(id => id !== anchorId);
+      const labeledOthers = others.filter(id => state.order.includes(id));
+      const rest = others.filter(id => !state.order.includes(id));
+      const distractorPool = [...shuffled(labeledOthers), ...shuffled(rest)];
+      const choiceIds = shuffled([anchorId, ...distractorPool.slice(0, QUIZ_CHOICE_COUNT - 1)]);
+
+      const optionsRow = document.createElement('div');
+      optionsRow.className = 'anchor-quiz-options';
+      let answered = false;
+      choiceIds.forEach(choiceId => {
+        const btn = document.createElement('button');
+        btn.className = 'anchor-quiz-option';
+        btn.textContent = anchorDisplayName(choiceId);
+        btn.addEventListener('click', () => {
+          if (answered) return;
+          answered = true;
+          const isCorrect = choiceId === anchorId;
+          if (isCorrect) state.correctCount++;
+          optionsRow.querySelectorAll('.anchor-quiz-option').forEach(el => {
+            el.disabled = true;
+            if (el.textContent === anchorDisplayName(anchorId)) el.classList.add('correct');
+            else if (el === btn) el.classList.add('incorrect');
+          });
+          const nextBtn = document.createElement('button');
+          nextBtn.className = 'review-btn anchor-quiz-next-btn';
+          nextBtn.textContent = t('quizNext');
+          nextBtn.addEventListener('click', () => {
+            state.index++;
+            renderAnchorQuizQuestion(panel);
+          });
+          panel.appendChild(nextBtn);
+        });
+        optionsRow.appendChild(btn);
+      });
+      panel.appendChild(optionsRow);
     }
 
     let diagramRenderCounter = 0;
