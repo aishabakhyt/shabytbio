@@ -1753,7 +1753,7 @@
           <span id="dropZoneText">Drag &amp; drop or <strong>click to browse</strong></span>
           <span style="color:#a0aec0;" data-i18n="dropZoneHint">PDF, .txt, or .pptx · max 50 MB</span>
         </label>
-        <input type="file" id="fileInput" accept=".pdf,.txt,.pptx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.presentationml.presentation" />
+        <input type="file" id="fileInput" multiple accept=".pdf,.txt,.pptx,application/pdf,text/plain,application/vnd.openxmlformats-officedocument.presentationml.presentation" />
 
         <div id="fileName"></div>
         <textarea id="focusInput" rows="2"
@@ -2124,7 +2124,9 @@
         cancelBtn: 'Cancel',
         dropZoneText: 'Drag & drop or ',
         dropZoneBold: 'click to browse',
-        dropZoneHint: 'PDF, .txt, or .pptx · max 50 MB',
+        dropZoneHint: 'PDF, .txt, or .pptx · max 50 MB each · up to 3 files',
+        selectedFiles: 'Selected: {names}',
+        maxFilesNotice: 'only the first {max} files are used',
         focusPlaceholder: "Optional: tell me what to focus on (e.g. 'I already know the vocab, focus on calculations') — leave blank for full coverage",
         uploadBtn: 'Upload & Analyse',
         recentUploads: 'Recent uploads',
@@ -2282,7 +2284,9 @@
         cancelBtn: 'Бас тарту',
         dropZoneText: 'Сүйреп апарыңыз немесе ',
         dropZoneBold: 'таңдау үшін басыңыз',
-        dropZoneHint: 'PDF, .txt немесе .pptx · макс. 50 МБ',
+        dropZoneHint: 'PDF, .txt немесе .pptx · әрқайсысы макс. 50 МБ · 3 файлға дейін',
+        selectedFiles: 'Таңдалды: {names}',
+        maxFilesNotice: 'тек алғашқы {max} файл қолданылады',
         focusPlaceholder: "Міндетті емес: неге назар аудару керектігін жазыңыз (мысалы, «Мен терминдерді білемін, есептеулерге назар аударыңыз») — толық қамту үшін бос қалдырыңыз",
         uploadBtn: 'Жүктеу және талдау',
         recentUploads: 'Соңғы жүктеулер',
@@ -2440,7 +2444,9 @@
         cancelBtn: 'Отмена',
         dropZoneText: 'Перетащите файл или ',
         dropZoneBold: 'нажмите для выбора',
-        dropZoneHint: 'PDF, .txt или .pptx · макс. 50 МБ',
+        dropZoneHint: 'PDF, .txt или .pptx · макс. 50 МБ каждый · до 3 файлов',
+        selectedFiles: 'Выбрано: {names}',
+        maxFilesNotice: 'используются только первые {max} файла',
         focusPlaceholder: "Необязательно: на чём сфокусироваться (например, «Я уже знаю термины, сосредоточьтесь на вычислениях») — оставьте пустым для полного охвата",
         uploadBtn: 'Загрузить и анализировать',
         recentUploads: 'Недавние загрузки',
@@ -3424,23 +3430,31 @@
       renderReviewCard();
     }
 
-    function setFile(file) {
-      if (!file) return;
-      fileInput._selectedFile = file;
-      fileNameEl.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+    const MAX_FILES_PER_UPLOAD = 3;
+
+    function setFiles(fileList) {
+      const files = Array.from(fileList || []);
+      if (!files.length) return;
+      const truncated = files.length > MAX_FILES_PER_UPLOAD;
+      const kept = files.slice(0, MAX_FILES_PER_UPLOAD);
+      fileInput._selectedFiles = kept;
+      const namesLine = kept.map(f => `${f.name} (${(f.size / 1024).toFixed(1)} KB)`).join(', ');
+      fileNameEl.textContent = truncated
+        ? `${tf('selectedFiles', { names: namesLine })} — ${tf('maxFilesNotice', { max: MAX_FILES_PER_UPLOAD })}`
+        : tf('selectedFiles', { names: namesLine });
       uploadBtn.disabled = false;
       statusEl.textContent = '';
       statusEl.className = '';
       resultsEl.hidden = true;
     }
 
-    fileInput.addEventListener('change', () => setFile(fileInput.files[0]));
+    fileInput.addEventListener('change', () => setFiles(fileInput.files));
     dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
     dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
     dropZone.addEventListener('drop', e => {
       e.preventDefault();
       dropZone.classList.remove('dragover');
-      setFile(e.dataTransfer.files[0]);
+      setFiles(e.dataTransfer.files);
     });
 
     // Polls the rate-limiter's current backlog (see GET /api/queue-status)
@@ -3468,8 +3482,8 @@
     }
 
     uploadBtn.addEventListener('click', async () => {
-      const file = fileInput._selectedFile || fileInput.files[0];
-      if (!file) return;
+      const files = fileInput._selectedFiles || Array.from(fileInput.files).slice(0, MAX_FILES_PER_UPLOAD);
+      if (!files.length) return;
 
       uploadBtn.disabled = true;
       statusEl.className = '';
@@ -3477,7 +3491,7 @@
       resultsEl.hidden = true;
 
       const form = new FormData();
-      form.append('file', file);
+      files.forEach(file => form.append('files', file));
       const focus = document.getElementById('focusInput').value.trim();
       if (focus) form.append('focusInstructions', focus);
 

@@ -50,9 +50,11 @@ router.get('/queue-status', (req, res) => {
 });
 
 
+const MAX_FILES_PER_UPLOAD = 3;
+
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB PER FILE
   fileFilter: (_req, file, cb) => {
     const allowed = ['application/pdf', 'text/plain', PPTX_MIME];
     if (allowed.includes(file.mimetype)) {
@@ -63,24 +65,51 @@ const upload = multer({
   },
 });
 
-router.post('/upload', upload.single('file'), async (req, res) => {
-  if (!req.file) {
+// A student's material for one lesson is often split across several files
+// (slides + a separate handout, or a deck exported as two parts) -- capped
+// at 3 rather than unlimited to keep a single upload's combined extracted
+// text (and therefore the Gemini prompt built from it) bounded, and because
+// the client UI presents this as "a few files for one topic", not a bulk
+// importer.
+function buildCombinedFilename(filenames) {
+  if (filenames.length === 1) return filenames[0];
+  const joined = filenames.join(' + ');
+  // Long joined names get unwieldy in history lists, dashboard topic
+  // labels, etc. -- fall back to a short summary once it crosses a
+  // reasonable display width instead of letting it wrap everywhere.
+  return joined.length <= 100 ? joined : `${filenames.length} files (${filenames[0]} + ${filenames.length - 1} more)`;
+}
+
+router.post('/upload', upload.array('files', MAX_FILES_PER_UPLOAD), async (req, res) => {
+  if (!req.files || req.files.length === 0) {
     return res.status(400).json({ error: 'No file uploaded.' });
   }
 
+  // Each file keeps its own extracted text, clearly labeled, rather than
+  // silently concatenated -- so Gemini (and anyone reading extracted_text
+  // later) can tell where one file's content ends and the next begins,
+  // which matters when e.g. slide numbering or headings repeat across
+  // files.
   let extractedText;
   try {
-    if (req.file.mimetype === 'application/pdf') {
-      const parsed = await pdfParse(req.file.buffer);
-      extractedText = parsed.text;
-    } else if (req.file.mimetype === PPTX_MIME) {
-      extractedText = (await parseOffice(req.file.buffer, { fileType: 'pptx' })).toText();
-    } else {
-      extractedText = req.file.buffer.toString('utf-8');
+    const parts = [];
+    for (const file of req.files) {
+      let text;
+      if (file.mimetype === 'application/pdf') {
+        text = (await pdfParse(file.buffer)).text;
+      } else if (file.mimetype === PPTX_MIME) {
+        text = (await parseOffice(file.buffer, { fileType: 'pptx' })).toText();
+      } else {
+        text = file.buffer.toString('utf-8');
+      }
+      parts.push(req.files.length > 1 ? `--- ${file.originalname} ---\n${text}` : text);
     }
+    extractedText = parts.join('\n\n');
   } catch (err) {
     return res.status(422).json({ error: `Text extraction failed: ${err.message}` });
   }
+
+  const combinedFilename = buildCombinedFilename(req.files.map(f => f.originalname));
 
   let user;
   try {
@@ -126,7 +155,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
       try {
         qualityWarnings = validateStudyPack(result, extractedText).warnings;
         if (qualityWarnings.length) {
-          console.warn(`[quality] ${req.file.originalname} (user ${req.session.userId}, school ${school || 'unset'}, lang ${language}):`, qualityWarnings);
+          console.warn(`[quality] ${combinedFilename} (user ${req.session.userId}, school ${school || 'unset'}, lang ${language}):`, qualityWarnings);
         }
       } catch (err) {
         console.error('Quality validation crashed (non-fatal):', err.message);
@@ -144,7 +173,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
   try {
     historyId = await saveUpload({
       userId: req.session.userId,
-      filename: req.file.originalname,
+      filename: combinedFilename,
       charCount: extractedText.length,
       focusInstructions,
       result,
@@ -166,7 +195,7 @@ router.post('/upload', upload.single('file'), async (req, res) => {
     await seedFromSelfTest({
       userId: req.session.userId,
       uploadId: historyId,
-      filename: req.file.originalname,
+      filename: combinedFilename,
       selfTest: result.self_test,
     });
   } catch (err) {
@@ -175,12 +204,31 @@ router.post('/upload', upload.single('file'), async (req, res) => {
 
   res.json({
     id: historyId,
-    filename: req.file.originalname,
+    filename: combinedFilename,
     charCount: extractedText.length,
     extractedText,
     result,
     fromCache,
   });
+});
+
+// Multer errors (wrong file type from fileFilter, a file over the 50MB
+// limit, or now more than MAX_FILES_PER_UPLOAD files at once) used to fall
+// through to Express's default error handler and come back as a plain
+// HTML/text 500 -- not the JSON { error } shape the client always expects
+// and renders in the status line. Normalizes all of them to that shape.
+// Router-level error middleware (4 args) only needs to sit after the
+// routes it protects, which is why this comes right after /upload.
+router.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError || (err && /Only PDF|PowerPoint/.test(err.message || ''))) {
+    const message = err.code === 'LIMIT_UNEXPECTED_FILE'
+      ? `You can upload up to ${MAX_FILES_PER_UPLOAD} files at once.`
+      : err.code === 'LIMIT_FILE_SIZE'
+      ? 'One of your files is over the 50MB limit.'
+      : err.message;
+    return res.status(400).json({ error: message });
+  }
+  next(err);
 });
 
 // ── History (each user only ever sees their own) ───────────
