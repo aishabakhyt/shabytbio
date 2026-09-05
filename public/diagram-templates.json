@@ -1470,6 +1470,145 @@
         "ұрықтану",
         "гүл тостағаны"
       ]
+    },
+    {
+      "id": "dna_replication",
+      "name": "DNA Structure & Replication",
+      "description": "A two-part labeled diagram of DNA: the top half shows the double helix's structure (the two sugar-phosphate backbones, the nitrogenous bases, and the hydrogen bonds holding complementary base pairs together); the bottom half is a zoomed view of a replication fork — helicase unwinding the helix, the continuously-synthesized leading strand with DNA polymerase, and the lagging strand built from Okazaki fragments joined by DNA ligase. Use for content describing DNA structure, base pairing, or DNA replication — not for protein synthesis (transcription/translation), which would need its own template.",
+      "viewBox": "0 0 460 620",
+      "svgBody": "<rect x='0' y='0' width='460' height='260' fill='#fdfcfb'/><rect x='0' y='260' width='460' height='360' fill='#f7fafc'/><line x1='0' y1='260' x2='460' y2='260' stroke='#cbd5e0' stroke-width='1.5' stroke-dasharray='4,3'/><text x='450' y='16' font-size='11' fill='#a08a5c' text-anchor='end'>DNA double helix</text><text x='450' y='276' font-size='11' fill='#718096' text-anchor='end'>replication fork (zoomed)</text><path d='M120,15 L100,55 L140,95 L100,135 L140,175 L100,215 L120,245' stroke='#3182ce' stroke-width='7' fill='none' stroke-linecap='round'/><path d='M340,15 L360,55 L320,95 L360,135 L320,175 L360,215 L340,245' stroke='#dd6b20' stroke-width='7' fill='none' stroke-linecap='round'/><line x1='120' y1='15' x2='193' y2='15' stroke='#68d391' stroke-width='5'/><line x1='193' y1='15' x2='267' y2='15' stroke='#a0aec0' stroke-width='3' stroke-dasharray='3,2'/><line x1='267' y1='15' x2='340' y2='15' stroke='#f687b3' stroke-width='5'/><line x1='100' y1='55' x2='187' y2='55' stroke='#68d391' stroke-width='5'/><line x1='187' y1='55' x2='273' y2='55' stroke='#a0aec0' stroke-width='3' stroke-dasharray='3,2'/><line x1='273' y1='55' x2='360' y2='55' stroke='#f687b3' stroke-width='5'/><line x1='140' y1='95' x2='200' y2='95' stroke='#68d391' stroke-width='5'/><line x1='200' y1='95' x2='260' y2='95' stroke='#a0aec0' stroke-width='3' stroke-dasharray='3,2'/><line x1='260' y1='95' x2='320' y2='95' stroke='#f687b3' stroke-width='5'/><line x1='100' y1='135' x2='187' y2='135' stroke='#68d391' stroke-width='5'/><line x1='187' y1='135' x2='273' y2='135' stroke='#a0aec0' stroke-width='3' stroke-dasharray='3,2'/><line x1='273' y1='135' x2='360' y2='135' stroke='#f687b3' stroke-width='5'/><line x1='140' y1='175' x2='200' y2='175' stroke='#68d391' stroke-width='5'/><line x1='200' y1='175' x2='260' y2='175' stroke='#a0aec0' stroke-width='3' stroke-dasharray='3,2'/><line x1='260' y1='175' x2='320' y2='175' stroke='#f687b3' stroke-width='5'/><line x1='100' y1='215' x2='187' y2='215' stroke='#68d391' stroke-width='5'/><line x1='187' y1='215' x2='273' y2='215' stroke='#a0aec0' stroke-width='3' stroke-dasharray='3,2'/><line x1='273' y1='215' x2='360' y2='215' stroke='#f687b3' stroke-width='5'/><path d='M30,395 L150,418' stroke='#3182ce' stroke-width='6' fill='none' stroke-linecap='round'/><path d='M30,460 L150,432' stroke='#dd6b20' stroke-width='6' fill='none' stroke-linecap='round'/><polygon points='150,410 172,425 150,440 135,425' fill='#9f7aea' stroke='#553c9a' stroke-width='2'/><path d='M172,420 L400,368' stroke='#3182ce' stroke-width='5' fill='none' stroke-linecap='round'/><path d='M180,432 L400,392' stroke='#68d391' stroke-width='5' fill='none' stroke-linecap='round'/><rect x='268' y='383' width='26' height='16' rx='5' fill='#48bb78' stroke='#276749' stroke-width='1.5' transform='rotate(-9 281 391)'/><path d='M180,438 L400,478' stroke='#dd6b20' stroke-width='5' fill='none' stroke-linecap='round'/><path d='M195,460 L235,469' stroke='#f687b3' stroke-width='5' fill='none' stroke-linecap='round'/><path d='M248,472 L288,481' stroke='#f687b3' stroke-width='5' fill='none' stroke-linecap='round'/><path d='M301,484 L341,493' stroke='#f687b3' stroke-width='5' fill='none' stroke-linecap='round'/><path d='M354,496 L394,505' stroke='#f687b3' stroke-width='5' fill='none' stroke-linecap='round'/><circle cx='295' cy='483' r='9' fill='#ecc94b' stroke='#b7791f' stroke-width='2'/>",
+      "anchors": [
+        {
+          "id": "sugar_phosphate_backbone",
+          "x": 100,
+          "y": 135,
+          "side": "left",
+          "hint": "the two strands that form the sides of the DNA ladder, made of alternating sugar and phosphate groups; the two backbones run in opposite (antiparallel) directions"
+        },
+        {
+          "id": "nitrogenous_base",
+          "x": 165,
+          "y": 95,
+          "side": "right",
+          "hint": "one of four bases — adenine, thymine, cytosine, or guanine — attached to each backbone and projecting inward to pair with a base on the opposite strand"
+        },
+        {
+          "id": "hydrogen_bonds",
+          "x": 230,
+          "y": 175,
+          "side": "left",
+          "hint": "weak bonds holding each complementary base pair together — A pairs with T via 2 hydrogen bonds, C pairs with G via 3 — weak enough that helicase can break them to unzip the helix"
+        },
+        {
+          "id": "helicase",
+          "x": 153,
+          "y": 425,
+          "side": "right",
+          "hint": "an enzyme that unwinds the double helix by breaking the hydrogen bonds between base pairs, creating the replication fork"
+        },
+        {
+          "id": "replication_fork",
+          "x": 176,
+          "y": 428,
+          "side": "left",
+          "hint": "the Y-shaped region where the two parent strands have been separated and each is being used as a template to build a new complementary strand"
+        },
+        {
+          "id": "leading_strand",
+          "x": 300,
+          "y": 375,
+          "side": "right",
+          "hint": "synthesized continuously in one smooth run, because it runs in the same direction the replication fork is opening"
+        },
+        {
+          "id": "dna_polymerase",
+          "x": 281,
+          "y": 391,
+          "side": "left",
+          "hint": "the enzyme that adds new complementary nucleotides to a growing strand, reading the template strand and building the new one in the 5' to 3' direction"
+        },
+        {
+          "id": "lagging_strand",
+          "x": 300,
+          "y": 460,
+          "side": "right",
+          "hint": "runs in the opposite direction to the fork's opening, so it can't be copied in one continuous run — it's built backwards in short bursts instead"
+        },
+        {
+          "id": "okazaki_fragments",
+          "x": 265,
+          "y": 476,
+          "side": "left",
+          "hint": "short segments of new DNA synthesized discontinuously on the lagging strand, each started fresh as more template is exposed"
+        },
+        {
+          "id": "dna_ligase",
+          "x": 295,
+          "y": 483,
+          "side": "right",
+          "hint": "the enzyme that seals the gaps between adjacent Okazaki fragments, joining them into one continuous lagging strand"
+        }
+      ],
+      "keywords": [
+        "dna",
+        "dna replication",
+        "double helix",
+        "sugar-phosphate backbone",
+        "nitrogenous base",
+        "base pairing",
+        "complementary base pairing",
+        "hydrogen bonds",
+        "adenine",
+        "thymine",
+        "cytosine",
+        "guanine",
+        "helicase",
+        "replication fork",
+        "leading strand",
+        "lagging strand",
+        "dna polymerase",
+        "okazaki fragments",
+        "dna ligase",
+        "semiconservative replication",
+        "antiparallel strands",
+        "primase",
+        "днк",
+        "репликация днк",
+        "двойная спираль",
+        "сахарофосфатный остов",
+        "азотистое основание",
+        "комплементарность",
+        "водородные связи",
+        "аденин",
+        "тимин",
+        "цитозин",
+        "гуанин",
+        "хеликаза",
+        "репликационная вилка",
+        "лидирующая цепь",
+        "отстающая цепь",
+        "днк-полимераза",
+        "фрагменты оказаки",
+        "днк-лигаза",
+        "ДНҚ",
+        "ДНҚ репликациясы",
+        "қос спираль",
+        "қант-фосфат негізі",
+        "азоттық негіз",
+        "комплементарлық",
+        "сутектік байланыс",
+        "аденин",
+        "тимин",
+        "цитозин",
+        "гуанин",
+        "геликаза",
+        "репликация айыры",
+        "жетекші тізбек",
+        "артта қалушы тізбек",
+        "ДНҚ-полимераза",
+        "оказаки фрагменттері",
+        "ДНҚ-лигаза"
+      ]
     }
   ]
 }
