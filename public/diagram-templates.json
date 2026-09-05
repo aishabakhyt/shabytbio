@@ -1609,6 +1609,153 @@
         "оказаки фрагменттері",
         "ДНҚ-лигаза"
       ]
+    },
+    {
+      "id": "mitosis_cell_cycle",
+      "name": "Mitosis & the Cell Cycle",
+      "description": "A six-panel filmstrip of mitotic cell division: interphase, prophase, metaphase, anaphase, telophase, and cytokinesis, each drawn as its own small cell diagram so the chromosomes' changing arrangement is visible phase-by-phase. Also labels sister chromatids, the centromere, spindle fibers, and the resulting daughter cells. Use for content describing mitosis, the cell cycle, or the phases of cell division — including meiosis content, since the daughter-cells panel is where the mitosis-vs-meiosis contrast (two identical diploid cells vs. four different haploid cells) belongs; a full separate meiosis phase-strip would need its own template if ever built.",
+      "viewBox": "0 0 1200 380",
+      "svgBody": "<rect x='0' y='0' width='1200' height='380' fill='#fdfcfb'/><text x='100' y='40' font-size='13' font-weight='600' fill='#718096' text-anchor='middle'>interphase</text><text x='280' y='40' font-size='13' font-weight='600' fill='#718096' text-anchor='middle'>prophase</text><text x='460' y='40' font-size='13' font-weight='600' fill='#718096' text-anchor='middle'>metaphase</text><text x='640' y='40' font-size='13' font-weight='600' fill='#718096' text-anchor='middle'>anaphase</text><text x='820' y='40' font-size='13' font-weight='600' fill='#718096' text-anchor='middle'>telophase</text><text x='1000' y='40' font-size='13' font-weight='600' fill='#718096' text-anchor='middle'>cytokinesis</text><circle cx='100' cy='190' r='85' fill='#ebf8ff' stroke='#3182ce' stroke-width='2.5'/><ellipse cx='100' cy='190' rx='55' ry='50' fill='#fefcbf' stroke='#b7791f' stroke-width='1.5' stroke-dasharray='4,3'/><path d='M72,175 Q92,158 108,175 Q124,192 116,208' stroke='#d69e2e' stroke-width='2.5' fill='none'/><path d='M84,215 Q100,200 122,212' stroke='#d69e2e' stroke-width='2.5' fill='none'/><circle cx='280' cy='190' r='85' fill='#ebf8ff' stroke='#3182ce' stroke-width='2.5'/><line x1='280' y1='108' x2='280' y2='150' stroke='#a0aec0' stroke-width='1.5' stroke-dasharray='3,2'/><line x1='280' y1='272' x2='280' y2='230' stroke='#a0aec0' stroke-width='1.5' stroke-dasharray='3,2'/><path d='M245,155 L275,185 M245,185 L275,155' stroke='#3182ce' stroke-width='5' stroke-linecap='round'/><path d='M285,195 L315,225 M285,225 L315,195' stroke='#c53030' stroke-width='5' stroke-linecap='round'/><circle cx='460' cy='190' r='85' fill='#ebf8ff' stroke='#3182ce' stroke-width='2.5'/><line x1='460' y1='115' x2='460' y2='265' stroke='#a0aec0' stroke-width='1.5' stroke-dasharray='3,2'/><path d='M445,135 L475,165 M445,165 L475,135' stroke='#3182ce' stroke-width='5' stroke-linecap='round'/><path d='M445,215 L475,245 M445,245 L475,215' stroke='#c53030' stroke-width='5' stroke-linecap='round'/><path d='M460,115 L460,150 M460,115 L460,230 M460,265 L460,230 M460,265 L460,150' stroke='#805ad5' stroke-width='1.3' fill='none'/><ellipse cx='640' cy='190' rx='75' ry='95' fill='#ebf8ff' stroke='#3182ce' stroke-width='2.5'/><path d='M618,140 L640,120 L662,140' stroke='#3182ce' stroke-width='5' fill='none' stroke-linecap='round'/><path d='M618,240 L640,260 L662,240' stroke='#c53030' stroke-width='5' fill='none' stroke-linecap='round'/><path d='M640,110 L640,125 M640,270 L640,255' stroke='#805ad5' stroke-width='1.3' fill='none'/><path d='M820,105 C878,105 892,152 858,190 C892,228 878,275 820,275 C762,275 748,228 782,190 C748,152 762,105 820,105 Z' fill='#ebf8ff' stroke='#3182ce' stroke-width='2.5'/><ellipse cx='820' cy='142' rx='38' ry='28' fill='#fefcbf' stroke='#b7791f' stroke-width='1.5' stroke-dasharray='4,3'/><ellipse cx='820' cy='238' rx='38' ry='28' fill='#fefcbf' stroke='#b7791f' stroke-width='1.5' stroke-dasharray='4,3'/><path d='M1000,100 C1058,100 1072,144 1048,174 C1040,180 1040,200 1048,206 C1072,236 1058,280 1000,280 C942,280 928,236 952,206 C960,200 960,180 952,174 C928,144 942,100 1000,100 Z' fill='#ebf8ff' stroke='#3182ce' stroke-width='2.5'/><ellipse cx='1000' cy='140' rx='34' ry='26' fill='#f6e05e' stroke='#b7791f' stroke-width='1.5'/><ellipse cx='1000' cy='240' rx='34' ry='26' fill='#f6e05e' stroke='#b7791f' stroke-width='1.5'/>",
+      "anchors": [
+        {
+          "id": "interphase",
+          "x": 100,
+          "y": 190,
+          "side": "left",
+          "hint": "the cell grows and its DNA replicates in preparation for division, but the chromosomes stay uncoiled and aren't yet visible as distinct structures"
+        },
+        {
+          "id": "prophase",
+          "x": 280,
+          "y": 190,
+          "side": "left",
+          "hint": "the replicated chromosomes condense into visible structures (each made of two sister chromatids) while the nuclear envelope breaks down and spindle fibers begin forming"
+        },
+        {
+          "id": "sister_chromatids",
+          "x": 265,
+          "y": 170,
+          "side": "left",
+          "hint": "two identical copies of a chromosome, produced by DNA replication in interphase and joined at the centromere until anaphase pulls them apart"
+        },
+        {
+          "id": "metaphase",
+          "x": 460,
+          "y": 190,
+          "side": "left",
+          "hint": "the chromosomes line up along the cell's equator (the metaphase plate), with spindle fibers from both poles attached — a checkpoint here confirms every chromosome is properly attached before division proceeds"
+        },
+        {
+          "id": "centromere",
+          "x": 460,
+          "y": 150,
+          "side": "left",
+          "hint": "the region joining a chromosome's two sister chromatids together, and the point where spindle fibers attach to eventually pull them apart"
+        },
+        {
+          "id": "spindle_fibers",
+          "x": 640,
+          "y": 118,
+          "side": "right",
+          "hint": "protein structures extending from the two poles of the cell that attach to each chromosome's centromere and pull the sister chromatids apart"
+        },
+        {
+          "id": "anaphase",
+          "x": 640,
+          "y": 190,
+          "side": "right",
+          "hint": "spindle fibers shorten, pulling the sister chromatids apart toward opposite poles — once separated, each chromatid now counts as its own chromosome"
+        },
+        {
+          "id": "telophase",
+          "x": 820,
+          "y": 190,
+          "side": "right",
+          "hint": "the separated chromosomes arrive at each pole and begin decondensing, while a new nuclear envelope re-forms around each set, giving the cell two genetically identical nuclei"
+        },
+        {
+          "id": "cytokinesis",
+          "x": 1000,
+          "y": 190,
+          "side": "right",
+          "hint": "the cytoplasm divides as the cell membrane pinches inward along a cleavage furrow, physically splitting one cell into two"
+        },
+        {
+          "id": "daughter_cells",
+          "x": 1000,
+          "y": 140,
+          "side": "right",
+          "hint": "two genetically identical daughter cells, each with a complete, identical set of chromosomes — in meiosis, this same overall process happens twice in a row, producing four genetically DIFFERENT haploid cells instead of two identical ones"
+        }
+      ],
+      "keywords": [
+        "mitosis",
+        "meiosis",
+        "cell division",
+        "cell cycle",
+        "interphase",
+        "prophase",
+        "metaphase",
+        "anaphase",
+        "telophase",
+        "cytokinesis",
+        "sister chromatids",
+        "centromere",
+        "spindle fibers",
+        "spindle apparatus",
+        "chromosome",
+        "chromatin",
+        "daughter cells",
+        "haploid",
+        "diploid",
+        "homologous chromosomes",
+        "crossing over",
+        "independent assortment",
+        "meiosis i",
+        "meiosis ii",
+        "genetic variation",
+        "cleavage furrow",
+        "metaphase plate",
+        "митоз",
+        "мейоз",
+        "деление клетки",
+        "клеточный цикл",
+        "интерфаза",
+        "профаза",
+        "метафаза",
+        "анафаза",
+        "телофаза",
+        "цитокинез",
+        "сестринские хроматиды",
+        "центромера",
+        "веретено деления",
+        "хромосома",
+        "дочерние клетки",
+        "гаплоидный",
+        "диплоидный",
+        "гомологичные хромосомы",
+        "кроссинговер",
+        "борозда деления",
+        "митоз",
+        "мейоз",
+        "жасуша бөлінуі",
+        "жасушалық цикл",
+        "интерфаза",
+        "профаза",
+        "метафаза",
+        "анафаза",
+        "телофаза",
+        "цитокинез",
+        "апалық-сіңлілік хроматидтер",
+        "центромера",
+        "ұршық жіпшелері",
+        "хромосома",
+        "ұрпақ жасушалар",
+        "гаплоидты",
+        "диплоидты",
+        "гомологты хромосомалар",
+        "кроссинговер"
+      ]
     }
   ]
 }
