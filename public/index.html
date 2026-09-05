@@ -1665,6 +1665,32 @@
     }
     .review-empty-state .review-empty-emoji { display: block; margin-bottom: 0.6rem; color: #a0aec0; }
 
+    /* Once-per-session confidence check-in (see renderReflectionPrompt) --
+       reuses .review-skip-link for the "skip" action, same as the per-card
+       skip link, for visual consistency. */
+    .review-reflection { text-align: center; padding: 0.5rem 0 0.25rem; }
+    .review-reflection-question { color: #2d3748; font-size: 0.9rem; margin-bottom: 0.9rem; }
+    .review-reflection-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+    .review-reflection-btn {
+      border: 1px solid #cbd5e0;
+      background: #fff;
+      border-radius: 8px;
+      padding: 0.55rem 0.3rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #2d3748;
+      cursor: pointer;
+    }
+    .review-reflection-btn:hover { background: #ebf8ff; border-color: #3182ce; color: #2b6cb0; }
+    .review-reflection-anchors {
+      display: flex;
+      justify-content: space-between;
+      color: #a0aec0;
+      font-size: 0.72rem;
+      margin-top: 0.35rem;
+      padding: 0 0.15rem;
+    }
+
     /* Inline markdown */
     strong { font-weight: 700; }
     em { font-style: italic; }
@@ -2173,6 +2199,10 @@
         gradeEasy: 'Easy',
         gradeSuggestedHint: 'Highlighted below is what the AI suggests — pick whatever actually matches how it felt.',
         reviewDoneToday: "That's everything due for today — nice work.",
+        reflectionQuestion: 'How confident do you feel about what you just reviewed?',
+        reflectionLow: 'Not confident',
+        reflectionHigh: 'Very confident',
+        reflectionSkip: 'Skip',
         reviewNothingDue: 'Nothing due right now. Upload more material to build up your review queue.',
         backToReview: '← Back to Review',
         rename: 'Rename',
@@ -2333,6 +2363,10 @@
         gradeEasy: 'Оңай',
         gradeSuggestedHint: 'Төменде ЖИ ұсынған жауап белгіленген — өзіңе қалай сезілгеніне сай келетінін таңда.',
         reviewDoneToday: 'Бүгінге барлығы дайын — жарайсың!',
+        reflectionQuestion: 'Жаңа ғана қайталағаныңа қаншалықты сенімдісің?',
+        reflectionLow: 'Сенімді емеспін',
+        reflectionHigh: 'Өте сенімдімін',
+        reflectionSkip: 'Өткізіп жіберу',
         reviewNothingDue: 'Қазір қайталайтын ештеңе жоқ. Қайталау кезегін толтыру үшін көбірек материал жүктеңіз.',
         backToReview: '← Қайталауға оралу',
         rename: 'Атын өзгерту',
@@ -2493,6 +2527,10 @@
         gradeEasy: 'Легко',
         gradeSuggestedHint: 'Ниже выделено то, что предлагает ИИ — выберите вариант, который точнее отражает, как это ощущалось.',
         reviewDoneToday: 'На сегодня всё повторено — отличная работа.',
+        reflectionQuestion: 'Насколько ты уверен(а) в том, что только что повторил(а)?',
+        reflectionLow: 'Не уверен(а)',
+        reflectionHigh: 'Очень уверен(а)',
+        reflectionSkip: 'Пропустить',
         reviewNothingDue: 'Сейчас повторять нечего. Загрузите больше материала, чтобы пополнить очередь повторения.',
         backToReview: '← Назад к повторению',
         rename: 'Переименовать',
@@ -2979,6 +3017,8 @@
     /* ── Review (spaced repetition across ALL past uploads) ── */
     let reviewQueue = [];
     let reviewIndex = 0;
+    let reviewTopicsThisSession = new Set();
+    let reflectionAsked = false;
 
     document.getElementById('reviewCloseBtn').addEventListener('click', closeReviewSession);
     document.getElementById('reviewTopicsBtn').addEventListener('click', openTopicsManager);
@@ -3264,6 +3304,8 @@
       }
 
       reviewIndex = 0;
+      reviewTopicsThisSession = new Set();
+      reflectionAsked = false;
       renderReviewCard();
     }
 
@@ -3280,6 +3322,14 @@
 
       if (reviewIndex >= reviewQueue.length) {
         progress.textContent = '';
+        // Once-per-session self-efficacy check: only asked when the
+        // student actually completed at least one card this session (not
+        // on an empty-queue visit), and only once even if renderReviewCard
+        // is called again afterward.
+        if (reviewQueue.length > 0 && !reflectionAsked) {
+          renderReflectionPrompt(body);
+          return;
+        }
         const empty = document.createElement('div');
         empty.className = 'review-empty-state';
         empty.innerHTML = reviewQueue.length
@@ -3291,6 +3341,7 @@
 
       progress.textContent = `${reviewIndex + 1} / ${reviewQueue.length}`;
       const item = reviewQueue[reviewIndex];
+      if (item.topicLabel || item.sourceFilename) reviewTopicsThisSession.add(item.topicLabel || item.sourceFilename);
 
       const typeBadge = document.createElement('span');
       typeBadge.className = `review-type-badge ${item.type === 'application' ? 'application' : 'recall'}`;
@@ -3337,6 +3388,71 @@
       checkRow.appendChild(skipBtn);
 
       body.appendChild(checkRow);
+    }
+
+    // Once-per-session self-efficacy prompt -- Aisha's spec: ask how
+    // confident the student feels about what they just reviewed, not after
+    // every card. Purely a self-report (not shown to anyone but the
+    // student, and not evaluative -- see the dashboard's confidence-
+    // language rules), so this is deliberately lightweight: 5 buttons and a
+    // skip link, not a modal or a required step.
+    function renderReflectionPrompt(body) {
+      const wrap = document.createElement('div');
+      wrap.className = 'review-reflection';
+
+      const question = document.createElement('p');
+      question.className = 'review-reflection-question';
+      question.textContent = t('reflectionQuestion');
+      wrap.appendChild(question);
+
+      const row = document.createElement('div');
+      row.className = 'review-reflection-row';
+      for (let rating = 1; rating <= 5; rating++) {
+        const btn = document.createElement('button');
+        btn.className = 'review-reflection-btn';
+        btn.textContent = String(rating);
+        btn.addEventListener('click', () => submitReflection(rating));
+        row.appendChild(btn);
+      }
+      wrap.appendChild(row);
+
+      const anchors = document.createElement('div');
+      anchors.className = 'review-reflection-anchors';
+      anchors.innerHTML = `<span>${t('reflectionLow')}</span><span>${t('reflectionHigh')}</span>`;
+      wrap.appendChild(anchors);
+
+      const skip = document.createElement('button');
+      skip.className = 'review-skip-link';
+      skip.style.marginTop = '0.75rem';
+      skip.textContent = t('reflectionSkip');
+      skip.addEventListener('click', skipReflection);
+      wrap.appendChild(skip);
+
+      body.appendChild(wrap);
+    }
+
+    async function submitReflection(rating) {
+      reflectionAsked = true; // never re-prompt this session, even if the save below fails
+      try {
+        const res = await fetch('/api/mastery/reflections', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            rating,
+            topics: [...reviewTopicsThisSession],
+            questionsReviewed: reviewQueue.length,
+          }),
+        });
+        if (res.status === 401) { closeReviewSession(); handleSessionExpired(); return; }
+      } catch (err) {
+        console.error('Failed to save reflection (non-fatal):', err);
+      }
+      renderReviewCard();
+    }
+
+    function skipReflection() {
+      reflectionAsked = true;
+      renderReviewCard();
     }
 
     async function checkReviewAnswer(item, studentAnswer) {

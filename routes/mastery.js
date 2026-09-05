@@ -1,5 +1,5 @@
 const express = require('express');
-const { listDue, getStats, getDashboard, gradeReview, getById, listTopics, setTopicArchived, renameTopic, setTopicExamDate, deleteTopic } = require('../services/mastery');
+const { listDue, getStats, getDashboard, gradeReview, getById, listTopics, setTopicArchived, renameTopic, setTopicExamDate, deleteTopic, recordReflection } = require('../services/mastery');
 const { gradeAnswer } = require('../services/claude');
 const { logGradeResult } = require('../services/gradeHistory');
 const { getUserById } = require('../services/users');
@@ -149,6 +149,28 @@ router.post('/:id/grade-answer', async (req, res) => {
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: `Grading failed: ${err.message}` });
+  }
+});
+
+// Records a student's own self-efficacy rating for a just-finished review
+// session ("how confident do you feel about what you just reviewed?"),
+// shown once per session when the review queue empties -- see
+// public/index.html's review-reflection-* UI. Purely a self-report, not
+// used for anything evaluative; topics is whatever distinct topic
+// labels/filenames the session touched (a due-queue session can span
+// several topics at once).
+router.post('/reflections', async (req, res) => {
+  const { rating, topics, questionsReviewed } = req.body;
+  try {
+    const doc = await recordReflection({
+      userId: req.session.userId,
+      rating: Number(rating),
+      topics,
+      questionsReviewed,
+    });
+    res.json({ id: doc.id });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 

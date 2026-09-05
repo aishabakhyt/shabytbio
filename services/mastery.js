@@ -461,9 +461,37 @@ async function gradeReview(id, userId, grade) {
   return record;
 }
 
+
+// Records a student's own self-efficacy rating for a just-finished review
+// session -- "how confident do you feel about what you just reviewed?",
+// asked once per session (not per question) when the review queue empties.
+// A session's due queue (GET /api/mastery/due) deliberately mixes items
+// from every topic that has something due, not just one, so this is
+// scoped to the WHOLE session -- recording every distinct topic touched --
+// rather than pretending a session maps to a single topic.
+const VALID_RATINGS = [1, 2, 3, 4, 5];
+
+async function recordReflection({ userId, topics, questionsReviewed, rating }) {
+  if (!VALID_RATINGS.includes(rating)) {
+    throw new Error(`Invalid rating — must be one of ${VALID_RATINGS.join(', ')}.`);
+  }
+  const db = await connectMongo();
+  const id = await nextSequence(db, 'reflections');
+  const doc = {
+    id,
+    userId,
+    topics: Array.isArray(topics) ? topics.filter(Boolean) : [],
+    questionsReviewed: Number(questionsReviewed) || 0,
+    rating,
+    createdAt: new Date().toISOString(),
+  };
+  await db.collection('reflections').insertOne(doc);
+  return doc;
+}
+
 module.exports = {
   seedFromSelfTest, listDue, getStats, getDashboard, gradeReview, getById,
   listTopics, setTopicArchived, renameTopic, setTopicExamDate, deleteTopic, deleteByUploadId,
-  reconcileTranslatedSelfTest,
+  reconcileTranslatedSelfTest, recordReflection,
   VALID_GRADES,
 };
