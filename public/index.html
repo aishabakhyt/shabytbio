@@ -1004,6 +1004,45 @@
        load; with it, it only appears once .hidden is cleared by openDiagramLightbox(). */
     .diagram-lightbox-overlay[hidden] { display: none; }
 
+    /* Reuses the diagram lightbox's overlay/modal/header pattern (see the bug-fix
+       comment above [hidden] matters here too), but kept as its own class rather
+       than sharing diagram-lightbox-* since FAQ content has nothing to do with
+       diagrams and shouldn't be coupled to that code path. */
+    .faq-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 32, 44, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      z-index: 110;
+    }
+    .faq-overlay[hidden] { display: none; }
+    .faq-modal {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      width: 100%;
+      max-width: 560px;
+      max-height: 85vh;
+      padding: 1.25rem 1.5rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+    }
+    .faq-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+    }
+    .faq-header h2 { font-size: 1.05rem; color: #2b6cb0; }
+    .faq-body { overflow-y: auto; }
+    .faq-item { padding: 0.85rem 0; border-bottom: 1px solid #edf2f7; }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-q { font-weight: 700; color: #2d3748; font-size: 0.92rem; margin-bottom: 0.3rem; }
+    .faq-a { color: #4a5568; font-size: 0.88rem; line-height: 1.5; }
+
     /* ── Dedicated dashboard page ── */
     .dashboard-page-back {
       background: none;
@@ -1751,6 +1790,38 @@
     </div>
   </div>
 
+  <!-- FAQ modal, reachable from the main nav (renderAuthBar) -->
+  <div class="faq-overlay" id="faqOverlay" hidden>
+    <div class="faq-modal">
+      <div class="faq-header">
+        <h2 data-i18n="faqTitle">Frequently Asked Questions</h2>
+        <button class="review-close-btn" id="faqCloseBtn" aria-label="Close">&times;</button>
+      </div>
+      <div class="faq-body">
+        <div class="faq-item">
+          <p class="faq-q" data-i18n="faqQ1">What can I upload?</p>
+          <p class="faq-a" data-i18n="faqA1">PDF, .txt, or .pptx files, up to 50MB.</p>
+        </div>
+        <div class="faq-item">
+          <p class="faq-q" data-i18n="faqQ2">What subject does ShabytBio cover?</p>
+          <p class="faq-a" data-i18n="faqA2">Biology, for now.</p>
+        </div>
+        <div class="faq-item">
+          <p class="faq-q" data-i18n="faqQ3">What languages does it support?</p>
+          <p class="faq-a" data-i18n="faqA3">English, Kazakh, and Russian.</p>
+        </div>
+        <div class="faq-item">
+          <p class="faq-q" data-i18n="faqQ4">How does "mastered" work?</p>
+          <p class="faq-a" data-i18n="faqA4">A question is marked mastered after you've answered it correctly 4 separate times, spaced at least 3 weeks apart.</p>
+        </div>
+        <div class="faq-item">
+          <p class="faq-q" data-i18n="faqQ5">Why did my streak reset?</p>
+          <p class="faq-a" data-i18n="faqA5">Any day you upload material or review questions counts. Missing a day resets the count, but nothing you've learned is lost, and your best streak is always shown.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="results" hidden>
     <div id="languageMismatchBanner" class="language-mismatch-banner" hidden></div>
     <div class="tabs-nav" id="tabsNav">
@@ -1936,6 +2007,7 @@
     const ICON_TROPHY = svgIcon('<path d="M8 4h8v5a4 4 0 01-8 0V4z"/><path d="M8 5H5a2 2 0 002 4M16 5h3a2 2 0 01-2 4"/><path d="M12 13v3M9 20h6M9 20a3 3 0 003-3 3 3 0 003 3" stroke-linecap="round"/>', 17);
     const ICON_CHART = svgIcon('<rect x="4" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="16" y="3" width="4" height="17" rx="1"/>', 15);
     const ICON_WARNING = svgIcon('<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/>', 12);
+    const ICON_HELP = svgIcon('<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 1.9-2.4 3.4" stroke-linecap="round"/><path d="M12 17h.01" stroke-linecap="round"/>', 14);
 
     /* Streak visual: a growing plant instead of a flame — fits the biology
        theme and the "tending something over time" feeling a streak should
@@ -2118,6 +2190,18 @@
         topicsHint: "Turn off a topic to pause it — it stops showing up in reviews, but your progress on it is kept, not deleted.",
         resumeTopic: 'Resume this topic',
         pauseTopic: 'Pause this topic',
+        faqNav: 'FAQ',
+        faqTitle: 'Frequently Asked Questions',
+        faqQ1: 'What can I upload?',
+        faqA1: 'PDF, .txt, or .pptx files, up to 50MB.',
+        faqQ2: 'What subject does ShabytBio cover?',
+        faqA2: 'Biology, for now.',
+        faqQ3: 'What languages does it support?',
+        faqA3: 'English, Kazakh, and Russian.',
+        faqQ4: 'How does "mastered" work?',
+        faqA4: "A question is marked mastered after you've answered it correctly 4 separate times, spaced at least 3 weeks apart.",
+        faqQ5: 'Why did my streak reset?',
+        faqA5: "Any day you upload material or review questions counts. Missing a day resets the count, but nothing you've learned is lost, and your best streak is always shown.",
       },
       kk: {
         appSubtitle: 'Сабақтарың — шабытың',
@@ -2255,6 +2339,18 @@
         loadingHistory: 'Тарихтан жүктелуде…',
         cachedResult: 'Дереу дайын — бұл файлды біреу бұрын талдаған, сондықтан дайын нәтиже алдыңыз.',
         charsExtracted: 'Дайын — «{filename}» файлынан {count} таңба алынды.',
+        faqNav: 'Жиі қойылатын сұрақтар',
+        faqTitle: 'Жиі қойылатын сұрақтар',
+        faqQ1: 'Не жүктеуге болады?',
+        faqA1: 'PDF, .txt немесе .pptx файлдары, 50 МБ-қа дейін.',
+        faqQ2: 'ShabytBio қай пәнді қамтиды?',
+        faqA2: 'Қазірше тек биология.',
+        faqQ3: 'Қандай тілдерді қолдайды?',
+        faqA3: 'Ағылшын, қазақ және орыс тілдерін.',
+        faqQ4: '«Меңгерілді» қалай жұмыс істейді?',
+        faqA4: 'Сұрақ кемінде 3 апта аралығында 4 рет дұрыс жауап берілгеннен кейін меңгерілген деп белгіленеді.',
+        faqQ5: 'Неге менің серия үзілді?',
+        faqA5: 'Серияң жаңа материал жүктеген немесе сұрақтарды қайталаған әрбір күнді санайды. Бір күнді өткізіп алсаң, санақ қайта басталады, бірақ үйренгендерің жоғалмайды, әрі ең жақсы серияң әрқашан көрсетіліп тұрады.',
       },
       ru: {
         appSubtitle: 'Твои уроки — твоё вдохновение',
@@ -2392,6 +2488,18 @@
         loadingHistory: 'Загрузка из истории…',
         cachedResult: 'Готово мгновенно — этот файл уже кто-то анализировал, поэтому вы получили готовый результат.',
         charsExtracted: 'Готово — извлечено {count} символов из «{filename}».',
+        faqNav: 'Частые вопросы',
+        faqTitle: 'Частые вопросы',
+        faqQ1: 'Что можно загрузить?',
+        faqA1: 'Файлы PDF, .txt или .pptx, до 50 МБ.',
+        faqQ2: 'Какой предмет охватывает ShabytBio?',
+        faqA2: 'Пока только биология.',
+        faqQ3: 'Какие языки поддерживаются?',
+        faqA3: 'Английский, казахский и русский.',
+        faqQ4: 'Как работает статус «Освоено»?',
+        faqA4: 'Вопрос считается освоенным после 4 правильных ответов, распределённых как минимум на 3 недели.',
+        faqQ5: 'Почему моя серия сбросилась?',
+        faqA5: 'Серия считает каждый день, когда вы загружаете новый материал или повторяете вопросы. Пропуск дня обнуляет счётчик, но всё изученное никуда не исчезает, а ваш лучший результат всегда показан.',
       },
     };
 
@@ -2544,6 +2652,12 @@
       dashboardBtn.innerHTML = `${ICON_CHART} ${t('dashboardNav')}`;
       dashboardBtn.addEventListener('click', showDashboardPage);
       wrap.appendChild(dashboardBtn);
+
+      const faqBtn = document.createElement('button');
+      faqBtn.className = 'review-btn';
+      faqBtn.innerHTML = `${ICON_HELP} ${t('faqNav')}`;
+      faqBtn.addEventListener('click', openFaq);
+      wrap.appendChild(faqBtn);
 
       const langSwitch = document.createElement('div');
       langSwitch.className = 'lang-switch';
@@ -2787,6 +2901,7 @@
     document.getElementById('reviewCloseBtn').addEventListener('click', closeReviewSession);
     document.getElementById('reviewTopicsBtn').addEventListener('click', openTopicsManager);
     document.getElementById('diagramLightboxCloseBtn').addEventListener('click', closeDiagramLightbox);
+    document.getElementById('faqCloseBtn').addEventListener('click', closeFaq);
 
     // Beta feedback: with 90+ questions piled up across a whole semester of
     // uploads, being forced into one undifferentiated review queue wasn't
@@ -4064,6 +4179,14 @@
     function closeDiagramLightbox() {
       document.getElementById('diagramLightboxOverlay').hidden = true;
       document.getElementById('diagramLightboxCanvas').innerHTML = '';
+    }
+
+    function openFaq() {
+      document.getElementById('faqOverlay').hidden = false;
+    }
+
+    function closeFaq() {
+      document.getElementById('faqOverlay').hidden = true;
     }
 
     async function renderDiagrams(mindMap, items, illustratedDiagram) {
