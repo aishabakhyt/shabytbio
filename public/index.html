@@ -1043,6 +1043,30 @@
     .faq-q { font-weight: 700; color: #2d3748; font-size: 0.92rem; margin-bottom: 0.3rem; }
     .faq-a { color: #4a5568; font-size: 0.88rem; line-height: 1.5; }
 
+    /* Feedback modal reuses .faq-overlay/.faq-modal/.faq-header/.faq-body
+       (see the comment above .faq-overlay) but needs its own textarea/button/
+       status styling on top of that shared shell. */
+    .feedback-textarea {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
+      padding: 0.6rem 0.75rem;
+      font: inherit;
+      font-size: 0.9rem;
+      color: #2d3748;
+      box-sizing: border-box;
+    }
+    .feedback-textarea:focus { outline: none; border-color: #2b6cb0; }
+    .feedback-actions { display: flex; justify-content: flex-end; margin-top: 0.75rem; }
+    .feedback-submit-btn { background: #2b6cb0; color: #fff; border: none; }
+    .feedback-submit-btn:disabled { opacity: 0.6; cursor: default; }
+    .feedback-status { margin-top: 0.6rem; font-size: 0.85rem; }
+    .feedback-status[hidden] { display: none; }
+    .feedback-status.success { color: #276749; }
+    .feedback-status.error { color: #c53030; }
+
     /* ── Dedicated dashboard page ── */
     .dashboard-page-back {
       background: none;
@@ -1822,6 +1846,24 @@
     </div>
   </div>
 
+  <!-- Feedback / bug-report modal, reachable from the main nav (renderAuthBar) -->
+  <div class="faq-overlay" id="feedbackOverlay" hidden>
+    <div class="faq-modal">
+      <div class="faq-header">
+        <h2 data-i18n="feedbackTitle">Send Feedback</h2>
+        <button class="review-close-btn" id="feedbackCloseBtn" aria-label="Close">&times;</button>
+      </div>
+      <div class="faq-body">
+        <p class="faq-a" data-i18n="feedbackIntro" style="margin-bottom:0.75rem;">Found a bug, or have an idea? Let me know below.</p>
+        <textarea id="feedbackTextarea" class="feedback-textarea" data-i18n-placeholder="feedbackPlaceholder" placeholder="What happened, or what would help?"></textarea>
+        <div id="feedbackStatus" class="feedback-status" hidden></div>
+        <div class="feedback-actions">
+          <button id="feedbackSubmitBtn" class="review-btn feedback-submit-btn" data-i18n="feedbackSubmit">Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="results" hidden>
     <div id="languageMismatchBanner" class="language-mismatch-banner" hidden></div>
     <div class="tabs-nav" id="tabsNav">
@@ -2008,6 +2050,7 @@
     const ICON_CHART = svgIcon('<rect x="4" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="16" y="3" width="4" height="17" rx="1"/>', 15);
     const ICON_WARNING = svgIcon('<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/>', 12);
     const ICON_HELP = svgIcon('<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 1.9-2.4 3.4" stroke-linecap="round"/><path d="M12 17h.01" stroke-linecap="round"/>', 14);
+    const ICON_FEEDBACK = svgIcon('<path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.4 8.5 8.5 0 0 1-4-1L3 20l1.1-5.5A8.4 8.4 0 0 1 3.5 11.5 8.38 8.38 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/><path d="M12 8v4M12 15h.01" stroke-linecap="round"/>', 14);
 
     /* Streak visual: a growing plant instead of a flame — fits the biology
        theme and the "tending something over time" feeling a streak should
@@ -2202,6 +2245,15 @@
         faqA4: "A question is marked mastered after you've answered it correctly 4 separate times, spaced at least 3 weeks apart.",
         faqQ5: 'Why did my streak reset?',
         faqA5: "Any day you upload material or review questions counts. Missing a day resets the count, but nothing you've learned is lost, and your best streak is always shown.",
+        feedbackNav: 'Feedback',
+        feedbackTitle: 'Send Feedback',
+        feedbackIntro: 'Found a bug, or have an idea? Let me know below.',
+        feedbackPlaceholder: 'What happened, or what would help?',
+        feedbackSubmit: 'Send',
+        feedbackSending: 'Sending...',
+        feedbackSuccess: 'Thanks, this was sent.',
+        feedbackError: "Couldn't send that. Try again in a moment.",
+        feedbackEmpty: 'Write something first.',
       },
       kk: {
         appSubtitle: 'Сабақтарың — шабытың',
@@ -2351,6 +2403,15 @@
         faqA4: 'Сұрақ кемінде 3 апта аралығында 4 рет дұрыс жауап берілгеннен кейін меңгерілген деп белгіленеді.',
         faqQ5: 'Неге менің серия үзілді?',
         faqA5: 'Серияң жаңа материал жүктеген немесе сұрақтарды қайталаған әрбір күнді санайды. Бір күнді өткізіп алсаң, санақ қайта басталады, бірақ үйренгендерің жоғалмайды, әрі ең жақсы серияң әрқашан көрсетіліп тұрады.',
+        feedbackNav: 'Пікір қалдыру',
+        feedbackTitle: 'Пікір қалдыру',
+        feedbackIntro: 'Қате тапсаң немесе идеяң болса, төменде жаз.',
+        feedbackPlaceholder: 'Не болды, немесе не көмектесер еді?',
+        feedbackSubmit: 'Жіберу',
+        feedbackSending: 'Жіберілуде...',
+        feedbackSuccess: 'Рахмет, жіберілді.',
+        feedbackError: 'Жіберу мүмкін болмады. Сәлден соң қайта көріңіз.',
+        feedbackEmpty: 'Алдымен бірдеңе жазыңыз.',
       },
       ru: {
         appSubtitle: 'Твои уроки — твоё вдохновение',
@@ -2500,6 +2561,15 @@
         faqA4: 'Вопрос считается освоенным после 4 правильных ответов, распределённых как минимум на 3 недели.',
         faqQ5: 'Почему моя серия сбросилась?',
         faqA5: 'Серия считает каждый день, когда вы загружаете новый материал или повторяете вопросы. Пропуск дня обнуляет счётчик, но всё изученное никуда не исчезает, а ваш лучший результат всегда показан.',
+        feedbackNav: 'Обратная связь',
+        feedbackTitle: 'Обратная связь',
+        feedbackIntro: 'Нашли баг или есть идея? Напишите ниже.',
+        feedbackPlaceholder: 'Что произошло, или что помогло бы?',
+        feedbackSubmit: 'Отправить',
+        feedbackSending: 'Отправка...',
+        feedbackSuccess: 'Спасибо, отправлено.',
+        feedbackError: 'Не удалось отправить. Попробуйте ещё раз через момент.',
+        feedbackEmpty: 'Сначала напишите что-нибудь.',
       },
     };
 
@@ -2658,6 +2728,12 @@
       faqBtn.innerHTML = `${ICON_HELP} ${t('faqNav')}`;
       faqBtn.addEventListener('click', openFaq);
       wrap.appendChild(faqBtn);
+
+      const feedbackBtn = document.createElement('button');
+      feedbackBtn.className = 'review-btn';
+      feedbackBtn.innerHTML = `${ICON_FEEDBACK} ${t('feedbackNav')}`;
+      feedbackBtn.addEventListener('click', openFeedback);
+      wrap.appendChild(feedbackBtn);
 
       const langSwitch = document.createElement('div');
       langSwitch.className = 'lang-switch';
@@ -2902,6 +2978,8 @@
     document.getElementById('reviewTopicsBtn').addEventListener('click', openTopicsManager);
     document.getElementById('diagramLightboxCloseBtn').addEventListener('click', closeDiagramLightbox);
     document.getElementById('faqCloseBtn').addEventListener('click', closeFaq);
+    document.getElementById('feedbackCloseBtn').addEventListener('click', closeFeedback);
+    document.getElementById('feedbackSubmitBtn').addEventListener('click', submitFeedbackForm);
 
     // Beta feedback: with 90+ questions piled up across a whole semester of
     // uploads, being forced into one undifferentiated review queue wasn't
@@ -4187,6 +4265,55 @@
 
     function closeFaq() {
       document.getElementById('faqOverlay').hidden = true;
+    }
+
+    function openFeedback() {
+      document.getElementById('feedbackOverlay').hidden = false;
+      const status = document.getElementById('feedbackStatus');
+      status.hidden = true;
+      status.className = 'feedback-status';
+      document.getElementById('feedbackTextarea').focus();
+    }
+
+    function closeFeedback() {
+      document.getElementById('feedbackOverlay').hidden = true;
+    }
+
+    async function submitFeedbackForm() {
+      const textarea = document.getElementById('feedbackTextarea');
+      const status = document.getElementById('feedbackStatus');
+      const btn = document.getElementById('feedbackSubmitBtn');
+      const message = textarea.value.trim();
+      if (!message) {
+        status.textContent = t('feedbackEmpty');
+        status.className = 'feedback-status error';
+        status.hidden = false;
+        return;
+      }
+      btn.disabled = true;
+      const originalLabel = btn.textContent;
+      btn.textContent = t('feedbackSending');
+      try {
+        const res = await fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, page: document.title || null }),
+        });
+        if (res.status === 401) { closeFeedback(); handleSessionExpired(); return; }
+        if (!res.ok) throw new Error('request failed');
+        textarea.value = '';
+        status.textContent = t('feedbackSuccess');
+        status.className = 'feedback-status success';
+        status.hidden = false;
+      } catch (err) {
+        console.error('Failed to submit feedback:', err);
+        status.textContent = t('feedbackError');
+        status.className = 'feedback-status error';
+        status.hidden = false;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = originalLabel;
+      }
     }
 
     async function renderDiagrams(mindMap, items, illustratedDiagram) {

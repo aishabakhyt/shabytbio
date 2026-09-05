@@ -7,6 +7,7 @@ const path = require('path');
 const uploadRouter = require('./routes/upload');
 const authRouter = require('./routes/auth');
 const masteryRouter = require('./routes/mastery');
+const feedbackRouter = require('./routes/feedback');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -68,6 +69,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/auth', authRouter);
 app.use('/api/mastery', masteryRouter);
+app.use('/api/feedback', feedbackRouter);
 app.use('/api', uploadRouter);
 
 app.listen(PORT, () => {
