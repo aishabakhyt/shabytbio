@@ -1,6 +1,7 @@
 const express = require('express');
 const { listDue, getStats, getDashboard, gradeReview, getById, listTopics, setTopicArchived, renameTopic, setTopicExamDate, deleteTopic } = require('../services/mastery');
 const { gradeAnswer } = require('../services/claude');
+const { logGradeResult } = require('../services/gradeHistory');
 const { getUserById } = require('../services/users');
 
 const router = express.Router();
@@ -133,6 +134,18 @@ router.post('/:id/grade-answer', async (req, res) => {
     }
     const language = (user && user.language) || 'en';
     const result = await gradeAnswer(item.question, item.answer, studentAnswer, language);
+
+    // Fire-and-forget: this is a stats-only record for later (e.g. a real
+    // "accuracy improved over time" number), it should never slow down or
+    // break the student-facing response if the write fails.
+    logGradeResult({
+      userId: req.session.userId,
+      masteryItemId: item.id,
+      uploadId: item.uploadId,
+      sourceFilename: item.sourceFilename,
+      verdict: result.verdict,
+    }).catch(err => console.error('Failed to log grade history (non-fatal):', err.message));
+
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: `Grading failed: ${err.message}` });
