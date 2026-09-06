@@ -5,10 +5,19 @@
 // class testing it around the same time) turns into "a few extra seconds
 // of wait" instead of "some people see an error."
 //
-// Default of 5 matches Aisha's confirmed free-tier RPM for Gemini 2.5
-// Flash (checked in AI Studio) — bump GEMINI_RPM_LIMIT in .env if that
-// changes (e.g. after a billing-tier upgrade or switching models).
-const RPM_LIMIT = Number(process.env.GEMINI_RPM_LIMIT) || 5;
+// Switched underlying model to gemini-3.5-flash-lite (see services/claude.js)
+// after gemini-2.5-flash's free tier (5 RPM / 20 RPD) got fully used up by
+// launch-day testing alone, with no billing available as an option.
+// Flash-Lite's free tier is 15 RPM / 500 RPD (confirmed in AI Studio) --
+// capping ourselves at 10, not 15, leaves real margin: this in-memory
+// counter resets on every server restart and can't see requests from any
+// other process sharing the same API key, so sitting exactly at the real
+// ceiling still lets 429s through (confirmed live, 6 Sep 2026). There's no
+// equivalent in-app guard for the 500 RPD ceiling yet -- at a small beta's
+// volume that's unlikely to matter, but if it ever does, the fix is the
+// same idea (track a rolling 24h window here too), not a bigger RPM
+// number. Bump GEMINI_RPM_LIMIT in .env after a billing-tier upgrade.
+const RPM_LIMIT = Number(process.env.GEMINI_RPM_LIMIT) || 10;
 const WINDOW_MS = 60 * 1000;
 
 const requestTimestamps = []; // when each in-window request was released

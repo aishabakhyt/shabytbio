@@ -5,8 +5,18 @@ const { describeTemplatesForPrompt } = require('./diagramTemplates');
 // out of sync with what the tripwire considers "required."
 const { REQUIRED_KEYS } = require('./validateStudyPack');
 
+// Switched from gemini-2.5-flash (6 Sep 2026): its free tier is only 5
+// RPM / 20 RPD, and Aisha genuinely can't put a card on file right now --
+// that ceiling got hit hard just from launch-day testing, well before any
+// real student traffic. gemini-3.5-flash-lite's free tier is 15 RPM / 500
+// RPD (confirmed in her AI Studio rate-limit dashboard) -- 25x the daily
+// headroom, no billing required. Trade-off: a Lite model is smaller than
+// full Flash, so double-check output quality (mind map, mnemonics,
+// self-test) on a real upload after this change before trusting it for
+// launch. If quality suffers noticeably, the alternative is enabling
+// billing on 2.5 Flash instead of downgrading model quality.
 const GEMINI_ENDPOINT =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+  'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent';
 
 // Bump this whenever buildPrompt's output format changes (new fields, new
 // formatting rules, new syntax constraints, etc.) — resultCache mixes this

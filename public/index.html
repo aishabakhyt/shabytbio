@@ -5534,12 +5534,22 @@
        bring an old item's actual content in line with the UI around it. ── */
     const LANGUAGE_LABEL_KEYS = { en: 'langEnglish', kk: 'langKazakh', ru: 'langRussian' };
 
+    // Turned off for now (6 Sep 2026): regenerate-in-language makes TWO
+    // Gemini calls per click (restructure + self-test translation), so it
+    // hits the free-tier RPM limit hardest of any action in the app and was
+    // failing repeatedly for real students during launch. Flip this back to
+    // true once Gemini billing/rate limits are sorted -- nothing else needs
+    // to change, checkLanguageMismatch just early-returns below and the
+    // banner/button never render.
+    const LANGUAGE_REGEN_ENABLED = false;
+
     function hideLanguageMismatchBanner() {
       const el = document.getElementById('languageMismatchBanner');
       if (el) { el.hidden = true; el.classList.remove('is-error'); el.innerHTML = ''; }
     }
 
     function checkLanguageMismatch(uploadId, recordLanguage, hasExtractedText) {
+      if (!LANGUAGE_REGEN_ENABLED) { hideLanguageMismatchBanner(); return; }
       const el = document.getElementById('languageMismatchBanner');
       if (!el) return;
       const target = (currentUser && currentUser.language) || 'en';
