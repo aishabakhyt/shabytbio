@@ -144,6 +144,78 @@
       margin-bottom: 0.75rem;
     }
 
+    /* ── Pre-sign-in landing hero (shown first inside #welcomeSignedOut) ── */
+    .welcome-card.landing-wide { max-width: 600px; }
+    .landing-hero { text-align: center; }
+    .landing-badge {
+      display: inline-block;
+      background: #ebf8ff;
+      color: #2b6cb0;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      padding: 0.3rem 0.8rem;
+      border-radius: 999px;
+      margin-bottom: 1.1rem;
+    }
+    .landing-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1.1rem;
+      border-radius: 18px;
+      background: #3182ce;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .landing-headline {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #1a202c;
+      line-height: 1.35;
+      margin-bottom: 0.65rem;
+    }
+    .landing-sub {
+      color: #4a5568;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      max-width: 440px;
+      margin: 0 auto 1.5rem;
+    }
+    .landing-features {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem;
+      text-align: left;
+      margin-bottom: 1.75rem;
+    }
+    .landing-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      background: #f7fafc;
+      border-radius: 10px;
+      padding: 0.65rem 0.7rem;
+      font-size: 0.8rem;
+      color: #2d3748;
+      line-height: 1.4;
+    }
+    .landing-feature-icon { flex-shrink: 0; margin-top: 0.1rem; }
+    .landing-continue-btn {
+      background: #3182ce;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 0.7rem 2.2rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .landing-continue-btn:hover { background: #2b6cb0; }
+    @media (max-width: 480px) {
+      .landing-features { grid-template-columns: 1fr; }
+    }
+
     .profile-field { margin-bottom: 1.1rem; text-align: left; }
     .profile-field label {
       display: block;
@@ -866,22 +938,13 @@
        compact node graph — needs materially more width/height headroom than
        the flowchart cap before "Enlarge" is the only way to read it. */
     .diagram-canvas-illustrated svg { max-height: 620px; }
-    .diagram-quiz-btn { background: #ebf8ff; color: #2b6cb0; }
-    .diagram-quiz-btn:hover { background: #d5eefc; }
-
-    /* "Identify the structure" quiz panel (renderAnchorQuizQuestion) --
-       toggled open below the diagram it belongs to via .diagram-quiz-btn,
-       reuses .diagram-canvas-illustrated for the highlighted SVG so sizing
-       stays consistent with the real diagram above it. */
-    .anchor-quiz-panel {
-      margin-top: 0.9rem;
-      padding-top: 0.9rem;
-      border-top: 1px dashed #cbd5e0;
-    }
-    .anchor-quiz-panel[hidden] { display: none; }
+    /* "Identify the structure" quiz -- now a Review Quiz card
+       (renderAnchorQuizReviewCard) rather than a panel under the diagram,
+       so the diagram itself no longer needs a quiz entry point. Reuses
+       .diagram-canvas-illustrated for the highlighted SVG so sizing stays
+       consistent with the real diagram elsewhere in the app. */
     .anchor-quiz-canvas svg { max-height: 260px; }
-    .anchor-quiz-progress { text-align: center; color: #a0aec0; font-size: 0.75rem; margin: 0.4rem 0 0.2rem; }
-    .anchor-quiz-question { text-align: center; color: #2d3748; font-weight: 600; font-size: 0.88rem; margin-bottom: 0.7rem; }
+    .anchor-quiz-question { text-align: center; color: #2d3748; font-weight: 600; font-size: 0.88rem; margin: 0.6rem 0 0.7rem; }
     .anchor-quiz-options { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
     .anchor-quiz-option {
       border: 1px solid #cbd5e0;
@@ -898,8 +961,6 @@
     .anchor-quiz-option.correct { background: #f0fff4; border-color: #38a169; color: #22543d; }
     .anchor-quiz-option.incorrect { background: #fff5f5; border-color: #e53e3e; color: #822727; }
     .anchor-quiz-next-btn { display: block; margin: 0.8rem auto 0; }
-    .anchor-quiz-summary { text-align: center; color: #2d3748; font-size: 0.9rem; }
-    .anchor-quiz-summary p { margin-bottom: 0.7rem; font-weight: 600; }
     .diagram-caption {
       margin-top: 0.6rem;
       font-size: 0.83rem;
@@ -1573,6 +1634,7 @@
     }
     .review-type-badge.recall { background: #e6fffa; color: #234e52; }
     .review-type-badge.application { background: #faf5ff; color: #553c9a; }
+    .review-type-badge.diagram { background: #ebf8ff; color: #2b6cb0; }
     .review-source {
       font-size: 0.72rem;
       color: #a0aec0;
@@ -1747,9 +1809,52 @@
     <div class="welcome-card">
 
       <div id="welcomeSignedOut">
-        <p class="welcome-desc" data-i18n="welcomeSignedOutDesc">Sign in with Google to upload your slides and get exam-ready study notes, hidden exam traps, and self-tests tailored to you.</p>
-        <div id="welcomeSigninBtn" class="welcome-signin-btn"></div>
-        <div class="auth-config-error" id="welcomeConfigError" hidden></div>
+
+        <!-- Shown first, on every visit while signed out (fresh visitor, signed-out,
+             or session-expired reload all funnel through showWelcome()) -- Aisha's
+             launch-day feedback was that the app went straight from the page loading
+             to a bare sign-in button with no context, which reads badly for someone
+             arriving from an Instagram/Telegram link who has never seen the app.
+             "Get started" swaps this out for the actual sign-in step below. -->
+        <div id="landingHero" class="landing-hero">
+          <div class="landing-badge" data-i18n="landingBadge">Beta — for NIS biology students</div>
+          <div class="landing-icon" aria-hidden="true">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 3c-4 2-6 6-6 10a6 6 0 0 0 12 0c0-4-2-8-6-10z"/>
+              <path d="M9.3 8.6c1 1.4 3.4 1.4 4.4 0M9 12.3c1.2 1.6 4.8 1.6 6 0"/>
+              <path d="M12 8v9"/>
+            </svg>
+          </div>
+          <h2 class="landing-headline" data-i18n="landingHeadline">Turn your slides into a study system that remembers what you know</h2>
+          <p class="landing-sub" data-i18n="landingSub">Upload your notes or slides — get a structured study pack, diagrams, and quizzes that check real understanding, not just memorization.</p>
+
+          <div class="landing-features">
+            <div class="landing-feature">
+              <svg class="landing-feature-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+              <span data-i18n="landingFeature1">Structured notes from your own slides</span>
+            </div>
+            <div class="landing-feature">
+              <svg class="landing-feature-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="8.5" y="14" width="7" height="7" rx="1"/><path d="M10 6.5h4M6.5 10v3M17.5 10v3"/></svg>
+              <span data-i18n="landingFeature2">Diagrams and quizzes, not just text</span>
+            </div>
+            <div class="landing-feature">
+              <svg class="landing-feature-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
+              <span data-i18n="landingFeature3">Review that remembers what you've mastered</span>
+            </div>
+            <div class="landing-feature">
+              <svg class="landing-feature-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2b6cb0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>
+              <span data-i18n="landingFeature4">Kazakh, Russian, and English</span>
+            </div>
+          </div>
+
+          <button id="landingContinueBtn" class="landing-continue-btn" data-i18n="landingContinueBtn">Get started</button>
+        </div>
+
+        <div id="welcomeSigninStep" hidden>
+          <p class="welcome-desc" data-i18n="welcomeSignedOutDesc">Sign in with Google to upload your slides and get exam-ready study notes, hidden exam traps, and self-tests tailored to you.</p>
+          <div id="welcomeSigninBtn" class="welcome-signin-btn"></div>
+          <div class="auth-config-error" id="welcomeConfigError" hidden></div>
+        </div>
       </div>
 
       <div id="welcomeOnboarding" hidden>
@@ -2111,7 +2216,6 @@
     const ICON_WARNING = svgIcon('<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01" stroke-linecap="round"/>', 12);
     const ICON_HELP = svgIcon('<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 1.9-2.4 3.4" stroke-linecap="round"/><path d="M12 17h.01" stroke-linecap="round"/>', 14);
     const ICON_FEEDBACK = svgIcon('<path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.4 8.5 8.5 0 0 1-4-1L3 20l1.1-5.5A8.4 8.4 0 0 1 3.5 11.5 8.38 8.38 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/><path d="M12 8v4M12 15h.01" stroke-linecap="round"/>', 14);
-    const ICON_QUIZ = svgIcon('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="0.6" fill="currentColor"/>', 13);
 
     /* Streak visual: a growing plant instead of a flame — fits the biology
        theme and the "tending something over time" feeling a streak should
@@ -2161,6 +2265,14 @@
       en: {
         appSubtitle: 'Your lessons, your inspiration',
         welcomeSignedOutDesc: "Sign in with Google to upload your slides and get exam-ready study notes, hidden exam traps, and self-tests tailored to you.",
+        landingBadge: "Beta — for NIS biology students",
+        landingHeadline: "Turn your slides into a study system that remembers what you know",
+        landingSub: "Upload your notes or slides — get a structured study pack, diagrams, and quizzes that check real understanding, not just memorization.",
+        landingFeature1: "Structured notes from your own slides",
+        landingFeature2: "Diagrams and quizzes, not just text",
+        landingFeature3: "Review that remembers what you've mastered",
+        landingFeature4: "Kazakh, Russian, and English",
+        landingContinueBtn: "Get started",
         welcomeGreeting: "Let's set up your profile.",
         welcomeBackGreeting: "Welcome, {name}! Let's set up your profile.",
         editingProfileGreeting: 'Editing your profile, {name}.',
@@ -2259,11 +2371,10 @@
         fullOverview: 'Full Overview',
         processDiagrams: 'Process Diagrams',
         illustratedDiagram: 'Illustrated Diagram',
-        quizStructureBtn: 'Quiz: identify the structure',
         quizQuestion: 'What structure is highlighted?',
         quizNext: 'Next',
-        quizScore: '{correct} / {total} correct',
-        quizTryAgain: 'Try again',
+        typeDiagram: 'Diagram',
+        quizUnavailable: "Couldn't load this diagram — skipping for now.",
         languageMismatchNotice: 'This content was analysed in {lang} — from before you switched your study language.',
         regenerateInLanguage: 'Regenerate in {lang}',
         regeneratingContent: 'Regenerating in your language…',
@@ -2273,6 +2384,9 @@
         loadingHistory: 'Loading from history…',
         cachedResult: 'Done instantly — someone already analysed this exact file, so you got the cached result.',
         charsExtracted: 'Done — {count} characters extracted from "{filename}".',
+        errorRateLimited: 'ShabytBio is getting a lot of requests right now — please wait a minute and try again.',
+        errorAiGlitch: 'Something went wrong generating your study pack. Please try again — if it keeps happening, let us know via Feedback.',
+        errorGeneric: 'Something went wrong. Please try again in a moment.',
         yourProgress: 'Your Progress',
         dashboardHowItWorks: 'How does this work?',
         dashboardNav: 'Dashboard',
@@ -2328,8 +2442,16 @@
         feedbackEmpty: 'Write something first.',
       },
       kk: {
-        appSubtitle: 'Сабақтарың — шабытың',
+        appSubtitle: 'Сабақтан шабыт алыңыз',
         welcomeSignedOutDesc: 'Слайдтарыңызды жүктеп, емтиханға дайын конспектілер, жасырын емтихан қателерін және өзіңізге бейімделген тесттерді алу үшін Google арқылы кіріңіз.',
+        landingBadge: 'Бета — NIS биология оқушыларына арналған',
+        landingHeadline: 'Дәрістеріңді білетінің есте қалатын оқу жүйесіне айналдыр',
+        landingSub: 'Конспект немесе слайд жүкте — құрылымдалған оқу материалын, диаграммаларды және шынымен түсінгеніңді тексеретін тесттерді ал.',
+        landingFeature1: 'Өз слайдтарыңнан құрылымдалған конспект',
+        landingFeature2: 'Мәтін ғана емес, диаграммалар мен тесттер',
+        landingFeature3: 'Меңгергеніңді есте сақтайтын қайталау',
+        landingFeature4: 'Қазақша, орысша және ағылшынша',
+        landingContinueBtn: 'Бастау',
         welcomeGreeting: 'Профиліңізді баптайық.',
         welcomeBackGreeting: 'Қош келдіңіз, {name}! Профиліңізді баптайық.',
         editingProfileGreeting: 'Профиліңізді өзгертуде, {name}.',
@@ -2460,12 +2582,11 @@
         fullOverview: 'Толық шолу',
         processDiagrams: 'Процесс диаграммалары',
         illustratedDiagram: 'Иллюстрацияланған диаграмма',
-        quizStructureBtn: 'Викторина: құрылымды анықта',
         quizQuestion: 'Қай құрылым белгіленген?',
         quizNext: 'Келесі',
-        quizScore: '{total} ішінен {correct} дұрыс',
-        quizTryAgain: 'Қайта көру',
-        languageMismatchNotice: 'Бұл мазмұн {lang} тілінде талданған — сіз оқу тілін ауыстырмас бұрын.',
+        typeDiagram: 'Диаграмма',
+        quizUnavailable: 'Бұл диаграмма жүктелмеді — қазірше өткізіп жібереміз.',
+        languageMismatchNotice: 'Бұл мазмұн сіз оқу тілін ауыстырмас бұрын {lang} тілінде талданған.',
         regenerateInLanguage: '{lang} тілінде қайта жасау',
         regeneratingContent: 'Сіздің тіліңізде қайта жасалуда…',
         regenerateFailed: 'Қайта жасау мүмкін болмады — қайталап көріңіз.',
@@ -2474,6 +2595,9 @@
         loadingHistory: 'Тарихтан жүктелуде…',
         cachedResult: 'Дереу дайын — бұл файлды біреу бұрын талдаған, сондықтан дайын нәтиже алдыңыз.',
         charsExtracted: 'Дайын — «{filename}» файлынан {count} таңба алынды.',
+        errorRateLimited: 'ShabytBio-ға қазір өтінімдер көп түсуде — бір минут күтіп, қайталап көріңіз.',
+        errorAiGlitch: 'Оқу материалын жасау кезінде қате шықты. Қайталап көріңіз — қайталана берсе, «Кері байланыс» арқылы хабарлаңыз.',
+        errorGeneric: 'Бірдеңе дұрыс болмады. Сәл кейінірек қайталап көріңіз.',
         faqNav: 'Жиі қойылатын сұрақтар',
         faqTitle: 'Жиі қойылатын сұрақтар',
         faqQ1: 'Не жүктеуге болады?',
@@ -2497,8 +2621,16 @@
         feedbackEmpty: 'Алдымен бірдеңе жазыңыз.',
       },
       ru: {
-        appSubtitle: 'Твои уроки — твоё вдохновение',
+        appSubtitle: 'Ваши уроки — ваше вдохновение',
         welcomeSignedOutDesc: 'Войдите через Google, чтобы загрузить свои слайды и получить готовые к экзамену конспекты, скрытые ловушки экзамена и тесты, адаптированные под вас.',
+        landingBadge: 'Бета — для учеников NIS по биологии',
+        landingHeadline: 'Преврати свои конспекты в систему обучения, которая помнит, что ты знаешь',
+        landingSub: 'Загрузи конспект или слайды — получи структурированный материал, диаграммы и тесты, которые проверяют реальное понимание, а не зубрёжку.',
+        landingFeature1: 'Структурированный конспект из твоих слайдов',
+        landingFeature2: 'Диаграммы и тесты, а не только текст',
+        landingFeature3: 'Повторение, которое помнит, что ты уже усвоил(а)',
+        landingFeature4: 'Казахский, русский и английский',
+        landingContinueBtn: 'Начать',
         welcomeGreeting: 'Давайте настроим ваш профиль.',
         welcomeBackGreeting: 'Добро пожаловать, {name}! Давайте настроим ваш профиль.',
         editingProfileGreeting: 'Редактирование профиля, {name}.',
@@ -2629,11 +2761,10 @@
         fullOverview: 'Полный обзор',
         processDiagrams: 'Диаграммы процессов',
         illustratedDiagram: 'Иллюстрированная диаграмма',
-        quizStructureBtn: 'Викторина: определи структуру',
         quizQuestion: 'Какая структура выделена?',
         quizNext: 'Далее',
-        quizScore: '{correct} из {total} правильно',
-        quizTryAgain: 'Попробовать снова',
+        typeDiagram: 'Диаграмма',
+        quizUnavailable: 'Не удалось загрузить эту диаграмму — пропускаем пока.',
         languageMismatchNotice: 'Этот материал был проанализирован на {lang} — до того как вы сменили язык обучения.',
         regenerateInLanguage: 'Пересоздать на {lang}',
         regeneratingContent: 'Пересоздание на вашем языке…',
@@ -2643,6 +2774,9 @@
         loadingHistory: 'Загрузка из истории…',
         cachedResult: 'Готово мгновенно — этот файл уже кто-то анализировал, поэтому вы получили готовый результат.',
         charsExtracted: 'Готово — извлечено {count} символов из «{filename}».',
+        errorRateLimited: 'Сейчас на ShabytBio много запросов — подождите минуту и попробуйте снова.',
+        errorAiGlitch: 'Не удалось сгенерировать учебный материал. Попробуйте ещё раз — если повторится, напишите нам через «Обратная связь».',
+        errorGeneric: 'Что-то пошло не так. Попробуйте ещё раз через минуту.',
         faqNav: 'Частые вопросы',
         faqTitle: 'Частые вопросы',
         faqQ1: 'Что можно загрузить?',
@@ -2877,6 +3011,12 @@
       document.getElementById('welcomeSignedOut').hidden = false;
       document.getElementById('welcomeOnboarding').hidden = true;
       document.getElementById('appContent').hidden = true;
+      // Every path into this screen (fresh visit, sign-out, session-expiry
+      // reload) starts back at the landing hero, not mid-sign-in -- see the
+      // comment on #landingHero in the HTML for why this exists at all.
+      document.getElementById('landingHero').hidden = false;
+      document.getElementById('welcomeSigninStep').hidden = true;
+      document.querySelector('.welcome-card').classList.add('landing-wide');
       renderAuthBar();
     }
 
@@ -3070,6 +3210,11 @@
     let reviewTopicsThisSession = new Set();
     let reflectionAsked = false;
 
+    document.getElementById('landingContinueBtn').addEventListener('click', () => {
+      document.getElementById('landingHero').hidden = true;
+      document.getElementById('welcomeSigninStep').hidden = false;
+      document.querySelector('.welcome-card').classList.remove('landing-wide');
+    });
     document.getElementById('reviewCloseBtn').addEventListener('click', closeReviewSession);
     document.getElementById('reviewTopicsBtn').addEventListener('click', openTopicsManager);
     document.getElementById('diagramLightboxCloseBtn').addEventListener('click', closeDiagramLightbox);
@@ -3393,6 +3538,11 @@
       const item = reviewQueue[reviewIndex];
       if (item.topicLabel || item.sourceFilename) reviewTopicsThisSession.add(item.topicLabel || item.sourceFilename);
 
+      if (item.format === 'anchor_quiz') {
+        renderAnchorQuizReviewCard(item);
+        return;
+      }
+
       const typeBadge = document.createElement('span');
       typeBadge.className = `review-type-badge ${item.type === 'application' ? 'application' : 'recall'}`;
       typeBadge.textContent = item.type === 'application' ? 'Application' : 'Recall';
@@ -3673,7 +3823,16 @@
 
         if (!res.ok) {
           statusEl.className = 'error';
-          statusEl.textContent = `Error: ${data.error}`;
+          // 500s from the AI call now come back as a stable code
+          // ('rate_limited' / 'ai_glitch' / 'unknown'), not the raw
+          // provider error text -- see classifyGenerationError in
+          // routes/upload.js. A 422 (bad file) still carries a real,
+          // actionable message about the upload itself, so that one is
+          // shown as-is.
+          const GENERATION_ERROR_KEYS = { rate_limited: 'errorRateLimited', ai_glitch: 'errorAiGlitch', unknown: 'errorGeneric' };
+          statusEl.textContent = GENERATION_ERROR_KEYS[data.error]
+            ? t(GENERATION_ERROR_KEYS[data.error])
+            : data.error;
         } else {
           statusEl.className = 'success';
           statusEl.textContent = data.fromCache
@@ -4243,7 +4402,17 @@
         }).join('');
       }
 
-      return `<svg viewBox="0 0 ${totalWidth} ${canvasHeight}" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, sans-serif">
+      // Explicit width/height (not just viewBox) matter here, not just style: a bare
+      // viewBox-only <svg> has no defined intrinsic size, and the enlarge lightbox
+      // deliberately strips max-width/max-height (see .diagram-lightbox-canvas svg)
+      // so the full-size diagram can render at its natural size. Safari resolves that
+      // combination (viewBox-only SVG, no size constraint, centered flexbox) to a
+      // zero-size box -- a real bug seen live (Aisha, Sep 5 2026 recording): Enlarge
+      // opened a lightbox with only the header, the diagram itself invisible. Chromium
+      // is more forgiving and never showed this. Explicit width/height gives every
+      // browser a defined intrinsic size to fall back on; CSS can still scale it down
+      // (e.g. the normal, non-lightbox max-width:100%/max-height:340px rule).
+      return `<svg viewBox="0 0 ${totalWidth} ${canvasHeight}" width="${totalWidth}" height="${canvasHeight}" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, sans-serif">
         <g transform="translate(${margin}, ${illustrationYOffset})">${template.svgBody}</g>
         ${renderSlots(left.slots, 'left')}
         ${renderSlots(right.slots, 'right')}
@@ -4265,23 +4434,12 @@
       titleEl.textContent = `${t('illustratedDiagram')} — ${template.name}`;
       header.appendChild(titleEl);
 
-      // "Identify the structure" only makes sense with a real pool of
-      // choices actually taught in THIS upload -- quizzing on a template
-      // anchor Gemini never used for this content would ask about
-      // something the student's material may not have covered at all,
-      // which breaks the app's grounded-in-the-source-text principle. See
-      // MIN_QUIZ_ANCHORS below.
-      const labeledAnchorIds = [...new Set((diagram.labels || [])
-        .filter(l => l.text && l.text.trim() && template.anchors.some(a => a.id === l.anchor))
-        .map(l => l.anchor))];
-      if (labeledAnchorIds.length >= MIN_QUIZ_ANCHORS) {
-        const quizBtn = document.createElement('button');
-        quizBtn.className = 'diagram-expand-btn diagram-quiz-btn';
-        quizBtn.innerHTML = `${ICON_QUIZ} ${t('quizStructureBtn')}`;
-        quizBtn.addEventListener('click', () => toggleAnchorQuiz(quizPanel, template, labeledAnchorIds));
-        header.appendChild(quizBtn);
-      }
-
+      // "Identify the structure" used to live here as a button + panel
+      // right under this fully-labeled diagram -- but every answer was
+      // already visible on the same screen, so the "quiz" wasn't blind.
+      // It's now seeded server-side (seedAnchorQuizItems) as real
+      // spaced-repetition items in Review Quiz instead -- see
+      // renderAnchorQuizReviewCard.
       const expandBtn = document.createElement('button');
       expandBtn.className = 'diagram-expand-btn';
       expandBtn.innerHTML = `${ICON_SEARCH} ${t('enlarge')}`;
@@ -4295,18 +4453,12 @@
       wrapper.appendChild(canvas);
       expandBtn.addEventListener('click', () => openDiagramLightbox(titleEl.textContent, svg));
 
-      const quizPanel = document.createElement('div');
-      quizPanel.className = 'anchor-quiz-panel';
-      quizPanel.hidden = true;
-      wrapper.appendChild(quizPanel);
-
       container.appendChild(wrapper);
     }
 
-    // Below this many labeled anchors, a 4-choice quiz either runs out of
-    // real distractors or only ever asks 1-2 questions -- not worth
-    // offering the button at all rather than a degenerate quiz.
-    const MIN_QUIZ_ANCHORS = 3;
+    // Mirrors MIN_QUIZ_ANCHORS in routes/upload.js, which now does the
+    // actual seed/no-seed gating server-side -- kept here only in case a
+    // future client-side quiz feature needs the same threshold.
     const QUIZ_CHOICE_COUNT = 4;
 
     // "presynaptic_terminal" -> "Presynaptic Terminal" -- every anchor id is
@@ -4337,63 +4489,73 @@
           <animate attributeName="opacity" values="1;0.4;1" dur="1.4s" repeatCount="indefinite"/>
         </circle>
         <circle cx="${anchor.x}" cy="${anchor.y}" r="4" fill="#e53e3e"/>` : '';
-      return `<svg viewBox="${template.viewBox}" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, sans-serif">${template.svgBody}${marker}</svg>`;
+      // Same explicit-size fix as buildIllustratedDiagramSvg above -- this SVG isn't
+      // opened in the Enlarge lightbox today, but it shares the same viewBox-only shape
+      // and the same review-card context could plausibly grow a zoom view later, so it
+      // gets the same fix rather than leaving a second copy of the bug latent.
+      const [, , vbWidth, vbHeight] = template.viewBox.split(/\s+/);
+      return `<svg viewBox="${template.viewBox}" width="${vbWidth}" height="${vbHeight}" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, sans-serif">${template.svgBody}${marker}</svg>`;
     }
 
-    let anchorQuizState = null; // { template, order: [anchorId,...], index, correctCount }
+    // "Identify the structure" now lives inside Review Quiz, seeded
+    // server-side as real spaced-repetition items (seedAnchorQuizItems) --
+    // called from renderReviewCard whenever item.format === 'anchor_quiz'.
+    // Reuses buildAnchorQuizSvg/anchorDisplayName/shuffled/QUIZ_CHOICE_COUNT
+    // defined above, same distractor-preference logic the old in-diagram
+    // panel used, just driven by the review item instead of local state.
+    function renderAnchorQuizReviewCard(item) {
+      const body = document.getElementById('reviewBody');
+      const template = DIAGRAM_TEMPLATES[item.templateId];
 
-    function toggleAnchorQuiz(panel, template, labeledAnchorIds) {
-      const isOpening = panel.hidden;
-      panel.hidden = !panel.hidden;
-      if (!isOpening) return;
-      anchorQuizState = { template, order: shuffled(labeledAnchorIds), index: 0, correctCount: 0 };
-      renderAnchorQuizQuestion(panel);
-    }
+      const typeBadge = document.createElement('span');
+      typeBadge.className = 'review-type-badge diagram';
+      typeBadge.textContent = t('typeDiagram');
+      body.appendChild(typeBadge);
 
-    function renderAnchorQuizQuestion(panel) {
-      const state = anchorQuizState;
-      panel.innerHTML = '';
+      if (item.sourceFilename) {
+        const src = document.createElement('div');
+        src.className = 'review-source';
+        src.textContent = `From: ${item.topicLabel || item.sourceFilename}`;
+        body.appendChild(src);
+      }
 
-      if (state.index >= state.order.length) {
-        const summary = document.createElement('div');
-        summary.className = 'anchor-quiz-summary';
-        summary.innerHTML = `<p>${tf('quizScore', { correct: state.correctCount, total: state.order.length })}</p>`;
-        const retryBtn = document.createElement('button');
-        retryBtn.className = 'review-btn';
-        retryBtn.textContent = t('quizTryAgain');
-        retryBtn.addEventListener('click', () => {
-          anchorQuizState = { template: state.template, order: shuffled(state.order), index: 0, correctCount: 0 };
-          renderAnchorQuizQuestion(panel);
-        });
-        summary.appendChild(retryBtn);
-        panel.appendChild(summary);
+      if (!template) {
+        // Registry still loading, or a template id this client no longer
+        // knows -- never guess at this item's spaced-repetition outcome
+        // over a client-side hiccup, just skip it for this session.
+        const note = document.createElement('p');
+        note.className = 'review-grade-hint';
+        note.textContent = t('quizUnavailable');
+        body.appendChild(note);
+        const skipBtn = document.createElement('button');
+        skipBtn.className = 'review-btn anchor-quiz-next-btn';
+        skipBtn.textContent = t('quizNext');
+        skipBtn.addEventListener('click', () => { reviewIndex += 1; renderReviewCard(); });
+        body.appendChild(skipBtn);
         return;
       }
 
-      const anchorId = state.order[state.index];
       const canvas = document.createElement('div');
       canvas.className = 'diagram-canvas diagram-canvas-illustrated anchor-quiz-canvas';
-      canvas.innerHTML = buildAnchorQuizSvg(state.template, anchorId);
-      panel.appendChild(canvas);
-
-      const progress = document.createElement('p');
-      progress.className = 'anchor-quiz-progress';
-      progress.textContent = `${state.index + 1} / ${state.order.length}`;
-      panel.appendChild(progress);
+      canvas.innerHTML = buildAnchorQuizSvg(template, item.anchorId);
+      body.appendChild(canvas);
 
       const question = document.createElement('p');
       question.className = 'anchor-quiz-question';
       question.textContent = t('quizQuestion');
-      panel.appendChild(question);
+      body.appendChild(question);
 
       // Distractors: prefer other anchors actually taught in this upload
-      // (more relevant, harder, still fair), padding out with the
+      // (the pool this item was seeded from), padding out with the
       // template's remaining anchors if there aren't enough of those.
-      const others = state.template.anchors.map(a => a.id).filter(id => id !== anchorId);
-      const labeledOthers = others.filter(id => state.order.includes(id));
-      const rest = others.filter(id => !state.order.includes(id));
+      const pool = Array.isArray(item.labeledAnchorIds) && item.labeledAnchorIds.length
+        ? item.labeledAnchorIds
+        : [item.anchorId];
+      const others = template.anchors.map(a => a.id).filter(id => id !== item.anchorId);
+      const labeledOthers = others.filter(id => pool.includes(id));
+      const rest = others.filter(id => !pool.includes(id));
       const distractorPool = [...shuffled(labeledOthers), ...shuffled(rest)];
-      const choiceIds = shuffled([anchorId, ...distractorPool.slice(0, QUIZ_CHOICE_COUNT - 1)]);
+      const choiceIds = shuffled([item.anchorId, ...distractorPool.slice(0, QUIZ_CHOICE_COUNT - 1)]);
 
       const optionsRow = document.createElement('div');
       optionsRow.className = 'anchor-quiz-options';
@@ -4405,25 +4567,25 @@
         btn.addEventListener('click', () => {
           if (answered) return;
           answered = true;
-          const isCorrect = choiceId === anchorId;
-          if (isCorrect) state.correctCount++;
+          const isCorrect = choiceId === item.anchorId;
           optionsRow.querySelectorAll('.anchor-quiz-option').forEach(el => {
             el.disabled = true;
-            if (el.textContent === anchorDisplayName(anchorId)) el.classList.add('correct');
+            if (el.textContent === anchorDisplayName(item.anchorId)) el.classList.add('correct');
             else if (el === btn) el.classList.add('incorrect');
           });
+          // Multiple-choice grades itself -- correct/incorrect maps
+          // directly onto the same 'good'/'again' spaced-repetition grades
+          // self-test items get from manual buttons, so this reuses
+          // submitReviewGrade (and its due-count/dashboard refresh) as-is.
           const nextBtn = document.createElement('button');
           nextBtn.className = 'review-btn anchor-quiz-next-btn';
           nextBtn.textContent = t('quizNext');
-          nextBtn.addEventListener('click', () => {
-            state.index++;
-            renderAnchorQuizQuestion(panel);
-          });
-          panel.appendChild(nextBtn);
+          nextBtn.addEventListener('click', () => submitReviewGrade(item.id, isCorrect ? 'good' : 'again'));
+          body.appendChild(nextBtn);
         });
         optionsRow.appendChild(btn);
       });
-      panel.appendChild(optionsRow);
+      body.appendChild(optionsRow);
     }
 
     let diagramRenderCounter = 0;
@@ -5422,9 +5584,20 @@
         if (!res.ok) {
           const el = document.getElementById('languageMismatchBanner');
           if (el) el.classList.add('is-error');
-          textEl.textContent = data.error && /re-upload/i.test(data.error)
-            ? tf('regenerateUnavailable', { lang: targetLabel })
-            : t('regenerateFailed');
+          // Same stable error codes as the main upload flow (see
+          // classifyGenerationError in routes/upload.js) -- surface the
+          // specific reason (rate-limited vs. a generation glitch) instead
+          // of a blanket "couldn't regenerate", since regeneration makes
+          // TWO Gemini calls (restructure + self-test translation) and so
+          // hits the RPM limit even more easily than a fresh upload.
+          const GENERATION_ERROR_KEYS = { rate_limited: 'errorRateLimited', ai_glitch: 'errorAiGlitch', unknown: 'errorGeneric' };
+          if (data.error && /re-upload/i.test(data.error)) {
+            textEl.textContent = tf('regenerateUnavailable', { lang: targetLabel });
+          } else if (GENERATION_ERROR_KEYS[data.error]) {
+            textEl.textContent = t(GENERATION_ERROR_KEYS[data.error]);
+          } else {
+            textEl.textContent = t('regenerateFailed');
+          }
           btn.remove();
           return;
         }

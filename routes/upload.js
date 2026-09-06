@@ -5,7 +5,8 @@ const { parseOffice } = require('officeparser');
 const { restructureWithClaude, translateSelfTest } = require('../services/claude');
 const { saveUpload, listUploads, getUpload, deleteUpload, updateUploadResult } = require('../services/db');
 const { getUserById } = require('../services/users');
-const { seedFromSelfTest, deleteByUploadId, reconcileTranslatedSelfTest } = require('../services/mastery');
+const { seedFromSelfTest, deleteByUploadId, reconcileTranslatedSelfTest, seedAnchorQuizItems } = require('../services/mastery');
+const { findTemplate } = require('../services/diagramTemplates');
 const { getCached, setCached } = require('../services/resultCache');
 const { searchVideos } = require('../services/youtube');
 const { validateStudyPack } = require('../services/validateStudyPack');
@@ -14,6 +15,41 @@ const { queueLength, RPM_LIMIT } = require('../services/rateLimiter');
 const router = express.Router();
 
 const PPTX_MIME = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+
+// Real generation failures (Gemini rate-limited, a malformed/cut-off JSON
+// response, a safety-filter block) used to reach students as the raw
+// exception text -- e.g. "Claude call failed: Gemini is experiencing high
+// demand right now -- please try again in a minute. (429)". That leaked
+// which AI provider we use, an HTTP status code, and a stale "Claude"
+// label left over from before this app switched to Gemini -- confusing
+// and unprofessional for a launch audience of NIS students. This classifies
+// the real error into a small stable code so the frontend can show a
+// friendly, translated message in the student's own language, while the
+// full detail still goes to the server log for debugging.
+function classifyGenerationError(err) {
+  const msg = (err && err.message) || '';
+  if (/high demand|429|rate limit/i.test(msg)) return 'rate_limited';
+  if (/valid JSON|MAX_TOKENS|safety/i.test(msg)) return 'ai_glitch';
+  return 'unknown';
+}
+
+// Below this many labeled anchors, a 4-choice "identify the structure" quiz
+// either runs out of real distractors or only ever asks 1-2 questions --
+// not worth seeding at all. Mirrors the client's old MIN_QUIZ_ANCHORS
+// (public/index.html), now enforced here since seeding happens server-side.
+const MIN_QUIZ_ANCHORS = 3;
+
+// Same filter the diagram renderer applies client-side: only anchors
+// Gemini actually labeled with real text for THIS upload's content are
+// fair quiz material -- never the full unfiltered template.
+function deriveLabeledAnchorIds(diagram) {
+  if (!diagram || !diagram.template) return [];
+  const template = findTemplate(diagram.template);
+  if (!template) return [];
+  return [...new Set((diagram.labels || [])
+    .filter(l => l.text && l.text.trim() && template.anchors.some(a => a.id === l.anchor))
+    .map(l => l.anchor))];
+}
 
 function requireAuth(req, res, next) {
   if (!req.session.userId) {
@@ -166,7 +202,8 @@ router.post('/upload', upload.array('files', MAX_FILES_PER_UPLOAD), async (req, 
       });
     }
   } catch (err) {
-    return res.status(500).json({ error: `Claude call failed: ${err.message}` });
+    console.error('[upload] generation failed:', err);
+    return res.status(500).json({ error: classifyGenerationError(err) });
   }
 
   let historyId = null;
@@ -200,6 +237,23 @@ router.post('/upload', upload.array('files', MAX_FILES_PER_UPLOAD), async (req, 
     });
   } catch (err) {
     console.error('Failed to seed mastery queue:', err.message);
+  }
+
+  try {
+    // Same idea, for "identify the structure" -- see seedAnchorQuizItems.
+    // Also best-effort so a seeding hiccup never fails the upload itself.
+    const labeledAnchorIds = deriveLabeledAnchorIds(result.illustrated_diagram);
+    if (labeledAnchorIds.length >= MIN_QUIZ_ANCHORS) {
+      await seedAnchorQuizItems({
+        userId: req.session.userId,
+        uploadId: historyId,
+        filename: combinedFilename,
+        templateId: result.illustrated_diagram.template,
+        labeledAnchorIds,
+      });
+    }
+  } catch (err) {
+    console.error('Failed to seed anchor-quiz review items:', err.message);
   }
 
   res.json({
@@ -316,7 +370,8 @@ router.post('/history/:id/regenerate-language', async (req, res) => {
       });
     }
   } catch (err) {
-    return res.status(500).json({ error: `Claude call failed: ${err.message}` });
+    console.error('[upload] generation failed:', err);
+    return res.status(500).json({ error: classifyGenerationError(err) });
   }
 
   // The old self_test questions were in a different language, so
@@ -375,6 +430,26 @@ router.post('/history/:id/regenerate-language', async (req, res) => {
     } catch (err) {
       console.error('Failed to reconcile mastery queue after regeneration:', err.message);
     }
+  }
+
+  try {
+    // Same reseed as a fresh upload -- the regenerated content can label a
+    // different set of anchors than before, so this re-derives the pool
+    // rather than assuming it's unchanged. Dedup in seedAnchorQuizItems
+    // means an anchor already tracked (e.g. reconciled self-test path,
+    // which leaves these untouched) is never duplicated.
+    const labeledAnchorIds = deriveLabeledAnchorIds(result.illustrated_diagram);
+    if (labeledAnchorIds.length >= MIN_QUIZ_ANCHORS) {
+      await seedAnchorQuizItems({
+        userId: req.session.userId,
+        uploadId,
+        filename: record.filename,
+        templateId: result.illustrated_diagram.template,
+        labeledAnchorIds,
+      });
+    }
+  } catch (err) {
+    console.error('Failed to reseed anchor-quiz review items after regeneration:', err.message);
   }
 
   res.json({ id: uploadId, filename: record.filename, result, language, fromCache });

@@ -34,7 +34,7 @@ async function seedFromSelfTest({ userId, uploadId, filename, selfTest }) {
   const questions = selfTest.map(item => item.question || '').filter(Boolean);
   const existing = questions.length
     ? await db.collection('mastery')
-        .find({ userId, question: { $in: questions } }, { projection: { question: 1 } })
+        .find({ userId, question: { $in: questions }, format: { $ne: 'anchor_quiz' } }, { projection: { question: 1 } })
         .toArray()
     : [];
   const alreadyTracked = new Set(existing.map(e => e.question));
@@ -49,9 +49,70 @@ async function seedFromSelfTest({ userId, uploadId, filename, selfTest }) {
       userId,
       uploadId: uploadId || null,
       sourceFilename: filename || '',
+      format: 'self_test',
       question,
       answer: item.answer || '',
       type: item.type || 'recall',
+      createdAt: now,
+      interval: 0,
+      easeFactor: 2.5,
+      repetitions: 0,
+      nextReviewAt: now, // due right away
+      lastReviewedAt: null,
+      lastGrade: null,
+      archived: false,
+    });
+  }
+
+  if (docs.length) await db.collection('mastery').insertMany(docs);
+  return docs;
+}
+
+// Turns an upload's illustrated-diagram anchors -- the specific structures
+// Gemini actually labeled with real text for THIS content, never the full
+// unfiltered template -- into spaced-repetition review items, one per
+// anchor. Building on the same "grounded in real content" principle as
+// seedFromSelfTest: a student should never be quizzed on a structure their
+// own material never mentioned.
+//
+// This is what makes "identify the structure" a genuine blind quiz inside
+// Review Quiz, instead of a practice toggle that used to sit right under
+// the fully-labeled diagram where every answer was already visible on the
+// same screen (Aisha, Sep 5 2026 launch-day feedback).
+//
+// Dedup by (userId, templateId, anchorId), not uploadId -- the same real
+// structure (e.g. "sa_node" in the heart template) showing up again in a
+// different upload is the same review item, not a new one, mirroring
+// seedFromSelfTest's dedup-by-question-text reasoning.
+async function seedAnchorQuizItems({ userId, uploadId, filename, templateId, labeledAnchorIds }) {
+  if (!templateId || !Array.isArray(labeledAnchorIds) || labeledAnchorIds.length === 0) return [];
+  const db = await connectMongo();
+  const now = new Date().toISOString();
+
+  const existing = await db.collection('mastery')
+    .find(
+      { userId, format: 'anchor_quiz', templateId, anchorId: { $in: labeledAnchorIds } },
+      { projection: { anchorId: 1 } }
+    )
+    .toArray();
+  const alreadyTracked = new Set(existing.map(e => e.anchorId));
+
+  const docs = [];
+  for (const anchorId of labeledAnchorIds) {
+    if (alreadyTracked.has(anchorId)) continue;
+    const id = await nextSequence(db, 'mastery');
+    docs.push({
+      id,
+      userId,
+      uploadId: uploadId || null,
+      sourceFilename: filename || '',
+      format: 'anchor_quiz',
+      templateId,
+      anchorId,
+      labeledAnchorIds, // the pool this anchor was drawn from, so distractors stay fair
+      question: 'Identify the highlighted structure.',
+      answer: anchorId.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+      type: null,
       createdAt: now,
       interval: 0,
       easeFactor: 2.5,
@@ -377,7 +438,7 @@ async function reconcileTranslatedSelfTest(userId, uploadId, translatedSelfTest)
   if (!Array.isArray(translatedSelfTest) || translatedSelfTest.length === 0) return false;
   const db = await connectMongo();
   const col = db.collection('mastery');
-  const existing = await col.find({ userId, uploadId }).sort({ id: 1 }).toArray();
+  const existing = await col.find({ userId, uploadId, format: { $ne: 'anchor_quiz' } }).sort({ id: 1 }).toArray();
   if (existing.length !== translatedSelfTest.length) return false;
 
   const ops = existing.map((doc, i) => ({
@@ -492,6 +553,6 @@ async function recordReflection({ userId, topics, questionsReviewed, rating }) {
 module.exports = {
   seedFromSelfTest, listDue, getStats, getDashboard, gradeReview, getById,
   listTopics, setTopicArchived, renameTopic, setTopicExamDate, deleteTopic, deleteByUploadId,
-  reconcileTranslatedSelfTest, recordReflection,
+  reconcileTranslatedSelfTest, recordReflection, seedAnchorQuizItems,
   VALID_GRADES,
 };

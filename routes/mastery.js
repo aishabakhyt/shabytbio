@@ -21,8 +21,11 @@ router.get('/due', async (req, res) => {
   try {
     const limit = Math.min(Number(req.query.limit) || 20, 50);
     const items = await listDue(req.session.userId, limit);
-    res.json(items.map(({ id, question, answer, type, sourceFilename, topicLabel }) => ({
-      id, question, answer, type, sourceFilename, topicLabel,
+    // format/templateId/anchorId/labeledAnchorIds only carry real values on
+    // "identify the structure" items (see seedAnchorQuizItems) -- undefined
+    // on ordinary self-test items, which the frontend's format check ignores.
+    res.json(items.map(({ id, question, answer, type, sourceFilename, topicLabel, format, templateId, anchorId, labeledAnchorIds }) => ({
+      id, question, answer, type, sourceFilename, topicLabel, format, templateId, anchorId, labeledAnchorIds,
     })));
   } catch (err) {
     res.status(500).json({ error: `Failed to load review queue: ${err.message}` });
