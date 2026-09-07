@@ -5,65 +5,82 @@
 // class testing it around the same time) turns into "a few extra seconds
 // of wait" instead of "some people see an error."
 //
-// Switched underlying model to gemini-3.5-flash-lite (see services/claude.js)
-// after gemini-2.5-flash's free tier (5 RPM / 20 RPD) got fully used up by
-// launch-day testing alone, with no billing available as an option.
-// Flash-Lite's free tier is 15 RPM / 500 RPD (confirmed in AI Studio) --
-// capping ourselves at 10, not 15, leaves real margin: this in-memory
-// counter resets on every server restart and can't see requests from any
-// other process sharing the same API key, so sitting exactly at the real
-// ceiling still lets 429s through (confirmed live, 6 Sep 2026). There's no
-// equivalent in-app guard for the 500 RPD ceiling yet -- at a small beta's
-// volume that's unlikely to matter, but if it ever does, the fix is the
-// same idea (track a rolling 24h window here too), not a bigger RPM
-// number. Bump GEMINI_RPM_LIMIT in .env after a billing-tier upgrade.
-const RPM_LIMIT = Number(process.env.GEMINI_RPM_LIMIT) || 10;
+// 6 Sep 2026: this used to be a single global limiter for one model. Now
+// that services/claude.js tries gemini-2.5-flash first and falls back to
+// gemini-3.5-flash-lite only once 2.5 Flash's own daily quota is actually
+// exhausted (see the comment there for why), each model needs its OWN
+// independent window -- they have different real ceilings (2.5 Flash: 5
+// RPM / 20 RPD; 3.5 Flash Lite: 15 RPM / 500 RPD, confirmed in AI Studio),
+// and Google tracks them as completely separate quotas. createRateLimiter
+// builds one such window; callers cap themselves below the real ceiling,
+// not exactly at it, because this in-memory counter resets on every server
+// restart and can't see requests from any other process sharing the same
+// API key -- sitting exactly at the real ceiling still lets 429s through
+// (confirmed live, 6 Sep 2026, "getting it constantly" during active
+// testing even with a limiter in place).
 const WINDOW_MS = 60 * 1000;
 
-const requestTimestamps = []; // when each in-window request was released
-const queue = []; // FIFO of pending { resolve }
-let drainScheduled = false;
+function createRateLimiter(rpmLimit) {
+  const requestTimestamps = []; // when each in-window request was released
+  const queue = []; // FIFO of pending { resolve }
+  let drainScheduled = false;
 
-function pruneOld() {
-  const cutoff = Date.now() - WINDOW_MS;
-  while (requestTimestamps.length && requestTimestamps[0] <= cutoff) {
-    requestTimestamps.shift();
-  }
-}
-
-function drainQueue() {
-  drainScheduled = false;
-  pruneOld();
-
-  while (queue.length && requestTimestamps.length < RPM_LIMIT) {
-    const next = queue.shift();
-    requestTimestamps.push(Date.now());
-    next.resolve();
+  function pruneOld() {
+    const cutoff = Date.now() - WINDOW_MS;
+    while (requestTimestamps.length && requestTimestamps[0] <= cutoff) {
+      requestTimestamps.shift();
+    }
   }
 
-  if (queue.length && !drainScheduled) {
-    // Nothing more can go out until the oldest in-window request ages out.
-    const oldest = requestTimestamps[0];
-    const delay = Math.max(50, oldest + WINDOW_MS - Date.now());
-    drainScheduled = true;
-    setTimeout(drainQueue, delay);
+  function drainQueue() {
+    drainScheduled = false;
+    pruneOld();
+
+    while (queue.length && requestTimestamps.length < rpmLimit) {
+      const next = queue.shift();
+      requestTimestamps.push(Date.now());
+      next.resolve();
+    }
+
+    if (queue.length && !drainScheduled) {
+      // Nothing more can go out until the oldest in-window request ages out.
+      const oldest = requestTimestamps[0];
+      const delay = Math.max(50, oldest + WINDOW_MS - Date.now());
+      drainScheduled = true;
+      setTimeout(drainQueue, delay);
+    }
   }
+
+  // Resolves once it's safe to make a request without exceeding the rate
+  // limit — immediately if there's headroom, otherwise after waiting in line.
+  function acquireSlot() {
+    return new Promise(resolve => {
+      queue.push({ resolve });
+      drainQueue();
+    });
+  }
+
+  // How many requests are currently waiting their turn — useful for
+  // surfacing "you're #N in line" type feedback.
+  function queueLength() {
+    pruneOld();
+    return queue.length;
+  }
+
+  return { acquireSlot, queueLength, RPM_LIMIT: rpmLimit };
 }
 
-// Resolves once it's safe to make a request without exceeding the rate
-// limit — immediately if there's headroom, otherwise after waiting in line.
-function acquireSlot() {
-  return new Promise(resolve => {
-    queue.push({ resolve });
-    drainQueue();
-  });
-}
+// Default/primary instance: matches gemini-2.5-flash's real 5 RPM ceiling,
+// capped at 3 for margin. This is the instance routes/upload.js's
+// /queue-status endpoint surfaces to students (that's the queue a real
+// upload actually waits on first) -- see services/claude.js for where the
+// fallback model's own separate limiter is created.
+const PRIMARY_RPM_LIMIT = Number(process.env.GEMINI_RPM_LIMIT) || 3;
+const primary = createRateLimiter(PRIMARY_RPM_LIMIT);
 
-// How many requests are currently waiting their turn — useful for
-// surfacing "you're #N in line" type feedback if we want it later.
-function queueLength() {
-  pruneOld();
-  return queue.length;
-}
-
-module.exports = { acquireSlot, queueLength, RPM_LIMIT };
+module.exports = {
+  createRateLimiter,
+  acquireSlot: primary.acquireSlot,
+  queueLength: primary.queueLength,
+  RPM_LIMIT: PRIMARY_RPM_LIMIT,
+};

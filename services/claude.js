@@ -1,22 +1,38 @@
-const { acquireSlot } = require('./rateLimiter');
+const { acquireSlot: acquirePrimarySlot, createRateLimiter } = require('./rateLimiter');
 const { describeTemplatesForPrompt } = require('./diagramTemplates');
 // Reuses the exact same required-field list validateStudyPack.js checks
 // against, so the retry-on-incomplete-response logic below can never drift
 // out of sync with what the tripwire considers "required."
 const { REQUIRED_KEYS } = require('./validateStudyPack');
 
-// Switched from gemini-2.5-flash (6 Sep 2026): its free tier is only 5
-// RPM / 20 RPD, and Aisha genuinely can't put a card on file right now --
-// that ceiling got hit hard just from launch-day testing, well before any
-// real student traffic. gemini-3.5-flash-lite's free tier is 15 RPM / 500
-// RPD (confirmed in her AI Studio rate-limit dashboard) -- 25x the daily
-// headroom, no billing required. Trade-off: a Lite model is smaller than
-// full Flash, so double-check output quality (mind map, mnemonics,
-// self-test) on a real upload after this change before trusting it for
-// launch. If quality suffers noticeably, the alternative is enabling
-// billing on 2.5 Flash instead of downgrading model quality.
-const GEMINI_ENDPOINT =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent';
+// 6 Sep 2026: gemini-2.5-flash's free tier (5 RPM / 20 RPD) got fully used
+// up by launch-day testing alone, and Aisha genuinely can't put a card on
+// file right now. Tried switching the app outright to gemini-3.5-flash-lite
+// (15 RPM / 500 RPD free) to escape that ceiling, but a real-upload check
+// showed its output quality noticeably worse -- not a trade worth making
+// for every generation, every day. So: 2.5 Flash stays the primary model
+// (real quality, 20/day free), and 3.5 Flash Lite is now only a FALLBACK,
+// used automatically for the rest of a day once 2.5 Flash's own quota is
+// actually exhausted -- see callGeminiJSON below. Most real usage each day
+// (the first 20 generations, across every student combined) gets full
+// quality; only after that does anyone see the lesser model, and even then
+// the app keeps working instead of failing outright. Once there's a way to
+// pay, PRIMARY_MODEL's headroom is the thing to raise.
+const PRIMARY_MODEL = 'gemini-2.5-flash';
+const FALLBACK_MODEL = 'gemini-3.5-flash-lite';
+
+function endpointFor(model) {
+  return `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+}
+
+// Separate rate window for the fallback model -- Google tracks its 15 RPM
+// ceiling completely independently of 2.5 Flash's 5 RPM, so sharing one
+// limiter between them would either throttle the fallback too hard or let
+// the primary model burst past its own real ceiling. Capped at 10, not 15,
+// for the same margin-below-the-real-ceiling reason as the primary limiter
+// (see services/rateLimiter.js).
+const FALLBACK_RPM_LIMIT = Number(process.env.GEMINI_FALLBACK_RPM_LIMIT) || 10;
+const { acquireSlot: acquireFallbackSlot } = createRateLimiter(FALLBACK_RPM_LIMIT);
 
 // Bump this whenever buildPrompt's output format changes (new fields, new
 // formatting rules, new syntax constraints, etc.) — resultCache mixes this
@@ -98,17 +114,20 @@ function extractJson(raw) {
   throw new Error('The JSON object never closed — the response was likely cut off before it finished (possibly truncated).');
 }
 
-// Shared by every Gemini JSON call (full restructuring, answer grading,
-// anything added later) — waits for a free-tier rate-limit slot, calls the
-// API with retries, and validates/parses the JSON response the same way
-// every time instead of duplicating this ~40 lines per call site.
-async function callGeminiJSON(prompt, { maxOutputTokens = 2048, temperature = 0.3 } = {}) {
-  const url = `${GEMINI_ENDPOINT}?key=${process.env.GEMINI_API_KEY}`;
+// One attempt against a specific model -- waits for that model's own
+// rate-limit slot, calls the API with retries, and validates/parses the
+// JSON response. Marks quota/overload failures (429/503) with
+// `.retryable = true` so callGeminiJSON knows those specifically -- and
+// only those -- are worth falling back to a different model for; a safety
+// block, a truncated response, or malformed JSON would likely fail on the
+// fallback model too, so those still surface immediately as real errors.
+async function callGeminiOnce(model, acquireSlotFn, prompt, { maxOutputTokens = 2048, temperature = 0.3 } = {}) {
+  const url = `${endpointFor(model)}?key=${process.env.GEMINI_API_KEY}`;
 
-  // Waits its turn if we're already at the free-tier RPM ceiling — turns a
-  // burst of simultaneous requests into "queue and wait a few seconds"
-  // instead of "some of them fail with a 429."
-  await acquireSlot();
+  // Waits its turn if we're already at this model's own rate-limit ceiling
+  // — turns a burst of simultaneous requests into "queue and wait a few
+  // seconds" instead of "some of them fail with a 429."
+  await acquireSlotFn();
 
   const response = await fetchGeminiWithRetry(url, {
     method: 'POST',
@@ -130,7 +149,9 @@ async function callGeminiJSON(prompt, { maxOutputTokens = 2048, temperature = 0.
   if (!response.ok) {
     const err = await response.text();
     if (RETRYABLE_STATUSES.has(response.status)) {
-      throw new Error(`Gemini is experiencing high demand right now — please try again in a minute. (${response.status})`);
+      const quotaErr = new Error(`Gemini is experiencing high demand right now — please try again in a minute. (${response.status})`);
+      quotaErr.retryable = true;
+      throw quotaErr;
     }
     throw new Error(`Gemini API error ${response.status}: ${err}`);
   }
@@ -157,6 +178,23 @@ async function callGeminiJSON(prompt, { maxOutputTokens = 2048, temperature = 0.
     console.error('Failed to parse Gemini JSON response:', err.message);
     console.error('Raw response was:\n', raw);
     throw new Error(`Gemini's response wasn't valid JSON (${err.message}) — please try again.`);
+  }
+}
+
+// Shared by every Gemini JSON call (full restructuring, answer grading,
+// anything added later). Tries PRIMARY_MODEL first; only when that fails
+// with a quota/overload-class error does it retry the exact same prompt
+// against FALLBACK_MODEL, which has its own separate, much larger daily
+// quota. Any other kind of failure (safety block, truncation, bad JSON)
+// propagates immediately without touching the fallback model, since those
+// aren't quota problems and burning a fallback attempt wouldn't help.
+async function callGeminiJSON(prompt, opts = {}) {
+  try {
+    return await callGeminiOnce(PRIMARY_MODEL, acquirePrimarySlot, prompt, opts);
+  } catch (err) {
+    if (!err.retryable) throw err;
+    console.warn(`callGeminiJSON: ${PRIMARY_MODEL} is out of quota/overloaded (${err.message}) — falling back to ${FALLBACK_MODEL}.`);
+    return callGeminiOnce(FALLBACK_MODEL, acquireFallbackSlot, prompt, opts);
   }
 }
 
